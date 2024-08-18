@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "StreamSchedule": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
