@@ -1,4 +1,7 @@
-﻿using TwitchLib.Client;
+﻿using Microsoft.EntityFrameworkCore.Internal;
+using StreamSchedule.Data;
+using StreamSchedule.Data.Models;
+using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
@@ -11,17 +14,20 @@ public class Program
 {
     private static void Main(string[] args)
     {
-        Body b = new Body();
+        Body b = new Body(new DatabaseContextFactory().CreateDbContext(Array.Empty<string>()));
         Console.ReadLine();
     }
 }
 
 class Body
 {
-    private TwitchClient client;
-
-    public Body()
+    private TwitchClient _client;
+    private DatabaseContext _context;
+    public Body(DatabaseContext context)
     {
+        _context = context;
+        _context.Database.EnsureCreated();
+        
         ConnectionCredentials credentials = new ConnectionCredentials(Credentials.username, Credentials.oauth);
         ClientOptions clientOptions = new()
         {
@@ -29,17 +35,17 @@ class Body
             ThrottlingPeriod = TimeSpan.FromSeconds(30)
         };
         WebSocketClient customClient = new(clientOptions);
-        client = new TwitchClient(customClient);
-        client.Initialize(credentials, "w1n7er");
+        _client = new TwitchClient(customClient);
+        _client.Initialize(credentials, "w1n7er");
 
-        client.OnLog += Client_OnLog;
-        client.OnJoinedChannel += Client_OnJoinedChannel;
-        client.OnMessageReceived += Client_OnMessageReceived;
-        client.OnWhisperReceived += Client_OnWhisperReceived;
-        client.OnNewSubscriber += Client_OnNewSubscriber;
-        client.OnConnected += Client_OnConnected;
+        _client.OnLog += Client_OnLog;
+        _client.OnJoinedChannel += Client_OnJoinedChannel;
+        _client.OnMessageReceived += Client_OnMessageReceived;
+        _client.OnWhisperReceived += Client_OnWhisperReceived;
+        _client.OnNewSubscriber += Client_OnNewSubscriber;
+        _client.OnConnected += Client_OnConnected;
 
-        client.Connect();
+        _client.Connect();
     }
 
     private void Client_OnLog(object? sender, OnLogArgs e)
@@ -49,28 +55,44 @@ class Body
 
     private void Client_OnConnected(object? sender, OnConnectedArgs e)
     {
-        Console.WriteLine($"Connected to {e.AutoJoinChannel}");
+        Console.WriteLine($"Connected {e.AutoJoinChannel}");
     }
 
     private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
-        Console.WriteLine("Hey guys! I am a bot connected via TwitchLib!");
-        client.SendMessage(e.Channel, "miniUuh ");
+        Console.WriteLine($"Joined {e.Channel.ToString()}");
+        //client.SendMessage(e.Channel, "miniUuh ");
     }
 
     private void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-        if (e.ChatMessage.Message.Contains("hi"))
+        User u = new()
         {
-            client.SendMessage(e.ChatMessage.Channel, "miniUuh ");
-            client.TimeoutUser(e.ChatMessage.Channel, e.ChatMessage.Username, TimeSpan.FromSeconds(5));
+            Id = int.Parse(e.ChatMessage.UserId),
+            Username = e.ChatMessage.Username,
+            privileges = Privileges.None
+        };
+
+        if(_context.Users.Find(u.Id) == null)
+        {
+            Console.WriteLine("new user");
+            _context.Users.Add(u);
+            _context.SaveChanges();
+        }
+        else { Console.WriteLine("known user"); }
+
+
+        if (e.ChatMessage.Message.StartsWith("hi"))
+        {
+            _client.SendMessage(e.ChatMessage.Channel, e.ChatMessage.Message);
+            //client.TimeoutUser(e.ChatMessage.Channel, e.ChatMessage.Username, TimeSpan.FromSeconds(5));
         }
     }
 
     private void Client_OnWhisperReceived(object? sender, OnWhisperReceivedArgs e)
     {
         if (e.WhisperMessage.Username == "my_friend")
-            client.SendWhisper(e.WhisperMessage.Username, "Hey! Whispers are so cool!!");
+            _client.SendWhisper(e.WhisperMessage.Username, "Hey! Whispers are so cool!!");
     }
 
     private void Client_OnNewSubscriber(object? sender, OnNewSubscriberArgs e)

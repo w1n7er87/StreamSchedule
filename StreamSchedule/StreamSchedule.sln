@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35118.90
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamSchedule", "StreamSchedule.csproj", "{1CD49E10-A09E-486A-9667-9CB3A9DF34D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamSchedule", "StreamSchedule.csproj", "{1CD49E10-A09E-486A-9667-9CB3A9DF34D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
