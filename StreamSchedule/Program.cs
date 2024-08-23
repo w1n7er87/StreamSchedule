@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore.Internal;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.Extensions.Hosting;
+using StreamSchedule.Commands;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using TwitchLib.Client;
@@ -12,21 +15,34 @@ namespace StreamSchedule;
 
 public class Program
 {
+
+
     private static void Main(string[] args)
     {
-        Body b = new Body(new DatabaseContextFactory().CreateDbContext(Array.Empty<string>()));
+        if (EF.IsDesignTime)
+        {
+            new HostBuilder().Build().Run();
+            return;
+        }
+        Body b = new Body();
         Console.ReadLine();
     }
+
+    //public static IHostBuilder CreateHostBuilder(string[] args)
+    //{
+    //    Console.WriteLine("Doing Entity Framework migrations stuff, not starting full application");
+    //    return Host.CreateDefaultBuilder();
+    //}
 }
 
 class Body
 {
     private TwitchClient _client;
-    private DatabaseContext _context;
-    public Body(DatabaseContext context)
+    public static DatabaseContext dbContext = new DatabaseContext(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
+
+    public Body()
     {
-        _context = context;
-        _context.Database.EnsureCreated();
+        dbContext.Database.EnsureCreated();
         
         ConnectionCredentials credentials = new ConnectionCredentials(Credentials.username, Credentials.oauth);
         ClientOptions clientOptions = new()
@@ -73,18 +89,32 @@ class Body
             privileges = Privileges.None
         };
 
-        if(_context.Users.Find(u.Id) == null)
+        if(dbContext.Users.Find(u.Id) == null)
         {
-            Console.WriteLine("new user");
-            _context.Users.Add(u);
-            _context.SaveChanges();
+            dbContext.Users.Add(u);
+            dbContext.SaveChanges();
         }
-        else { Console.WriteLine("known user"); }
-
-
-        if (e.ChatMessage.Message.StartsWith("hi"))
+        else
         {
-            _client.SendMessage(e.ChatMessage.Channel, e.ChatMessage.Message);
+            Console.WriteLine(u.Username + " " + u.Id);
+        }
+
+
+        if (e.ChatMessage.Message.StartsWith('!'))
+        {
+            foreach (var c in Commands.Commands.knownCommands)
+            {
+                Command? i = (Command?) Activator.CreateInstance(c);
+
+                if (i != null && e.ChatMessage.Message.StartsWith(i.Call))
+                {
+                    Console.WriteLine(i.Handle(e.ChatMessage));
+                }
+            }
+            
+            //_client.SendMessage(e.ChatMessage.Channel, e.ChatMessage.Message);
+
+
             //client.TimeoutUser(e.ChatMessage.Channel, e.ChatMessage.Username, TimeSpan.FromSeconds(5));
         }
     }

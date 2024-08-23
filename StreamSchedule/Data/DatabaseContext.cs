@@ -11,6 +11,7 @@ public class DatabaseContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Models.Stream> Streams => Set<Models.Stream>();
 }
 
 public class DatabaseContextFactory : IDesignTimeDbContextFactory<DatabaseContext>
