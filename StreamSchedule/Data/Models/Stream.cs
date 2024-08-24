@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace StreamSchedule.Data.Models;
 
-[PrimaryKey("StreamTime")]
+[PrimaryKey("StreamDate")]
 public class Stream
 {
-    public DateTime StreamTime { get; set; }
+    public DateOnly StreamDate { get; set; }
+    public TimeOnly StreamTime { get; set; }
     public string? StreamTitle { get; set; }
 }

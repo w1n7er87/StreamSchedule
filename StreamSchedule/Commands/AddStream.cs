@@ -1,4 +1,5 @@
-﻿using StreamSchedule.Data.Models;
+﻿using StreamSchedule.Data;
+using StreamSchedule.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,44 +11,52 @@ namespace StreamSchedule.Commands;
 
 internal class AddStream : Command
 {
-    internal override string Call => "!test";
+    internal override string Call => "test";
+    internal override Privileges MinPrivilege => Privileges.Mod;
 
-    internal override bool Handle(ChatMessage message)
+    private readonly string inputPattern = "d-M-H-mm";
+
+    internal override string? Handle(ChatMessage message)
     {
         string[] split = message.Message.Split(" ");
-        if (split.Length < 4) { return false; }
+        if (split.Length < 3) { return Utils.Responses.Fail; }
 
         DateTime temp = DateTime.Now;
 
-        if (!DateTime.TryParse(split[1] + DateTime.UtcNow.Year + " " + split[2], out temp))
+        if (!DateTime.TryParseExact(split[1], inputPattern, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp)) 
         {
-            return false;
+            return Utils.Responses.Fail + "bad date ";
         }
-        temp = temp.ToUniversalTime();
+
+        
         Data.Models.Stream stream = new()
         {
-            StreamTime = temp, StreamTitle = split[3]
+            StreamDate = DateOnly.FromDateTime(temp),
+            StreamTime = TimeOnly.FromDateTime(temp),
+            StreamTitle = message.Message[(split[0].Length + split[1].Length + 2) ..]
         };
 
         try
         {
-            Data.Models.Stream? s = Body.dbContext.Streams.SingleOrDefault(x => x.StreamTime == temp);
+            Data.Models.Stream? s = Body.dbContext.Streams.SingleOrDefault(x => x.StreamDate == stream.StreamDate);
             if (s == null)
             {
                 Body.dbContext.Streams.Add(stream);
             }
             else
             {
-                Body.dbContext.Streams.Update(stream);
+                Body.dbContext.Streams.Update(s);
+                s.StreamTime = stream.StreamTime;
+                s.StreamTitle = stream.StreamTitle;
             }
-            Body.dbContext.SaveChanges();
+            Console.WriteLine( Body.dbContext.SaveChanges());
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return false;
+            return Utils.Responses.Fail;
         }
 
-        return true;
+        return Utils.Responses.Ok;
     }
 }

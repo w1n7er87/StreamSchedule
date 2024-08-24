@@ -15,8 +15,6 @@ namespace StreamSchedule;
 
 public class Program
 {
-
-
     private static void Main(string[] args)
     {
         if (EF.IsDesignTime)
@@ -39,7 +37,7 @@ class Body
 {
     private TwitchClient _client;
     public static DatabaseContext dbContext = new DatabaseContext(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
-
+    private static readonly string commandChars = "!$?";
     public Body()
     {
         dbContext.Database.EnsureCreated();
@@ -60,7 +58,6 @@ class Body
         _client.OnWhisperReceived += Client_OnWhisperReceived;
         _client.OnNewSubscriber += Client_OnNewSubscriber;
         _client.OnConnected += Client_OnConnected;
-
         _client.Connect();
     }
 
@@ -77,7 +74,6 @@ class Body
     private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
         Console.WriteLine($"Joined {e.Channel.ToString()}");
-        //client.SendMessage(e.Channel, "miniUuh ");
     }
 
     private void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
@@ -86,7 +82,7 @@ class Body
         {
             Id = int.Parse(e.ChatMessage.UserId),
             Username = e.ChatMessage.Username,
-            privileges = Privileges.None
+            privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
         };
 
         if(dbContext.Users.Find(u.Id) == null)
@@ -94,31 +90,27 @@ class Body
             dbContext.Users.Add(u);
             dbContext.SaveChanges();
         }
-        else
-        {
-            Console.WriteLine(u.Username + " " + u.Id);
-        }
 
-
-        if (e.ChatMessage.Message.StartsWith('!'))
+        if (commandChars.Contains(e.ChatMessage.Message[0])) 
         {
             foreach (var c in Commands.Commands.knownCommands)
             {
                 Command? i = (Command?) Activator.CreateInstance(c);
 
-                if (i != null && e.ChatMessage.Message.StartsWith(i.Call))
+                if (i != null && e.ChatMessage.Message[1..].StartsWith(i.Call))
                 {
-                    Console.WriteLine(i.Handle(e.ChatMessage));
+                    User? userSent = dbContext.Users.SingleOrDefault(u => u.Id == int.Parse(e.ChatMessage.UserId));
+                    if (userSent != null && userSent.privileges >= i.MinPrivilege)
+                    {
+                        Console.WriteLine(i.Handle(e.ChatMessage));
+                        _client.SendMessage(e.ChatMessage.Channel, i.Handle(e.ChatMessage));
+                    }
+                    else { _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action"); }
                 }
             }
-            
-            //_client.SendMessage(e.ChatMessage.Channel, e.ChatMessage.Message);
-
-
-            //client.TimeoutUser(e.ChatMessage.Channel, e.ChatMessage.Username, TimeSpan.FromSeconds(5));
         }
     }
-
+    
     private void Client_OnWhisperReceived(object? sender, OnWhisperReceivedArgs e)
     {
         if (e.WhisperMessage.Username == "my_friend")

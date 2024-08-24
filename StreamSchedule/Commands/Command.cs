@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StreamSchedule.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace StreamSchedule.Commands;
 internal abstract class Command 
 {
     internal abstract string Call { get; }
-    
-    internal abstract bool Handle(ChatMessage message);
+    internal abstract Privileges MinPrivilege { get; }
+
+    internal abstract string? Handle(ChatMessage message);
 }
