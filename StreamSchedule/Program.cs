@@ -82,7 +82,7 @@ class Body
         {
             Id = int.Parse(e.ChatMessage.UserId),
             Username = e.ChatMessage.Username,
-            privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
+            privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.None : Privileges.Mod,
         };
 
         if(dbContext.Users.Find(u.Id) == null)

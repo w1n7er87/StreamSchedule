@@ -7,20 +7,20 @@ using System.Threading.Tasks;
 
 namespace StreamSchedule;
 
-internal class Utils
+internal static class Utils
 {
     internal static class Responses
     {
         internal static string Fail => "NOIDONTTHINKSO ";
-        internal static string Ok => "ok ";
+        internal static string Ok => "Ok ";
         internal static string Surprise => "oh ";
     }
 
-    internal Privileges ParsePrivilege(string text)
+    internal static Privileges ParsePrivilege(string text)
     {
         return text.ToLower() switch
         {
-            "ban" => Privileges.Mod,
+            "banned" => Privileges.Banned,
             "ok" => Privileges.None,
             "trusted" => Privileges.Trusted,
             "mod" => Privileges.Mod,
