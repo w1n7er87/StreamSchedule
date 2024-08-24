@@ -1,10 +1,4 @@
 ﻿using StreamSchedule.Data;
-using StreamSchedule.Data.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TwitchLib.Client.Models;
 
 namespace StreamSchedule.Commands;
@@ -23,17 +17,16 @@ internal class AddStream : Command
 
         DateTime temp = DateTime.Now;
 
-        if (!DateTime.TryParseExact(split[1], inputPattern, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp)) 
+        if (!DateTime.TryParseExact(split[1], inputPattern, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
         {
             return Utils.Responses.Fail + "bad date ";
         }
 
-        
         Data.Models.Stream stream = new()
         {
             StreamDate = DateOnly.FromDateTime(temp),
             StreamTime = TimeOnly.FromDateTime(temp),
-            StreamTitle = message.Message[(split[0].Length + split[1].Length + 2) ..]
+            StreamTitle = message.Message[(split[0].Length + split[1].Length + 2)..]
         };
 
         try
@@ -49,7 +42,7 @@ internal class AddStream : Command
                 s.StreamTime = stream.StreamTime;
                 s.StreamTitle = stream.StreamTitle;
             }
-            Console.WriteLine( Body.dbContext.SaveChanges());
+            Console.WriteLine(Body.dbContext.SaveChanges());
         }
         catch (Exception e)
         {

@@ -1,12 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Hosting;
 using StreamSchedule.Commands;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
-using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Models;
@@ -33,15 +31,16 @@ public class Program
     //}
 }
 
-class Body
+internal class Body
 {
     private TwitchClient _client;
     public static DatabaseContext dbContext = new DatabaseContext(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
     private static readonly string commandChars = "!$?";
+
     public Body()
     {
         dbContext.Database.EnsureCreated();
-        
+
         ConnectionCredentials credentials = new ConnectionCredentials(Credentials.username, Credentials.oauth);
         ClientOptions clientOptions = new()
         {
@@ -85,17 +84,17 @@ class Body
             privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.None : Privileges.Mod,
         };
 
-        if(dbContext.Users.Find(u.Id) == null)
+        if (dbContext.Users.Find(u.Id) == null)
         {
             dbContext.Users.Add(u);
             dbContext.SaveChanges();
         }
 
-        if (commandChars.Contains(e.ChatMessage.Message[0])) 
+        if (commandChars.Contains(e.ChatMessage.Message[0]))
         {
             foreach (var c in Commands.Commands.knownCommands)
             {
-                Command? i = (Command?) Activator.CreateInstance(c);
+                Command? i = (Command?)Activator.CreateInstance(c);
 
                 if (i != null && e.ChatMessage.Message[1..].StartsWith(i.Call))
                 {
@@ -110,7 +109,7 @@ class Body
             }
         }
     }
-    
+
     private void Client_OnWhisperReceived(object? sender, OnWhisperReceivedArgs e)
     {
         if (e.WhisperMessage.Username == "my_friend")
@@ -119,10 +118,10 @@ class Body
 
     private void Client_OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
     {
-    //    if (e.Subscriber.SubscriptionPlan == SubscriptionPlan.Prime)
-    //        client.SendMessage(e.Channel, $"Welcome {e.Subscriber.DisplayName} to the substers! You just earned 500 points! So kind of you to use your Twitch Prime on this channel!");
-    //    else
-    //        client.SendMessage(e.Channel, $"Welcome {e.Subscriber.DisplayName} to the substers! You just earned 500 points!");
-    //
+        //    if (e.Subscriber.SubscriptionPlan == SubscriptionPlan.Prime)
+        //        client.SendMessage(e.Channel, $"Welcome {e.Subscriber.DisplayName} to the substers! You just earned 500 points! So kind of you to use your Twitch Prime on this channel!");
+        //    else
+        //        client.SendMessage(e.Channel, $"Welcome {e.Subscriber.DisplayName} to the substers! You just earned 500 points!");
+        //
     }
 }
