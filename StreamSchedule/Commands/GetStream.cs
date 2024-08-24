@@ -1,16 +1,26 @@
 ﻿using StreamSchedule.Data;
-using TwitchLib.Client.Models;
 
 namespace StreamSchedule.Commands
 {
     internal class GetStream : Command
     {
-        internal override string Call => "erm";
+        internal override string Call => "stream";
         internal override Privileges MinPrivilege => Privileges.None;
 
-        internal override string Handle(ChatMessage message)
+        internal override string Handle(UniversalMessageInfo message)
         {
-            Data.Models.Stream? next = Body.dbContext.Streams.FirstOrDefault(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.UtcNow));
+            var futureStreams = Body.dbContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.Now));
+            Data.Models.Stream? next = null;
+            foreach (var stream in futureStreams)
+            {
+                DateTime fullDate = new DateTime(stream.StreamDate, stream.StreamTime);
+                if (fullDate >= DateTime.Now)
+                {
+                    next = stream;
+                    break;
+                }
+            }
+
             if (next == null)
             {
                 return "There is no more streams scheduled DinkDonk ";

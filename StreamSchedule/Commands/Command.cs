@@ -8,5 +8,5 @@ internal abstract class Command
     internal abstract string Call { get; }
     internal abstract Privileges MinPrivilege { get; }
 
-    internal abstract string? Handle(ChatMessage message);
+    internal abstract string Handle(UniversalMessageInfo message);
 }

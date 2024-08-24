@@ -3,6 +3,10 @@ using Microsoft.Extensions.Hosting;
 using StreamSchedule.Commands;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
+using TwitchLib.Api;
+using TwitchLib.Api.Services;
+using TwitchLib.Api.Services.Events;
+using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
@@ -23,22 +27,43 @@ public class Program
         Body b = new Body();
         Console.ReadLine();
     }
-
-    //public static IHostBuilder CreateHostBuilder(string[] args)
-    //{
-    //    Console.WriteLine("Doing Entity Framework migrations stuff, not starting full application");
-    //    return Host.CreateDefaultBuilder();
-    //}
 }
 
 internal class Body
 {
     private TwitchClient _client;
+    private TwitchAPI _api;
+    private LiveStreamMonitorService _monitor;
     public static DatabaseContext dbContext = new DatabaseContext(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
-    private static readonly string commandChars = "!$?";
+
+    private static readonly string _commandChars = "!$?";
+    private bool _isOnline = false;
+
+    private async Task ConfigLiveMonitorAsync()
+    {
+        _monitor.SetChannelsById(["78135490"]);
+
+        _monitor.OnStreamOnline += OnLive;
+        _monitor.OnStreamOffline += OnOffline;
+        _monitor.OnChannelsSet += Monitor_OnChannelsSet;
+        _monitor.OnServiceStarted += Monitor_OnServiceStarted;
+        _monitor.Start(); //Keep at the end!
+
+        await Task.Delay(-1);
+    }
 
     public Body()
     {
+        _api = new TwitchAPI();
+        _api.Settings.ClientId = Credentials.clientID;
+        _api.Settings.AccessToken = Credentials.oauth;
+        _api.Helix.Settings.ClientId = Credentials.clientID;
+        _api.Helix.Settings.AccessToken = Credentials.oauth;
+
+        _monitor = new LiveStreamMonitorService(_api, 10);
+
+        Task.Run(() => ConfigLiveMonitorAsync());
+
         dbContext.Database.EnsureCreated();
 
         ConnectionCredentials credentials = new ConnectionCredentials(Credentials.username, Credentials.oauth);
@@ -55,11 +80,30 @@ internal class Body
         _client.OnJoinedChannel += Client_OnJoinedChannel;
         _client.OnMessageReceived += Client_OnMessageReceived;
         _client.OnWhisperReceived += Client_OnWhisperReceived;
-        _client.OnNewSubscriber += Client_OnNewSubscriber;
         _client.OnConnected += Client_OnConnected;
         _client.Connect();
     }
+    private void OnLive(object? sender, OnStreamOnlineArgs args)
+    {
+        _isOnline = true;
+        Console.WriteLine("went live");
+    }
+    
+    private void OnOffline(object? sender, OnStreamOfflineArgs args)
+    {
+        _isOnline = false;
+        Console.WriteLine("went offline");
+    }
+    private void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
+    {
+        Console.WriteLine($"channels set{e.Channels[0]}");
+    }
 
+    private void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
+    {
+        Console.WriteLine("monitoring service stated");
+
+    }
     private void Client_OnLog(object? sender, OnLogArgs e)
     {
         Console.WriteLine($"{e.DateTime.ToString()}: {e.BotUsername} - {e.Data}");
@@ -77,11 +121,13 @@ internal class Body
 
     private void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
+        if (_isOnline) return;
+
         User u = new()
         {
             Id = int.Parse(e.ChatMessage.UserId),
             Username = e.ChatMessage.Username,
-            privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.None : Privileges.Mod,
+            privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
         };
 
         if (dbContext.Users.Find(u.Id) == null)
@@ -90,7 +136,8 @@ internal class Body
             dbContext.SaveChanges();
         }
 
-        if (commandChars.Contains(e.ChatMessage.Message[0]))
+
+        if (_commandChars.Contains(e.ChatMessage.Message[0]))
         {
             foreach (var c in Commands.Commands.knownCommands)
             {
@@ -101,8 +148,9 @@ internal class Body
                     User? userSent = dbContext.Users.SingleOrDefault(u => u.Id == int.Parse(e.ChatMessage.UserId));
                     if (userSent != null && userSent.privileges >= i.MinPrivilege)
                     {
-                        Console.WriteLine(i.Handle(e.ChatMessage));
-                        _client.SendMessage(e.ChatMessage.Channel, i.Handle(e.ChatMessage));
+                        string response = i.Handle(new(e.ChatMessage, u.privileges));
+                        Console.WriteLine(response);
+                        _client.SendMessage(e.ChatMessage.Channel, response);
                     }
                     else { _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action"); }
                 }
@@ -112,16 +160,37 @@ internal class Body
 
     private void Client_OnWhisperReceived(object? sender, OnWhisperReceivedArgs e)
     {
-        if (e.WhisperMessage.Username == "my_friend")
-            _client.SendWhisper(e.WhisperMessage.Username, "Hey! Whispers are so cool!!");
-    }
+        User u = new()
+        {
+            Id = int.Parse(e.WhisperMessage.UserId),
+            Username = e.WhisperMessage.Username,
+            privileges = e.WhisperMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None ,
+        };
 
-    private void Client_OnNewSubscriber(object? sender, OnNewSubscriberArgs e)
-    {
-        //    if (e.Subscriber.SubscriptionPlan == SubscriptionPlan.Prime)
-        //        client.SendMessage(e.Channel, $"Welcome {e.Subscriber.DisplayName} to the substers! You just earned 500 points! So kind of you to use your Twitch Prime on this channel!");
-        //    else
-        //        client.SendMessage(e.Channel, $"Welcome {e.Subscriber.DisplayName} to the substers! You just earned 500 points!");
-        //
+        if (dbContext.Users.Find(u.Id) == null)
+        {
+            dbContext.Users.Add(u);
+            dbContext.SaveChanges();
+        }
+
+        if (_commandChars.Contains(e.WhisperMessage.Message[0]))
+        {
+            foreach (var c in Commands.Commands.knownCommands)
+            {
+                Command? i = (Command?)Activator.CreateInstance(c);
+
+                if (i != null && e.WhisperMessage.Message[1..].StartsWith(i.Call))
+                {
+                    User? userSent = dbContext.Users.SingleOrDefault(u => u.Id == int.Parse(e.WhisperMessage.UserId));
+                    if (userSent != null && userSent.privileges >= i.MinPrivilege)
+                    {
+                        string response = i.Handle(new(e.WhisperMessage, u.privileges));
+                        Console.WriteLine(response);
+                        _client.SendWhisper(e.WhisperMessage.Username, response);
+                    }
+                    else { _client.SendWhisper(e.WhisperMessage.Username, "✋ unauthorized action"); }
+                }
+            }
+        }
     }
 }

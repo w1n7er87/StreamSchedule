@@ -1,4 +1,7 @@
-﻿using StreamSchedule.Data;
+﻿using StreamSchedule.Commands;
+using StreamSchedule.Data;
+using StreamSchedule.Data.Models;
+using TwitchLib.Client.Models;
 
 namespace StreamSchedule;
 
@@ -15,11 +18,44 @@ internal static class Utils
     {
         return text.ToLower() switch
         {
-            "banned" => Privileges.Banned,
+            "ban" => Privileges.Banned,
             "ok" => Privileges.None,
-            "trusted" => Privileges.Trusted,
+            "trust" => Privileges.Trusted,
             "mod" => Privileges.Mod,
             _ => Privileges.None
         };
+    }
+    internal static string PrivilegeToString(Privileges p)
+    {
+        return p switch
+        {
+            Privileges.Banned => "banned",
+            Privileges.None => "a regular",
+            Privileges.Trusted => "a VIP",
+            Privileges.Mod => "a mod MONKA ",
+            _ => "an alien "
+        };
+    }
+}
+
+public class UniversalMessageInfo
+{
+    public string Message;
+    public string Username;
+    public string UserId;
+    public Privileges Privileges;
+    public UniversalMessageInfo(ChatMessage chatMessage, Privileges userPrivileges) 
+    {
+        Privileges = userPrivileges;
+        Message = chatMessage.Message;
+        Username = chatMessage.Username;
+        UserId = chatMessage.UserId;
+    }
+    public UniversalMessageInfo(WhisperMessage whisperMessage, Privileges userPrivileges) 
+    {
+        Privileges = userPrivileges;
+        Message = whisperMessage.Message;
+        Username = whisperMessage.Username;
+        UserId = whisperMessage.UserId;
     }
 }

@@ -1,5 +1,4 @@
 ﻿using StreamSchedule.Data;
-using TwitchLib.Client.Models;
 
 namespace StreamSchedule.Commands;
 
@@ -10,7 +9,7 @@ internal class AddStream : Command
 
     private readonly string inputPattern = "d-M-H-mm";
 
-    internal override string? Handle(ChatMessage message)
+    internal override string Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(" ");
         if (split.Length < 3) { return Utils.Responses.Fail; }
