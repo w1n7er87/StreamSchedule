@@ -7,7 +7,7 @@ internal class AddStream : Command
     internal override string Call => "test";
     internal override Privileges MinPrivilege => Privileges.Mod;
 
-    private readonly string inputPattern = "d-M-H-mm";
+    private readonly string[] inputPatterns = ["d-M-H-mm", "dd-MM-H-mm"];
 
     internal override string Handle(UniversalMessageInfo message)
     {
@@ -16,7 +16,7 @@ internal class AddStream : Command
 
         DateTime temp = DateTime.Now;
 
-        if (!DateTime.TryParseExact(split[1], inputPattern, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
+        if (!DateTime.TryParseExact(split[1], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
         {
             return Utils.Responses.Fail + "bad date ";
         }
