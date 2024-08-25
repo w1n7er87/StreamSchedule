@@ -157,7 +157,7 @@ internal class Body
                     User? userSent = dbContext.Users.SingleOrDefault(u => u.Id == int.Parse(e.ChatMessage.UserId));
                     if (userSent != null && userSent.privileges >= c.MinPrivilege)
                     {
-                        string response = c.Handle(new(e.ChatMessage, u.privileges));
+                        string response = c.Handle(new(e.ChatMessage, userSent.privileges));
                         Console.WriteLine(response);
                         _client.SendMessage(e.ChatMessage.Channel, response);
                     }
@@ -192,7 +192,7 @@ internal class Body
                     User? userSent = dbContext.Users.SingleOrDefault(u => u.Id == int.Parse(e.WhisperMessage.UserId));
                     if (userSent != null && userSent.privileges >= c.MinPrivilege)
                     {
-                        string response = c.Handle(new(e.WhisperMessage, u.privileges));
+                        string response = c.Handle(new(e.WhisperMessage, userSent.privileges));
                         Console.WriteLine(response);
                         _client.SendWhisper(e.WhisperMessage.Username, response);
                     }

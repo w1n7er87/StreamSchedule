@@ -15,8 +15,6 @@ internal class SetPrivileges : Command
         Privileges p = Utils.ParsePrivilege(split[1]);
         User? target = Body.dbContext.Users.SingleOrDefault(u => u.Username == split[2].ToLower().Replace("@", string.Empty));
 
-        Console.WriteLine(split[2]);
-
         if (target != null)
         {
             if(target.privileges >= message.Privileges) { return Utils.Responses.Fail; }
