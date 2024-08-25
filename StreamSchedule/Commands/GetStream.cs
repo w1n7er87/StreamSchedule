@@ -6,6 +6,7 @@ namespace StreamSchedule.Commands
     {
         internal override string Call => "stream";
         internal override Privileges MinPrivilege => Privileges.None;
+        internal override string Help => "time until next stream on the schedule.";
 
         internal override string Handle(UniversalMessageInfo message)
         {

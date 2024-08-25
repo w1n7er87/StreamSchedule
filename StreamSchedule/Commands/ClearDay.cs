@@ -5,8 +5,8 @@ namespace StreamSchedule.Commands;
 internal class ClearDay : Command
 {
     internal override string Call => "clearday";
-
     internal override Privileges MinPrivilege => Privileges.Mod;
+    internal override string Help => "clear schedule for the given day: [date] (d-M-yy or dd-MM-yy)";
 
     private readonly string[] inputPatterns = ["d-M-yy", "dd-MM-yy"];
 

@@ -4,8 +4,9 @@ namespace StreamSchedule.Commands;
 
 internal class AddStream : Command
 {
-    internal override string Call => "test";
+    internal override string Call => "sets";
     internal override Privileges MinPrivilege => Privileges.Mod;
+    internal override string Help => "set new stream time or update given day: [date-time] (d-M-H-mm or dd-MM-H-mm) [stream title] (required)";
 
     private readonly string[] inputPatterns = ["d-M-H-mm", "dd-MM-H-mm"];
 

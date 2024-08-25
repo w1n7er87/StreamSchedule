@@ -1,6 +1,4 @@
-﻿using StreamSchedule.Commands;
-using StreamSchedule.Data;
-using StreamSchedule.Data.Models;
+﻿using StreamSchedule.Data;
 using TwitchLib.Client.Models;
 
 namespace StreamSchedule;

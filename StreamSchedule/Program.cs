@@ -38,6 +38,10 @@ internal class Body
 
     private static readonly string _commandChars = "!$?";
     private bool _isOnline = false;
+    
+    private DateTime _lastMessageSent = DateTime.Now;
+
+    public static List<Command?> currentCommands = [];
 
     private async Task ConfigLiveMonitorAsync()
     {
@@ -82,7 +86,13 @@ internal class Body
         _client.OnWhisperReceived += Client_OnWhisperReceived;
         _client.OnConnected += Client_OnConnected;
         _client.Connect();
+
+        foreach (var c in Commands.Commands.knownCommands)
+        {
+            currentCommands.Add((Command?)Activator.CreateInstance(c));
+        }
     }
+
     private void OnLive(object? sender, OnStreamOnlineArgs args)
     {
         _isOnline = true;
@@ -136,19 +146,18 @@ internal class Body
             dbContext.SaveChanges();
         }
 
+        if (DateTime.Now - _lastMessageSent < TimeSpan.FromSeconds(1)) return;
 
         if (_commandChars.Contains(e.ChatMessage.Message[0]))
         {
-            foreach (var c in Commands.Commands.knownCommands)
+            foreach (var c in currentCommands)
             {
-                Command? i = (Command?)Activator.CreateInstance(c);
-
-                if (i != null && e.ChatMessage.Message[1..].StartsWith(i.Call))
+                if (c != null && e.ChatMessage.Message[1..].StartsWith(c.Call))
                 {
                     User? userSent = dbContext.Users.SingleOrDefault(u => u.Id == int.Parse(e.ChatMessage.UserId));
-                    if (userSent != null && userSent.privileges >= i.MinPrivilege)
+                    if (userSent != null && userSent.privileges >= c.MinPrivilege)
                     {
-                        string response = i.Handle(new(e.ChatMessage, u.privileges));
+                        string response = c.Handle(new(e.ChatMessage, u.privileges));
                         Console.WriteLine(response);
                         _client.SendMessage(e.ChatMessage.Channel, response);
                     }
@@ -156,6 +165,7 @@ internal class Body
                 }
             }
         }
+        _lastMessageSent = DateTime.Now;
     }
 
     private void Client_OnWhisperReceived(object? sender, OnWhisperReceivedArgs e)
@@ -175,16 +185,14 @@ internal class Body
 
         if (_commandChars.Contains(e.WhisperMessage.Message[0]))
         {
-            foreach (var c in Commands.Commands.knownCommands)
+            foreach (var c in currentCommands)
             {
-                Command? i = (Command?)Activator.CreateInstance(c);
-
-                if (i != null && e.WhisperMessage.Message[1..].StartsWith(i.Call))
+                if (c != null && e.WhisperMessage.Message[1..].StartsWith(c.Call))
                 {
                     User? userSent = dbContext.Users.SingleOrDefault(u => u.Id == int.Parse(e.WhisperMessage.UserId));
-                    if (userSent != null && userSent.privileges >= i.MinPrivilege)
+                    if (userSent != null && userSent.privileges >= c.MinPrivilege)
                     {
-                        string response = i.Handle(new(e.WhisperMessage, u.privileges));
+                        string response = c.Handle(new(e.WhisperMessage, u.privileges));
                         Console.WriteLine(response);
                         _client.SendWhisper(e.WhisperMessage.Username, response);
                     }

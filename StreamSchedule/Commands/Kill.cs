@@ -1,12 +1,14 @@
 ﻿using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
-
+/// <summary>
+/// surely there will no problems if bot shuts down during db operations (actually Clueless )
+/// </summary>
 internal class Kill : Command
 {
     internal override string Call => "kill";
-
     internal override Privileges MinPrivilege => Privileges.Mod;
+    internal override string Help => "kill the bot: [time] (in seconds, optional)";
 
     private async Task KillTask(TimeSpan delay)
     {
@@ -17,7 +19,7 @@ internal class Kill : Command
     internal override string Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
-        TimeSpan delay = split.Length > 1 ? TimeSpan.FromSeconds(int.Parse(message.Message.Split(' ')[1])) : TimeSpan.FromSeconds(1);
+        TimeSpan delay = split.Length > 1 ? TimeSpan.FromSeconds(Math.Min(1, int.Parse(message.Message.Split(' ')[1]))) : TimeSpan.FromSeconds(1);
         Task.Run(() => KillTask(delay));
         return "buhbye ";
     }
