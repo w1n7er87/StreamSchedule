@@ -45,7 +45,7 @@ internal class Body
 
     private async Task ConfigLiveMonitorAsync()
     {
-        _monitor.SetChannelsById(["78135490"]);
+        _monitor.SetChannelsById(["85498365"]);
 
         _monitor.OnStreamOnline += OnLive;
         _monitor.OnStreamOffline += OnOffline;
@@ -78,7 +78,7 @@ internal class Body
         };
         WebSocketClient customClient = new(clientOptions);
         _client = new TwitchClient(customClient);
-        _client.Initialize(credentials, "w1n7er");
+        _client.Initialize(credentials, "vedal987");
 
         _client.OnLog += Client_OnLog;
         _client.OnJoinedChannel += Client_OnJoinedChannel;
