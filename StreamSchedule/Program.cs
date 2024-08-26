@@ -42,6 +42,7 @@ internal class Body
     private DateTime _lastMessageSent = DateTime.Now;
 
     public static List<Command?> currentCommands = [];
+    public static int messagesIgnoreDelayMS = 350;
 
     private async Task ConfigLiveMonitorAsync()
     {
@@ -146,7 +147,7 @@ internal class Body
             dbContext.SaveChanges();
         }
 
-        if (DateTime.Now - _lastMessageSent < TimeSpan.FromSeconds(1)) return;
+        if (DateTime.Now - _lastMessageSent < TimeSpan.FromMilliseconds(messagesIgnoreDelayMS)) return;
 
         if (_commandChars.Contains(e.ChatMessage.Message[0]))
         {
@@ -160,12 +161,12 @@ internal class Body
                         string response = c.Handle(new(e.ChatMessage, userSent.privileges));
                         Console.WriteLine(response);
                         _client.SendMessage(e.ChatMessage.Channel, response);
+                        _lastMessageSent = DateTime.Now;
                     }
                     else { _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action"); }
                 }
             }
         }
-        _lastMessageSent = DateTime.Now;
     }
 
     private void Client_OnWhisperReceived(object? sender, OnWhisperReceivedArgs e)
