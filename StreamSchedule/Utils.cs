@@ -1,4 +1,6 @@
-﻿using StreamSchedule.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using StreamSchedule.Data;
+using StreamSchedule.Data.Models;
 using TwitchLib.Client.Models;
 
 namespace StreamSchedule;
@@ -8,7 +10,7 @@ internal static class Utils
     internal static class Responses
     {
         internal static string Fail => "NOIDONTTHINKSO ";
-        internal static string Ok => "Ok ";
+        internal static string Ok => "ok ";
         internal static string Surprise => "oh ";
     }
 
@@ -34,6 +36,26 @@ internal static class Utils
             _ => "an alien "
         };
     }
+
+    internal static User SyncToDb(User u, ref DatabaseContext context)
+    {
+        User? uDb = context.Users.Find(u.Id);
+        if (uDb == null)
+        {
+            context.Users.Add(u);
+            uDb = u;
+        }
+        else
+        {
+            if(uDb.Username != u.Username)
+            {
+                context.Users.Update(uDb);
+                uDb.Username = u.Username;
+            }
+        }
+        context.SaveChanges();
+        return uDb;
+    }
 }
 
 public class UniversalMessageInfo
@@ -56,4 +78,10 @@ public class UniversalMessageInfo
         Username = whisperMessage.Username;
         UserId = whisperMessage.UserId;
     }
+}
+
+public class ChannelSlowmodeInfo
+{
+    public bool isLive = false;
+    public DateTime lastMessageSent;
 }

@@ -42,7 +42,7 @@ internal class AddStream : Command
                 s.StreamTime = stream.StreamTime;
                 s.StreamTitle = stream.StreamTitle;
             }
-            Console.WriteLine(Body.dbContext.SaveChanges());
+            Body.dbContext.SaveChanges();
         }
         catch (Exception e)
         {
