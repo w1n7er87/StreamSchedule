@@ -10,6 +10,6 @@ internal class Skin : Command
 
     internal override string Handle(UniversalMessageInfo message)
     {
-        return "@" + message.Username + " dokidokilolixx 2018-06-10";
+        return "dokidokilolixx 2018-06-10 ";
     }
 }

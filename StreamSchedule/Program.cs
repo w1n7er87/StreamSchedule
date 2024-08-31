@@ -29,17 +29,20 @@ public class Program
 
 internal class Body
 {
+    public static DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
+    
     private TwitchClient _client;
     private TwitchAPI _api;
     private LiveStreamMonitorService _monitor;
-    public static DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
-
-    private static readonly string _commandChars = "!$?";
-
-    private Dictionary<string, ChannelSlowmodeInfo> slow;
 
     public static List<Command?> currentCommands = [];
     public static int messagesIgnoreDelayMS = 350;
+
+    private static readonly string _commandChars = "!$?";
+
+    private Dictionary<string, ChannelSlowmodeInfo> _slow;
+
+    private bool _sameMessage = false;
 
     private async Task ConfigLiveMonitorAsync(string[] channelNames)
     {
@@ -85,22 +88,22 @@ internal class Body
                 currentCommands.Add((Command?)Activator.CreateInstance(c));
             }
         }
-        slow = [];
+        _slow = [];
         foreach (string channel in channelNames)
         {
-            slow[channel] = new();
+            _slow[channel] = new();
         }
     }
 
     private void OnLive(object? sender, OnStreamOnlineArgs args)
     {
-        slow[args.Channel].isLive = true;
+        _slow[args.Channel].isLive = true;
         Console.WriteLine($"{args.Channel} went live");
     }
 
     private void OnOffline(object? sender, OnStreamOfflineArgs args)
     {
-        slow[args.Channel].isLive = false;
+        _slow[args.Channel].isLive = false;
         Console.WriteLine($"{args.Channel} went offline");
     }
 
@@ -133,7 +136,7 @@ internal class Body
 
     private void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-        if (slow[e.ChatMessage.Channel].isLive) return;
+        if (_slow[e.ChatMessage.Channel].isLive) return;
 
         User u = new()
         {
@@ -144,7 +147,10 @@ internal class Body
 
         User userSent = Utils.SyncToDb(u, ref dbContext);
 
-        if (DateTime.Now - slow[e.ChatMessage.Channel].lastMessageSent < TimeSpan.FromMilliseconds(messagesIgnoreDelayMS)) return;
+        if (DateTime.Now - _slow[e.ChatMessage.Channel].lastMessageSent < TimeSpan.FromMilliseconds(messagesIgnoreDelayMS)) return;
+
+        string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
+
         if (_commandChars.Contains(e.ChatMessage.Message[0]))
         {
             foreach (var c in currentCommands)
@@ -154,11 +160,15 @@ internal class Body
                     if (userSent.privileges >= c.MinPrivilege)
                     {
                         string response = c.Handle(new(e.ChatMessage, userSent.privileges));
-                        Console.WriteLine(response);
-                        _client.SendMessage(e.ChatMessage.Channel, response);
-                        slow[e.ChatMessage.Channel].lastMessageSent = DateTime.Now;
+                        _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.Id, response + bypassSameMessage);
                     }
-                    else { _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action"); }
+                    else
+                    {
+                        _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
+                    }
+                    _sameMessage = !_sameMessage;
+                    _slow[e.ChatMessage.Channel].lastMessageSent = DateTime.Now;
+
                 }
             }
         }
