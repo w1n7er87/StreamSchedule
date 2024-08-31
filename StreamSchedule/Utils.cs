@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using StreamSchedule.Data;
+﻿using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using TwitchLib.Client.Models;
 
@@ -25,6 +24,7 @@ internal static class Utils
             _ => Privileges.None
         };
     }
+
     internal static string PrivilegeToString(Privileges p)
     {
         return p switch
@@ -47,7 +47,7 @@ internal static class Utils
         }
         else
         {
-            if(uDb.Username != u.Username)
+            if (uDb.Username != u.Username)
             {
                 context.Users.Update(uDb);
                 uDb.Username = u.Username;
@@ -64,14 +64,16 @@ public class UniversalMessageInfo
     public string Username;
     public string UserId;
     public Privileges Privileges;
-    public UniversalMessageInfo(ChatMessage chatMessage, Privileges userPrivileges) 
+
+    public UniversalMessageInfo(ChatMessage chatMessage, Privileges userPrivileges)
     {
         Privileges = userPrivileges;
         Message = chatMessage.Message;
         Username = chatMessage.Username;
         UserId = chatMessage.UserId;
     }
-    public UniversalMessageInfo(WhisperMessage whisperMessage, Privileges userPrivileges) 
+
+    public UniversalMessageInfo(WhisperMessage whisperMessage, Privileges userPrivileges)
     {
         Privileges = userPrivileges;
         Message = whisperMessage.Message;
