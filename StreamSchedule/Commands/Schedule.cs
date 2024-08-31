@@ -15,7 +15,7 @@ internal class Schedule : Command
         string response = "";
         foreach (var stream in streams)
         {
-            response += new DateTime(stream.StreamDate, stream.StreamTime).ToString("ddd") + " : " + stream.StreamTitle?[..Math.Min(20, stream.StreamTitle.Length)] + "  ";
+            response += new DateTime(stream.StreamDate, stream.StreamTime).ToString("ddd") + ": " + stream.StreamTitle?[..Math.Min(25, stream.StreamTitle.Length)] + ".  ";
         }
         return response;
     }

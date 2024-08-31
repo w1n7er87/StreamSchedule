@@ -17,7 +17,9 @@ internal class Today : Command
         }
         else
         {
-            return $"There is a {today.StreamTitle} stream today DinkDonk ";
+            DateTime fullDate = new DateTime(today.StreamDate, today.StreamTime);
+            TimeSpan span = fullDate - DateTime.Now;
+            return $"The {today.StreamTitle} is in {Math.Floor(span.TotalHours).ToString() + span.ToString("'h 'm'm 's's'")} DinkDonk ";
         }
     }
 }

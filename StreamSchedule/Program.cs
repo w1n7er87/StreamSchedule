@@ -35,7 +35,7 @@ internal class Body
     public static DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
 
     private static readonly string _commandChars = "!$?";
-    
+
     private Dictionary<string, ChannelSlowmodeInfo> slow;
 
     public static List<Command?> currentCommands = [];
@@ -97,12 +97,13 @@ internal class Body
         slow[args.Channel].isLive = true;
         Console.WriteLine($"{args.Channel} went live");
     }
-    
+
     private void OnOffline(object? sender, OnStreamOfflineArgs args)
     {
         slow[args.Channel].isLive = false;
         Console.WriteLine($"{args.Channel} went offline");
     }
+
     private void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
     {
         string r = "";
@@ -113,8 +114,8 @@ internal class Body
     private void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
     {
         Console.WriteLine("monitoring service stated");
-
     }
+
     private void Client_OnLog(object? sender, OnLogArgs e)
     {
         Console.WriteLine($"{e.DateTime.ToString()}: {e.BotUsername} - {e.Data}");
@@ -147,7 +148,7 @@ internal class Body
         if (_commandChars.Contains(e.ChatMessage.Message[0]))
         {
             foreach (var c in currentCommands)
-            { 
+            {
                 if (c != null && e.ChatMessage.Message[1..].Split(' ', 2)[0] == c.Call)
                 {
                     if (userSent.privileges >= c.MinPrivilege)

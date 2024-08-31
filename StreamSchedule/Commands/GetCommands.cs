@@ -13,8 +13,8 @@ internal class GetCommands : Command
         string response = "";
         foreach (var c in Body.currentCommands)
         {
-            if(c == null) {continue;}
-            if(c.MinPrivilege <= message.Privileges) { response += c.Call + ", "; }
+            if (c == null) { continue; }
+            if (c.MinPrivilege <= message.Privileges) { response += c.Call + ", "; }
         }
         return response[..^2] + ". ";
     }

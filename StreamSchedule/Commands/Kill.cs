@@ -1,6 +1,7 @@
 ﻿using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
+
 /// <summary>
 /// surely there will no problems if bot shuts down during db operations (actually Clueless )
 /// </summary>

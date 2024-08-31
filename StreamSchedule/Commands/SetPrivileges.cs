@@ -17,7 +17,7 @@ internal class SetPrivileges : Command
 
         if (target != null)
         {
-            if(target.privileges >= message.Privileges) { return Utils.Responses.Fail; }
+            if (target.privileges >= message.Privileges) { return Utils.Responses.Fail; }
             Body.dbContext.Users.Update(target);
             target.privileges = p;
             Body.dbContext.SaveChanges();
@@ -26,6 +26,6 @@ internal class SetPrivileges : Command
         else
         {
             return Utils.Responses.Surprise;
-        } 
+        }
     }
 }
