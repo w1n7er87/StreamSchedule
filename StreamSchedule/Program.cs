@@ -155,7 +155,7 @@ internal class Body
         {
             foreach (var c in currentCommands)
             {
-                if (c != null && e.ChatMessage.Message[1..].Split(' ', 2)[0] == c.Call)
+                if (c != null && e.ChatMessage.Message[1..].Split(' ', 2)[0].Equals(c.Call, StringComparison.CurrentCultureIgnoreCase))
                 {
                     if (userSent.privileges >= c.MinPrivilege)
                     {
