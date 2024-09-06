@@ -38,7 +38,7 @@ internal class Body
     public static List<Command?> currentCommands = [];
     public static int messagesIgnoreDelayMS = 350;
 
-    private static readonly string _commandChars = "!$?";
+    private static readonly string _commandChars = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.🫃‽？！‼⁉❢♯";
 
     private Dictionary<string, ChannelSlowmodeInfo> _slow;
 
@@ -64,7 +64,7 @@ internal class Body
         _api.Settings.AccessToken = Credentials.oauth;
         _api.Helix.Settings.ClientId = Credentials.clientID;
         _api.Helix.Settings.AccessToken = Credentials.oauth;
-        _monitor = new LiveStreamMonitorService(_api, 10);
+        _monitor = new LiveStreamMonitorService(_api, 5);
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
 
@@ -153,9 +153,11 @@ internal class Body
 
         if (_commandChars.Contains(e.ChatMessage.Message[0]))
         {
+            int idx = e.ChatMessage.Message[1].Equals(' ') ? 2 : 1;
+
             foreach (var c in currentCommands)
             {
-                if (c != null && e.ChatMessage.Message[1..].Split(' ', 2)[0].Equals(c.Call, StringComparison.CurrentCultureIgnoreCase))
+                if (c != null && e.ChatMessage.Message[idx..].Split(' ', 3)[0].Equals(c.Call, StringComparison.CurrentCultureIgnoreCase))
                 {
                     if (userSent.privileges >= c.MinPrivilege)
                     {
