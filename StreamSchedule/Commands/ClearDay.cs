@@ -17,7 +17,7 @@ internal class ClearDay : Command
         string[] split = message.Message.Split(' ');
         DateTime temp = new();
 
-        if (split.Length < 2 || !DateTime.TryParseExact(split[1], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
+        if (split.Length < 1 || !DateTime.TryParseExact(split[0], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
         {
             return Utils.Responses.Fail + "bad date ";
         }

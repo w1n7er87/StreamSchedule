@@ -14,8 +14,9 @@ internal class SetPrivileges : Command
     internal override string Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
-        Privileges p = Utils.ParsePrivilege(split[1]);
-        User? target = Body.dbContext.Users.SingleOrDefault(u => u.Username == split[2].ToLower().Replace("@", string.Empty));
+
+        Privileges p = Utils.ParsePrivilege(split[0]);
+        User? target = Body.dbContext.Users.SingleOrDefault(u => u.Username == split[1].ToLower().Replace("@", string.Empty));
 
         if (target != null)
         {

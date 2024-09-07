@@ -22,7 +22,7 @@ internal class Kill : Command
     internal override string Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
-        TimeSpan delay = split.Length > 1 ? TimeSpan.FromSeconds(Math.Min(1, int.Parse(message.Message.Split(' ')[1]))) : TimeSpan.FromSeconds(1);
+        TimeSpan delay = split.Length > 0 ? TimeSpan.FromSeconds(Math.Min(1, int.Parse(message.Message.Split(' ')[0]))) : TimeSpan.FromSeconds(1);
         Task.Run(() => KillTask(delay));
         return "buhbye ";
     }

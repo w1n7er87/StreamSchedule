@@ -15,11 +15,11 @@ internal class AddStream : Command
     internal override string Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(" ");
-        if (split.Length < 3) { return Utils.Responses.Fail; }
+        if (split.Length < 2) { return Utils.Responses.Fail; }
 
         DateTime temp = DateTime.Now;
 
-        if (!DateTime.TryParseExact(split[1], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
+        if (!DateTime.TryParseExact(split[0], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
         {
             return Utils.Responses.Fail + "bad date ";
         }
@@ -28,7 +28,7 @@ internal class AddStream : Command
         {
             StreamDate = DateOnly.FromDateTime(temp),
             StreamTime = TimeOnly.FromDateTime(temp),
-            StreamTitle = message.Message[(split[0].Length + split[1].Length + 2)..]
+            StreamTitle = message.Message[(split[0].Length + 1)..]
         };
 
         try

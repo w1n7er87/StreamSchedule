@@ -13,11 +13,11 @@ internal class Helps : Command
     internal override string Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
-        if (split.Length < 2) { return this.Help; }
+        if (split.Length < 1) { return this.Help; }
         foreach (Command? c in Body.currentCommands)
         {
             if (c == null) { continue; }
-            if (split[1] == c.Call) { return c.Help; }
+            if (split[0] == c.Call) { return c.Help; }
         }
         return this.Help;
     }

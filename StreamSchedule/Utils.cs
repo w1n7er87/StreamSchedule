@@ -65,18 +65,18 @@ public class UniversalMessageInfo
     public string UserId;
     public Privileges Privileges;
 
-    public UniversalMessageInfo(ChatMessage chatMessage, Privileges userPrivileges)
+    public UniversalMessageInfo(ChatMessage chatMessage, string commandTrimmedContent, Privileges senderPrivileges)
     {
-        Privileges = userPrivileges;
-        Message = chatMessage.Message;
+        Privileges = senderPrivileges;
+        Message = (commandTrimmedContent.Length > 1 && commandTrimmedContent[0].Equals(' '))? commandTrimmedContent[1..] : commandTrimmedContent;
         Username = chatMessage.Username;
         UserId = chatMessage.UserId;
     }
 
-    public UniversalMessageInfo(WhisperMessage whisperMessage, Privileges userPrivileges)
+    public UniversalMessageInfo(WhisperMessage whisperMessage, string commandTrimmedContent, Privileges senderPrivileges)
     {
-        Privileges = userPrivileges;
-        Message = whisperMessage.Message;
+        Privileges = senderPrivileges;
+        Message = (commandTrimmedContent.Length > 1 && commandTrimmedContent[0].Equals(' ')) ? commandTrimmedContent[1..] : commandTrimmedContent;
         Username = whisperMessage.Username;
         UserId = whisperMessage.UserId;
     }

@@ -166,7 +166,8 @@ internal class Body
                     if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) { return; }
                     if (userSent.privileges >= c.MinPrivilege)
                     {
-                        string response = c.Handle(new(e.ChatMessage, userSent.privileges));
+                        string trimmedMessage = e.ChatMessage.Message[(idx + c.Call.Length)..];
+                        string response = c.Handle(new(e.ChatMessage, trimmedMessage, userSent.privileges));
                         _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.Id, response + bypassSameMessage);
                     }
                     else
@@ -175,6 +176,8 @@ internal class Body
                     }
                     _sameMessage = !_sameMessage; 
                     c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
+
+                    break;
                 }
             }
         }
@@ -199,7 +202,8 @@ internal class Body
                 {
                     if (userSent.privileges >= c.MinPrivilege)
                     {
-                        string response = c.Handle(new(e.WhisperMessage, userSent.privileges));
+                        string trimmedMessage = e.WhisperMessage.Message[(c.Call.Length + 1)..];
+                        string response = c.Handle(new(e.WhisperMessage, trimmedMessage, userSent.privileges));
                         Console.WriteLine(response);
                         _client.SendWhisper(e.WhisperMessage.Username, response);
                     }
