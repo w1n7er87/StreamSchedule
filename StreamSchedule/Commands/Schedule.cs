@@ -7,6 +7,8 @@ internal class Schedule : Command
     internal override string Call => "schedule";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "show streams for the next week per day.";
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(1.1);
+    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
     internal override string Handle(UniversalMessageInfo message)
     {

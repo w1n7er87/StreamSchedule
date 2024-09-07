@@ -36,11 +36,10 @@ internal class Body
     private LiveStreamMonitorService _monitor;
 
     public static List<Command?> currentCommands = [];
-    public static int messagesIgnoreDelayMS = 350;
 
     private static readonly string _commandChars = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.🫃‽？！‼⁉❢♯";
 
-    private Dictionary<string, ChannelSlowmodeInfo> _slow;
+    private Dictionary<string, bool> _channelLiveState;
 
     private bool _sameMessage = false;
 
@@ -81,29 +80,34 @@ internal class Body
         _client.OnConnected += Client_OnConnected;
         _client.Connect();
 
+        _channelLiveState = [];
+        foreach (string channel in channelNames)
+        {
+            _channelLiveState[channel] = new();
+        }
+
         if (currentCommands.Count == 0)
         {
             foreach (var c in Commands.Commands.knownCommands)
             {
                 currentCommands.Add((Command?)Activator.CreateInstance(c));
+                foreach (string channel in channelNames)
+                {
+                    currentCommands[^1]?.LastUsedOnChannel.Add(channel, DateTime.Now); 
+                }
             }
-        }
-        _slow = [];
-        foreach (string channel in channelNames)
-        {
-            _slow[channel] = new();
         }
     }
 
     private void OnLive(object? sender, OnStreamOnlineArgs args)
     {
-        _slow[args.Channel].isLive = true;
+        _channelLiveState[args.Channel] = true;
         Console.WriteLine($"{args.Channel} went live");
     }
 
     private void OnOffline(object? sender, OnStreamOfflineArgs args)
     {
-        _slow[args.Channel].isLive = false;
+        _channelLiveState[args.Channel] = false;
         Console.WriteLine($"{args.Channel} went offline");
     }
 
@@ -136,7 +140,7 @@ internal class Body
 
     private void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-        if (_slow[e.ChatMessage.Channel].isLive) return;
+        if (_channelLiveState[e.ChatMessage.Channel]) return;
 
         User u = new()
         {
@@ -147,9 +151,9 @@ internal class Body
 
         User userSent = Utils.SyncToDb(u, ref dbContext);
 
-        if (DateTime.Now - _slow[e.ChatMessage.Channel].lastMessageSent < TimeSpan.FromMilliseconds(messagesIgnoreDelayMS)) return;
-
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
+
+        if (e.ChatMessage.Message.Length < 3) return;
 
         if (_commandChars.Contains(e.ChatMessage.Message[0]))
         {
@@ -159,6 +163,7 @@ internal class Body
             {
                 if (c != null && e.ChatMessage.Message[idx..].Split(' ', 3)[0].Equals(c.Call, StringComparison.CurrentCultureIgnoreCase))
                 {
+                    if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) { return; }
                     if (userSent.privileges >= c.MinPrivilege)
                     {
                         string response = c.Handle(new(e.ChatMessage, userSent.privileges));
@@ -168,9 +173,8 @@ internal class Body
                     {
                         _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
                     }
-                    _sameMessage = !_sameMessage;
-                    _slow[e.ChatMessage.Channel].lastMessageSent = DateTime.Now;
-
+                    _sameMessage = !_sameMessage; 
+                    c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
                 }
             }
         }

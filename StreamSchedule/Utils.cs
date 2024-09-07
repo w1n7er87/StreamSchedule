@@ -81,9 +81,3 @@ public class UniversalMessageInfo
         UserId = whisperMessage.UserId;
     }
 }
-
-public class ChannelSlowmodeInfo
-{
-    public bool isLive = false;
-    public DateTime lastMessageSent;
-}

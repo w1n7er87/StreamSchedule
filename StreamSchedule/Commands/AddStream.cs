@@ -7,6 +7,8 @@ internal class AddStream : Command
     internal override string Call => "sets";
     internal override Privileges MinPrivilege => Privileges.Mod;
     internal override string Help => "set new stream time or update given day: [date-time] (d-M-H-mm or dd-MM-H-mm) [stream title] (required)";
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(1.1);
+    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
     private readonly string[] inputPatterns = ["d-M-H-mm", "dd-MM-H-mm"];
 
