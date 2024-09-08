@@ -1,11 +1,10 @@
 ﻿using StreamSchedule.Data;
-using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
 namespace StreamSchedule.Commands;
 
 internal class UserInfo : Command
 {
-    internal override string Call => "WHOMEGALUL";
+    internal override string Call => "whomegalul";
     internal override Privileges MinPrivilege => Privileges.Trusted;
     internal override string Help => "user info: [username]";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
@@ -36,7 +35,7 @@ internal class UserInfo : Command
             try
             {
                 var a = idProvided ? await Body.main.api.Helix.Users.GetUsersAsync(ids: [userID.ToString()]) : await Body.main.api.Helix.Users.GetUsersAsync(logins: [targetUsername]);
-                User u = a.Users.Single();
+                TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users.Single();
                 userID = int.Parse(u.Id);
 
                 var emotes = await Body.main.api.Helix.Chat.GetChannelEmotesAsync(userID.ToString());
@@ -48,13 +47,30 @@ internal class UserInfo : Command
                 if (emotes.ChannelEmotes.Count() > 0)
                 {
                     emotesPerTier = emotes.ChannelEmotes.Count() + " emotes";
-                    emotesPerTier += " ("+ emotes.ChannelEmotes.Count(e => e.Tier == "1000") + " - T1; " +
-                        emotes.ChannelEmotes.Count(e => e.Tier == "2000") + " - T2; " +
-                        emotes.ChannelEmotes.Count(e => e.Tier == "3000") + " - T3)" ;
+                    emotesPerTier += " ("+ emotes.ChannelEmotes.Count(e => e.Tier == "1000") + "-T1; " +
+                        emotes.ChannelEmotes.Count(e => e.Tier == "2000") + "-T2; " +
+                        emotes.ChannelEmotes.Count(e => e.Tier == "3000") + "-T3; " +
+                        emotes.ChannelEmotes.Count(e => e.EmoteType == "follower") + "-Flw; " +
+                        emotes.ChannelEmotes.Count(e => e.EmoteType == "bitstier") + "-Bits;";
+
                 }
 
-                response = nameOrID + " " + u.BroadcasterType + " " + u.Type + " created: " + u.CreatedAt.ToString("dd/MM/yyyy")
-                    + ". " + emotesPerTier + " color: " + (color.Data.Single().Color.Equals("")? "not set" : color.Data.Single().Color);
+                Data.Models.User? dbData = Body.dbContext.Users.SingleOrDefault(x => x.Id == userID);
+                string aka = "";
+
+                if (dbData != null && dbData.PreviousUsernames != null && dbData.PreviousUsernames?.Count != 0) // im really not sure about this one ... 
+                {
+                    aka = "aka: ";
+                    foreach (string name in dbData.PreviousUsernames)
+                    {
+                        aka += name +", ";
+                    }
+                    aka = aka[..^2] + ". ";
+                }
+
+                response = nameOrID + " " + aka + u.Type + " created: " + u.CreatedAt.ToString("dd/MM/yyyy")
+                    + ". " + u.BroadcasterType + " " + emotesPerTier + " color: " + (color.Data.Single().Color.Equals("") ? "not set" : color.Data.Single().Color);
+
                 break;
             }
             catch(Exception ex)
