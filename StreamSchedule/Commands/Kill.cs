@@ -19,11 +19,16 @@ internal class Kill : Command
         Environment.Exit(0);
     }
 
-    internal override string Handle(UniversalMessageInfo message)
+    internal override Task<string> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
-        TimeSpan delay = split.Length > 0 ? TimeSpan.FromSeconds(Math.Min(1, int.Parse(message.Message.Split(' ')[0]))) : TimeSpan.FromSeconds(1);
+        int duration = 1;
+        if (split.Length > 0)
+        {
+            _ = int.TryParse(split[0], out duration);
+        }
+        TimeSpan delay = TimeSpan.FromSeconds(Math.Min(1, duration));
         Task.Run(() => KillTask(delay));
-        return "buhbye ";
+        return Task.FromResult("buhbye ");
     }
 }

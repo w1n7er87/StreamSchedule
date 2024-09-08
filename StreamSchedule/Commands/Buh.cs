@@ -10,9 +10,9 @@ internal class Buh : Command
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(1.1);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
-    internal override string Handle(UniversalMessageInfo message)
+    internal override Task<string> Handle(UniversalMessageInfo message)
     {
         int a = new Random().Next(101);
-        return a == 69 ? "buhblunt " : "buh ";
+        return Task.FromResult(a == 69 ? "buhblunt " : "buh ");
     }
 }

@@ -11,7 +11,7 @@ internal class SetPrivileges : Command
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(1.1);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
-    internal override string Handle(UniversalMessageInfo message)
+    internal override Task<string> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
 
@@ -20,15 +20,15 @@ internal class SetPrivileges : Command
 
         if (target != null)
         {
-            if (target.privileges >= message.Privileges) { return Utils.Responses.Fail; }
+            if (target.privileges >= message.Privileges) { return Task.FromResult(Utils.Responses.Fail); }
             Body.dbContext.Users.Update(target);
             target.privileges = p;
             Body.dbContext.SaveChanges();
-            return Utils.Responses.Ok + $"{target.Username} is now {Utils.PrivilegeToString(p)}";
+            return Task.FromResult(Utils.Responses.Ok + $"{target.Username} is now {Utils.PrivilegeToString(p)}");
         }
         else
         {
-            return Utils.Responses.Surprise;
+            return Task.FromResult(Utils.Responses.Surprise);
         }
     }
 }

@@ -10,18 +10,18 @@ internal class Today : Command
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(2);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
-    internal override string Handle(UniversalMessageInfo message)
+    internal override Task<string> Handle(UniversalMessageInfo message)
     {
         Data.Models.Stream? today = Body.dbContext.Streams.SingleOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.Now));
         if (today == null || new DateTime(today.StreamDate, today.StreamTime) < DateTime.Now)
         {
-            return "There is no stream today DinkDonk ";
+            return Task.FromResult("There is no stream today DinkDonk ");
         }
         else
         {
             DateTime fullDate = new DateTime(today.StreamDate, today.StreamTime);
             TimeSpan span = fullDate - DateTime.Now;
-            return $"The {today.StreamTitle} is in {Math.Floor(span.TotalHours).ToString() + span.ToString("'h 'm'm 's's'")} DinkDonk ";
+            return Task.FromResult($"The {today.StreamTitle} is in {Math.Floor(span.TotalHours).ToString() + span.ToString("'h 'm'm 's's'")} DinkDonk ");
         }
     }
 }

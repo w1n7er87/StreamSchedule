@@ -12,16 +12,16 @@ internal class AddStream : Command
 
     private readonly string[] inputPatterns = ["d-M-H-mm", "dd-MM-H-mm"];
 
-    internal override string Handle(UniversalMessageInfo message)
+    internal override Task<string> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(" ");
-        if (split.Length < 2) { return Utils.Responses.Fail; }
+        if (split.Length < 2) { return Task.FromResult(Utils.Responses.Fail); }
 
         DateTime temp = DateTime.Now;
 
         if (!DateTime.TryParseExact(split[0], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
         {
-            return Utils.Responses.Fail + "bad date ";
+            return Task.FromResult(Utils.Responses.Fail + "bad date ");
         }
 
         Data.Models.Stream stream = new()
@@ -49,9 +49,9 @@ internal class AddStream : Command
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return Utils.Responses.Fail;
+            return Task.FromResult(Utils.Responses.Fail);
         }
 
-        return Utils.Responses.Ok;
+        return Task.FromResult(Utils.Responses.Ok);
     }
 }

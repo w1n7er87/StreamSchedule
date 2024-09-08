@@ -10,7 +10,7 @@ internal class GetCommands : Command
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(1.1);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
-    internal override string Handle(UniversalMessageInfo message)
+    internal override Task<string> Handle(UniversalMessageInfo message)
     {
         string response = "";
         foreach (var c in Body.currentCommands)
@@ -18,6 +18,6 @@ internal class GetCommands : Command
             if (c == null) { continue; }
             if (c.MinPrivilege <= message.Privileges) { response += c.Call + ", "; }
         }
-        return response[..^2] + ". ";
+        return Task.FromResult(response[..^2] + ". ");
     }
 }

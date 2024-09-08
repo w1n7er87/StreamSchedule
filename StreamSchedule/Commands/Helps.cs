@@ -10,15 +10,15 @@ internal class Helps : Command
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(1.1);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
-    internal override string Handle(UniversalMessageInfo message)
+    internal override Task<string> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
-        if (split.Length < 1) { return this.Help; }
+        if (split.Length < 1) { return Task.FromResult(this.Help); }
         foreach (Command? c in Body.currentCommands)
         {
             if (c == null) { continue; }
-            if (split[0] == c.Call) { return c.Help; }
+            if (split[0] == c.Call) { return Task.FromResult(c.Help); }
         }
-        return this.Help;
+        return Task.FromResult(this.Help);
     }
 }

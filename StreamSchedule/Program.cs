@@ -22,7 +22,7 @@ public class Program
             new HostBuilder().Build().Run();
             return;
         }
-        Body b = new Body(["vedal987", "w1n7er", "streamschedule"]);
+        Body.main = new Body(["vedal987", "w1n7er", "streamschedule"]);
         Console.ReadLine();
     }
 }
@@ -30,9 +30,9 @@ public class Program
 internal class Body
 {
     public static DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
-    
+    public static Body main;
     private TwitchClient _client;
-    private TwitchAPI _api;
+    public TwitchAPI api;
     private LiveStreamMonitorService _monitor;
 
     public static List<Command?> currentCommands = [];
@@ -58,12 +58,12 @@ internal class Body
 
     public Body(string[] channelNames)
     {
-        _api = new TwitchAPI();
-        _api.Settings.ClientId = Credentials.clientID;
-        _api.Settings.AccessToken = Credentials.oauth;
-        _api.Helix.Settings.ClientId = Credentials.clientID;
-        _api.Helix.Settings.AccessToken = Credentials.oauth;
-        _monitor = new LiveStreamMonitorService(_api, 5);
+        api = new TwitchAPI();
+        api.Settings.ClientId = Credentials.clientID;
+        api.Settings.AccessToken = Credentials.oauth;
+        api.Helix.Settings.ClientId = Credentials.clientID;
+        api.Helix.Settings.AccessToken = Credentials.oauth;
+        _monitor = new LiveStreamMonitorService(api, 5);
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
 
@@ -76,7 +76,7 @@ internal class Body
         _client.OnLog += Client_OnLog;
         _client.OnJoinedChannel += Client_OnJoinedChannel;
         _client.OnMessageReceived += Client_OnMessageReceived;
-        _client.OnWhisperReceived += Client_OnWhisperReceived;
+        //_client.OnWhisperReceived += Client_OnWhisperReceivedAsync;
         _client.OnConnected += Client_OnConnected;
         _client.Connect();
 
@@ -138,7 +138,7 @@ internal class Body
         Console.WriteLine($"Joined {e.Channel.ToString()}");
     }
 
-    private void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
+    private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         if (_channelLiveState[e.ChatMessage.Channel]) return;
 
@@ -167,7 +167,7 @@ internal class Body
                     if (userSent.privileges >= c.MinPrivilege)
                     {
                         string trimmedMessage = e.ChatMessage.Message[(idx + c.Call.Length)..];
-                        string response = c.Handle(new(e.ChatMessage, trimmedMessage, userSent.privileges));
+                        string response = await c.Handle(new(e.ChatMessage, trimmedMessage, userSent.privileges));
                         _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.Id, response + bypassSameMessage);
                     }
                     else
@@ -183,33 +183,33 @@ internal class Body
         }
     }
 
-    private void Client_OnWhisperReceived(object? sender, OnWhisperReceivedArgs e)
-    {
-        User u = new()
-        {
-            Id = int.Parse(e.WhisperMessage.UserId),
-            Username = e.WhisperMessage.Username,
-            privileges = e.WhisperMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
-        };
+    //private async Task Client_OnWhisperReceivedAsync(object? sender, OnWhisperReceivedArgs e)
+    //{
+    //    User u = new()
+    //    {
+    //        Id = int.Parse(e.WhisperMessage.UserId),
+    //        Username = e.WhisperMessage.Username,
+    //        privileges = e.WhisperMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
+    //    };
 
-        User userSent = Utils.SyncToDb(u, ref dbContext);
+    //    User userSent = Utils.SyncToDb(u, ref dbContext);
 
-        if (_commandChars.Contains(e.WhisperMessage.Message[0]))
-        {
-            foreach (var c in currentCommands)
-            {
-                if (c != null && e.WhisperMessage.Message[1..].StartsWith(c.Call))
-                {
-                    if (userSent.privileges >= c.MinPrivilege)
-                    {
-                        string trimmedMessage = e.WhisperMessage.Message[(c.Call.Length + 1)..];
-                        string response = c.Handle(new(e.WhisperMessage, trimmedMessage, userSent.privileges));
-                        Console.WriteLine(response);
-                        _client.SendWhisper(e.WhisperMessage.Username, response);
-                    }
-                    else { _client.SendWhisper(e.WhisperMessage.Username, "✋ unauthorized action"); }
-                }
-            }
-        }
-    }
+    //    if (_commandChars.Contains(e.WhisperMessage.Message[0]))
+    //    {
+    //        foreach (var c in currentCommands)
+    //        {
+    //            if (c != null && e.WhisperMessage.Message[1..].StartsWith(c.Call))
+    //            {
+    //                if (userSent.privileges >= c.MinPrivilege)
+    //                {
+    //                    string trimmedMessage = e.WhisperMessage.Message[(c.Call.Length + 1)..];
+    //                    string response = await c.Handle(new(e.WhisperMessage, trimmedMessage, userSent.privileges));
+    //                    Console.WriteLine(response);
+    //                    _client.SendWhisper(e.WhisperMessage.Username, response);
+    //                }
+    //                else { _client.SendWhisper(e.WhisperMessage.Username, "✋ unauthorized action"); }
+    //            }
+    //        }
+    //    }
+    //}
 }

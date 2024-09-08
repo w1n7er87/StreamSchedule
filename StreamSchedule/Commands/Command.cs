@@ -10,5 +10,5 @@ internal abstract class Command
     internal abstract TimeSpan Cooldown { get; }
     internal abstract Dictionary<string, DateTime> LastUsedOnChannel { get; set; }
 
-    internal abstract string Handle(UniversalMessageInfo message);
+    internal abstract Task<string> Handle(UniversalMessageInfo message);
 }

@@ -10,7 +10,7 @@ namespace StreamSchedule.Commands
         internal override TimeSpan Cooldown => TimeSpan.FromSeconds(1.1);
         internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
-        internal override string Handle(UniversalMessageInfo message)
+        internal override Task<string> Handle(UniversalMessageInfo message)
         {
             var futureStreams = Body.dbContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.Now));
             Data.Models.Stream? next = null;
@@ -26,13 +26,13 @@ namespace StreamSchedule.Commands
 
             if (next == null)
             {
-                return "There is no more streams scheduled DinkDonk ";
+                return Task.FromResult("There is no more streams scheduled DinkDonk ");
             }
             else
             {
                 DateTime fullDate = new DateTime(next.StreamDate, next.StreamTime);
                 TimeSpan span = fullDate - DateTime.Now;
-                return $"Next stream is in {Math.Floor(span.TotalHours).ToString() + span.ToString("'h 'm'm 's's'")} : {next.StreamTitle}";
+                return Task.FromResult($"Next stream is in {Math.Floor(span.TotalHours).ToString() + span.ToString("'h 'm'm 's's'")} : {next.StreamTitle}");
             }
         }
     }

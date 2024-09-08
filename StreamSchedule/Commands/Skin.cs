@@ -10,8 +10,8 @@ internal class Skin : Command
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(5);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
-    internal override string Handle(UniversalMessageInfo message)
+    internal override Task<string> Handle(UniversalMessageInfo message)
     {
-        return "dokidokilolixx 2018-06-10 ";
+        return Task.FromResult("dokidokilolixx 2018-06-10 ");
     }
 }

@@ -12,27 +12,27 @@ internal class ClearDay : Command
 
     private readonly string[] inputPatterns = ["d-M-yy", "dd-MM-yy"];
 
-    internal override string Handle(UniversalMessageInfo message)
+    internal override Task<string> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
         DateTime temp = new();
 
         if (split.Length < 1 || !DateTime.TryParseExact(split[0], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
         {
-            return Utils.Responses.Fail + "bad date ";
+            return Task.FromResult(Utils.Responses.Fail + "bad date ");
         }
 
         Data.Models.Stream? interest = Body.dbContext.Streams.SingleOrDefault(s => s.StreamDate == DateOnly.FromDateTime(temp));
 
         if (interest == null)
         {
-            return "Nothing on that day.";
+            return Task.FromResult("Nothing on that day.");
         }
         else
         {
             Body.dbContext.Streams.Remove(interest);
             Body.dbContext.SaveChanges();
-            return Utils.Responses.Ok;
+            return Task.FromResult(Utils.Responses.Ok);
         }
     }
 }
