@@ -7,7 +7,7 @@ namespace StreamSchedule.Commands
         internal override string Call => "stream";
         internal override Privileges MinPrivilege => Privileges.None;
         internal override string Help => "time until next stream on the schedule.";
-        internal override TimeSpan Cooldown => TimeSpan.FromSeconds(1.1);
+        internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Medium);
         internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
         internal override Task<string> Handle(UniversalMessageInfo message)

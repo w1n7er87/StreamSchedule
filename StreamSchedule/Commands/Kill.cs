@@ -10,7 +10,7 @@ internal class Kill : Command
     internal override string Call => "kill";
     internal override Privileges MinPrivilege => Privileges.Mod;
     internal override string Help => "kill the bot: [time] (in seconds, optional)";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(1.1);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Minute);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
     private async Task KillTask(TimeSpan delay)

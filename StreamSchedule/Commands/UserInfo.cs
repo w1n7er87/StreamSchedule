@@ -8,7 +8,7 @@ internal class UserInfo : Command
     internal override string Call => "WHOMEGALUL";
     internal override Privileges MinPrivilege => Privileges.Trusted;
     internal override string Help => "user info: [username]";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(5);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
     internal override async Task<string> Handle(UniversalMessageInfo message)

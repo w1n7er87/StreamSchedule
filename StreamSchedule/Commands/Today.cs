@@ -7,7 +7,7 @@ internal class Today : Command
     internal override string Call => "today";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "check if there is a stream today.";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(2);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
     internal override Task<string> Handle(UniversalMessageInfo message)
