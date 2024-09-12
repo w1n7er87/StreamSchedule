@@ -1,6 +1,5 @@
 ﻿using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
-using TwitchLib.Client.Models;
 
 namespace StreamSchedule;
 
@@ -56,29 +55,5 @@ internal static class Utils
         }
         context.SaveChanges();
         return uDb;
-    }
-}
-
-public class UniversalMessageInfo
-{
-    public string Message;
-    public string Username;
-    public string UserId;
-    public Privileges Privileges;
-
-    public UniversalMessageInfo(ChatMessage chatMessage, string commandTrimmedContent, Privileges senderPrivileges)
-    {
-        Privileges = senderPrivileges;
-        Message = (commandTrimmedContent.Length > 1 && commandTrimmedContent[0].Equals(' '))? commandTrimmedContent[1..] : commandTrimmedContent;
-        Username = chatMessage.Username;
-        UserId = chatMessage.UserId;
-    }
-
-    public UniversalMessageInfo(WhisperMessage whisperMessage, string commandTrimmedContent, Privileges senderPrivileges)
-    {
-        Privileges = senderPrivileges;
-        Message = (commandTrimmedContent.Length > 1 && commandTrimmedContent[0].Equals(' ')) ? commandTrimmedContent[1..] : commandTrimmedContent;
-        Username = whisperMessage.Username;
-        UserId = whisperMessage.UserId;
     }
 }

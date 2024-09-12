@@ -35,13 +35,16 @@ internal class Body
     public TwitchAPI api;
     private LiveStreamMonitorService _monitor;
 
-    public static List<Command?> currentCommands = [];
+    public static List<Command?> CurrentCommands { get; private set; } = [];
 
-    private static readonly string _commandChars = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.🫃‽？！‼⁉❢♯";
+    private static readonly string _commandChars = "♿!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.🫃‽？！‼⁉❢♯";
 
     private Dictionary<string, bool> _channelLiveState;
 
     private bool _sameMessage = false;
+
+    public List<ChatMessage> MessageCache { get; private set; } = [];
+    private int _cacheSize = 300;
 
     private async Task ConfigLiveMonitorAsync(string[] channelNames)
     {
@@ -76,7 +79,6 @@ internal class Body
         _client.OnLog += Client_OnLog;
         _client.OnJoinedChannel += Client_OnJoinedChannel;
         _client.OnMessageReceived += Client_OnMessageReceived;
-        //_client.OnWhisperReceived += Client_OnWhisperReceivedAsync;
         _client.OnConnected += Client_OnConnected;
         _client.Connect();
 
@@ -86,14 +88,14 @@ internal class Body
             _channelLiveState[channel] = new();
         }
 
-        if (currentCommands.Count == 0)
+        if (CurrentCommands.Count == 0)
         {
             foreach (var c in Commands.Commands.knownCommands)
             {
-                currentCommands.Add((Command?)Activator.CreateInstance(c));
+                CurrentCommands.Add((Command?)Activator.CreateInstance(c));
                 foreach (string channel in channelNames)
                 {
-                    currentCommands[^1]?.LastUsedOnChannel.Add(channel, DateTime.Now); 
+                    CurrentCommands[^1]?.LastUsedOnChannel.Add(channel, DateTime.Now);
                 }
             }
         }
@@ -155,26 +157,42 @@ internal class Body
 
         if (e.ChatMessage.Message.Length < 3) return;
 
+        MessageCache.Add(e.ChatMessage);
+        if (MessageCache.Count > _cacheSize)
+        {
+            MessageCache.RemoveAt(0);
+        }
+
+        string? replyID = null;
+        string trimmedMessage = e.ChatMessage.Message;
+        if (e.ChatMessage.ChatReply != null)
+        {
+            replyID = e.ChatMessage.ChatReply.ParentMsgId;
+            trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2)..];
+        }
+
         if (_commandChars.Contains(e.ChatMessage.Message[0]))
         {
-            int idx = e.ChatMessage.Message[1].Equals(' ') ? 2 : 1;
+            int idx = trimmedMessage[1].Equals(' ') ? 2 : 1;
 
-            foreach (var c in currentCommands)
+            foreach (var c in CurrentCommands)
             {
-                if (c != null && e.ChatMessage.Message[idx..].Split(' ', 3)[0].Equals(c.Call, StringComparison.CurrentCultureIgnoreCase))
+                if (c != null && trimmedMessage[idx..].Split(' ', 3)[0].Equals(c.Call, StringComparison.CurrentCultureIgnoreCase))
                 {
                     if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) { return; }
+
                     if (userSent.privileges >= c.MinPrivilege)
                     {
-                        string trimmedMessage = e.ChatMessage.Message[(idx + c.Call.Length)..];
-                        string response = await c.Handle(new(e.ChatMessage, trimmedMessage, userSent.privileges));
+                        trimmedMessage = trimmedMessage[(idx + c.Call.Length)..];
+                        string response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
                         _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.Id, response + bypassSameMessage);
                     }
                     else
                     {
                         _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
                     }
-                    _sameMessage = !_sameMessage; 
+
+                    _sameMessage = !_sameMessage;
                     c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
 
                     break;
@@ -182,34 +200,4 @@ internal class Body
             }
         }
     }
-
-    //private async Task Client_OnWhisperReceivedAsync(object? sender, OnWhisperReceivedArgs e)
-    //{
-    //    User u = new()
-    //    {
-    //        Id = int.Parse(e.WhisperMessage.UserId),
-    //        Username = e.WhisperMessage.Username,
-    //        privileges = e.WhisperMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
-    //    };
-
-    //    User userSent = Utils.SyncToDb(u, ref dbContext);
-
-    //    if (_commandChars.Contains(e.WhisperMessage.Message[0]))
-    //    {
-    //        foreach (var c in currentCommands)
-    //        {
-    //            if (c != null && e.WhisperMessage.Message[1..].StartsWith(c.Call))
-    //            {
-    //                if (userSent.privileges >= c.MinPrivilege)
-    //                {
-    //                    string trimmedMessage = e.WhisperMessage.Message[(c.Call.Length + 1)..];
-    //                    string response = await c.Handle(new(e.WhisperMessage, trimmedMessage, userSent.privileges));
-    //                    Console.WriteLine(response);
-    //                    _client.SendWhisper(e.WhisperMessage.Username, response);
-    //                }
-    //                else { _client.SendWhisper(e.WhisperMessage.Username, "✋ unauthorized action"); }
-    //            }
-    //        }
-    //    }
-    //}
 }

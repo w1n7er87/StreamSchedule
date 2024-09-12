@@ -14,7 +14,7 @@ internal class Helps : Command
     {
         string[] split = message.Message.Split(' ');
         if (split.Length < 1) { return Task.FromResult(this.Help); }
-        foreach (Command? c in Body.currentCommands)
+        foreach (Command? c in Body.CurrentCommands)
         {
             if (c == null) { continue; }
             if (split[0] == c.Call) { return Task.FromResult(c.Help); }

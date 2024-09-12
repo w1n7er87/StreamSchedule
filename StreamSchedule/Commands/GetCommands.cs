@@ -13,7 +13,7 @@ internal class GetCommands : Command
     internal override Task<string> Handle(UniversalMessageInfo message)
     {
         string response = "";
-        foreach (var c in Body.currentCommands)
+        foreach (var c in Body.CurrentCommands)
         {
             if (c == null) { continue; }
             if (c.MinPrivilege <= message.Privileges) { response += c.Call + ", "; }
