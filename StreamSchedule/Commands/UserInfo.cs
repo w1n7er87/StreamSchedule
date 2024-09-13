@@ -83,7 +83,7 @@ internal class UserInfo : Command
                 }
 
                 response = nameOrID + " " + aka + u.Type + " created: " + u.CreatedAt.ToString("dd/MM/yyyy")
-                    + ". " + u.BroadcasterType + $"{followers.Total} followers " + emotesPerTier + " color: " + (color.Data.Single().Color.Equals("") ? "not set" : color.Data.Single().Color) +
+                    + ". " + u.BroadcasterType + $" {followers.Total} followers " + emotesPerTier + " color: " + (color.Data.Single().Color.Equals("") ? "not set" : color.Data.Single().Color) +
                     " " + isLive;
 
                 break;

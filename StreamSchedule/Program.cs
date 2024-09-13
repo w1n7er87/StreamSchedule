@@ -171,6 +171,8 @@ internal class Body
             trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2)..];
         }
 
+        if (trimmedMessage.Length <= 1) return;
+
         if (_commandChars.Contains(e.ChatMessage.Message[0]))
         {
             int idx = trimmedMessage[1].Equals(' ') ? 2 : 1;
@@ -185,7 +187,7 @@ internal class Body
                     {
                         trimmedMessage = trimmedMessage[(idx + c.Call.Length)..];
                         string response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
-                        _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.Id, response + bypassSameMessage);
+                        _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, response + bypassSameMessage);
                     }
                     else
                     {
