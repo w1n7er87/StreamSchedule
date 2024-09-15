@@ -130,6 +130,7 @@ internal class Body
 
     private void Client_OnLog(object? sender, OnLogArgs e)
     {
+        
         Console.WriteLine($"{e.DateTime.ToString()}: {e.BotUsername} - {e.Data}");
     }
 
@@ -198,6 +199,8 @@ internal class Body
                         trimmedMessage = trimmedMessage[(idx + c.Call.Length)..];
 
                         CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
+                        Console.WriteLine(trimmedMessage + " -- " + response);
+
                         if (!string.IsNullOrEmpty(response.ToString()))
                         {
                             if (response.reply)

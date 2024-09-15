@@ -119,7 +119,7 @@ internal class UserInfo : Command
             TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.SingleOrDefault();
             if (s != null)
             {
-                result = (p >= Privileges.Trusted) ? $"Now {s.Type} - {s.GameName} : \" {s.Title} \" with {s.ViewerCount} viewers." : $"live {s.GameName}";
+                result = (p >= Privileges.Trusted) ? $"Now {s.Type} : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers." : $"live {s.GameName}";
             }
             else
             {
@@ -140,8 +140,12 @@ internal class UserInfo : Command
             Data.Models.User? dbData = Body.dbContext.Users.SingleOrDefault(x => x.Id == int.Parse(user.Id));
 
             List<string>? previousUsernames = dbData?.PreviousUsernames;
-
-            float offlinerScore = Userscore.GetRatioAndScore(dbData!).score;
+            string offlinerScoreText = "";
+            if(dbData is not null)
+            {
+                float offlinerScore = Userscore.GetRatioAndScore(dbData!).score;
+                offlinerScoreText = $"offliner score: {offlinerScore}.";
+            }
 
             string aka = "";
             if (dbData != null && previousUsernames != null && previousUsernames.Count != 0)
@@ -154,7 +158,7 @@ internal class UserInfo : Command
                 aka = aka[..^2] + ". ";
             }
 
-            return $"{user.Type} {user.BroadcasterType} {user.Login} (id:{user.Id}) offliner score: {offlinerScore}. {aka}created: {user.CreatedAt:dd/MM/yyyy}";
+            return $"{user.Type} {user.BroadcasterType} {user.Login} {aka} (id:{user.Id}) {offlinerScoreText} created: {user.CreatedAt:dd/MM/yyyy}";
         }
         catch
         {
