@@ -1,6 +1,5 @@
 ﻿using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
-using System.Text;
 
 namespace StreamSchedule;
 
@@ -50,7 +49,7 @@ internal static class Utils
             if (uDb.Username != u.Username)
             {
                 context.Users.Update(uDb);
-                if(uDb.PreviousUsernames == null) uDb.PreviousUsernames = [];
+                if (uDb.PreviousUsernames == null) uDb.PreviousUsernames = [];
                 uDb.PreviousUsernames!.Append(uDb.Username);
                 uDb.Username = u.Username;
             }

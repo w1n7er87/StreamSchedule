@@ -33,8 +33,10 @@ internal class GetEmotesFromMessage : Command
         if (emotes.Count == 0) { return response; }
 
         HashSet<string> channels = [];
-        foreach (var emote in emotes)
+
+        for (int i = 0; i < emotes.Count; i++)
         {
+            Emote? emote = emotes[i];
             if ((Body.GlobalEmotes ?? []).Any(x => x.Id == emote.Id))
             {
                 channels.Add("twitch");

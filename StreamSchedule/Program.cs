@@ -146,7 +146,6 @@ internal class Body
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-
         User u = new()
         {
             Id = int.Parse(e.ChatMessage.UserId),
@@ -156,11 +155,10 @@ internal class Body
 
         User userSent = Utils.SyncToDb(u, ref dbContext);
 
-
         if (_channelLiveState[e.ChatMessage.Channel])
         {
             Utils.AddMessagesCounter(userSent, ref dbContext, 1);
-            return; 
+            return;
         }
 
         Utils.AddMessagesCounter(userSent, ref dbContext, 0, 1);

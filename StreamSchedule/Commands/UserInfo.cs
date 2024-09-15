@@ -39,7 +39,7 @@ internal class UserInfo : Command
 
             string followers = (await GetFollowers(u.Id)).ToString() + " followers";
             string emotes = await GetEmotes(u.Id);
-            string liveInfo = await GetLiveStatus(u.Id);
+            string liveInfo = await GetLiveStatus(u.Id, message.Privileges);
             string generalInfo = GetGeneralInfo(u);
             string color = await GetColor(u.Id);
 
@@ -108,7 +108,7 @@ internal class UserInfo : Command
         }
     }
 
-    private static async Task<string> GetLiveStatus(string userID)
+    private static async Task<string> GetLiveStatus(string userID, Privileges p)
     {
         try
         {
@@ -119,7 +119,7 @@ internal class UserInfo : Command
             TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.SingleOrDefault();
             if (s != null)
             {
-                result = $"Now {s.Type} : {s.Title} with {s.ViewerCount} viewers. ";
+                result = (p >= Privileges.Trusted) ? $"Now {s.Type} - {s.GameName} : \" {s.Title} \" with {s.ViewerCount} viewers." : $"live {s.GameName}";
             }
             else
             {
@@ -141,6 +141,8 @@ internal class UserInfo : Command
 
             List<string>? previousUsernames = dbData?.PreviousUsernames;
 
+            float offlinerScore = Userscore.GetRatioAndScore(dbData!).score;
+
             string aka = "";
             if (dbData != null && previousUsernames != null && previousUsernames.Count != 0)
             {
@@ -152,7 +154,7 @@ internal class UserInfo : Command
                 aka = aka[..^2] + ". ";
             }
 
-            return $"{user.Type} {user.BroadcasterType} {user.Login} (id:{user.Id}) {aka}created: {user.CreatedAt:dd/MM/yyyy}";
+            return $"{user.Type} {user.BroadcasterType} {user.Login} (id:{user.Id}) offliner score: {offlinerScore}. {aka}created: {user.CreatedAt:dd/MM/yyyy}";
         }
         catch
         {
