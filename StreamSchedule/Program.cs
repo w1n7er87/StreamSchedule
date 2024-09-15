@@ -146,7 +146,6 @@ internal class Body
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-        if (_channelLiveState[e.ChatMessage.Channel]) return;
 
         User u = new()
         {
@@ -156,6 +155,15 @@ internal class Body
         };
 
         User userSent = Utils.SyncToDb(u, ref dbContext);
+
+
+        if (_channelLiveState[e.ChatMessage.Channel])
+        {
+            Utils.AddMessagesCounter(userSent, ref dbContext, 1);
+            return; 
+        }
+
+        Utils.AddMessagesCounter(userSent, ref dbContext, 0, 1);
 
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 

@@ -59,6 +59,14 @@ internal static class Utils
         return uDb;
     }
 
+    internal static void AddMessagesCounter(User u, ref DatabaseContext context, int online = 0, int offline = 0)
+    {
+        context.Users.Update(u);
+        u.MessagesOnline += online;
+        u.MessagesOffline += offline;
+        context.SaveChanges();
+    }
+
     internal static string RetrieveArguments(string[] args, string input, out List<string> usedArgs)
     {
         usedArgs = [];
