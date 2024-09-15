@@ -50,7 +50,8 @@ internal static class Utils
             if (uDb.Username != u.Username)
             {
                 context.Users.Update(uDb);
-                uDb.PreviousUsernames?.Append(uDb.Username);
+                if(uDb.PreviousUsernames == null) uDb.PreviousUsernames = [];
+                uDb.PreviousUsernames!.Append(uDb.Username);
                 uDb.Username = u.Username;
             }
         }

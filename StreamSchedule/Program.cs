@@ -203,6 +203,7 @@ internal class Body
                                 _client.SendMessage(e.ChatMessage.Channel, (response + bypassSameMessage).ToString());
                             }
                         }
+                        else { return; }
                     }
                     else
                     {
