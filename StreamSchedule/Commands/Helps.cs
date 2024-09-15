@@ -9,16 +9,28 @@ internal class Helps : Command
     internal override string Help => "show command help: [command name] ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
+    internal override string[]? Arguments => null;
 
-    internal override Task<string> Handle(UniversalMessageInfo message)
+    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
-        if (split.Length < 1) { return Task.FromResult(this.Help); }
+        if (split.Length < 1) { return Task.FromResult(new CommandResult(this.Help)); }
         foreach (Command? c in Body.CurrentCommands)
         {
             if (c == null) { continue; }
-            if (split[0] == c.Call) { return Task.FromResult(c.Help); }
+
+            string a = "";
+            if (c.Arguments is not null)
+            {
+                a = " args: ";
+                foreach (string arg in c.Arguments)
+                {
+                    a += arg + " ";
+                }
+            }
+
+            if (split[0] == c.Call) { return Task.FromResult(new CommandResult(c.Help + a)); }
         }
-        return Task.FromResult(this.Help);
+        return Task.FromResult(new CommandResult(this.Help));
     }
 }

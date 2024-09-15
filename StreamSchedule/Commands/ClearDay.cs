@@ -9,10 +9,11 @@ internal class ClearDay : Command
     internal override string Help => "clear schedule for the given day: [date] (d-M-yy or dd-MM-yy)";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
+    internal override string[]? Arguments => null;
 
     private readonly string[] inputPatterns = ["d-M-yy", "dd-MM-yy"];
 
-    internal override Task<string> Handle(UniversalMessageInfo message)
+    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
         DateTime temp = new();
@@ -26,7 +27,7 @@ internal class ClearDay : Command
 
         if (interest == null)
         {
-            return Task.FromResult("Nothing on that day.");
+            return Task.FromResult(new CommandResult("Nothing on that day.", false));
         }
         else
         {

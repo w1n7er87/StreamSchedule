@@ -10,8 +10,9 @@ internal class SetPrivileges : Command
     internal override string Help => "set other user's privileges (who's privileges are < yours) to <= your privileges: [privilege](ban<ok<trusted<mod) [target](username, must be known user).";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
+    internal override string[]? Arguments => null;
 
-    internal override Task<string> Handle(UniversalMessageInfo message)
+    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
 

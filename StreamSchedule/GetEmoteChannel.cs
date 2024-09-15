@@ -13,7 +13,7 @@ namespace StreamSchedule
 
             if (response.StatusCode >= System.Net.HttpStatusCode.Redirect)
             {
-                result = (response.Headers.Location?.ToString().Split('/')[^1]) ?? Utils.Responses.Surprise;
+                result = (response.Headers.Location?.ToString().Split('/')[^1]) ?? "";
             }
 
             return result;

@@ -9,8 +9,9 @@ internal class GetCommands : Command
     internal override string Help => "show list of commands available to you. ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
+    internal override string[]? Arguments => null;
 
-    internal override Task<string> Handle(UniversalMessageInfo message)
+    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string response = "";
         foreach (var c in Body.CurrentCommands)
@@ -18,6 +19,6 @@ internal class GetCommands : Command
             if (c == null) { continue; }
             if (c.MinPrivilege <= message.Privileges) { response += c.Call + ", "; }
         }
-        return Task.FromResult(response[..^2] + ". ");
+        return Task.FromResult(new CommandResult(response[..^2] + ". "));
     }
 }

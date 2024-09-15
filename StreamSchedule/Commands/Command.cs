@@ -9,6 +9,7 @@ internal abstract class Command
     internal abstract string Help { get; }
     internal abstract TimeSpan Cooldown { get; }
     internal abstract Dictionary<string, DateTime> LastUsedOnChannel { get; set; }
+    internal abstract string[]? Arguments { get; }
 
-    internal abstract Task<string> Handle(UniversalMessageInfo message);
+    internal abstract Task<CommandResult> Handle(UniversalMessageInfo message);
 }

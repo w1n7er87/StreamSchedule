@@ -9,10 +9,11 @@ internal class AddStream : Command
     internal override string Help => "set new stream time or update given day: [date-time] (d-M-H-mm or dd-MM-H-mm) [stream title] (required)";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
+    internal override string[]? Arguments => null;
 
     private readonly string[] inputPatterns = ["d-M-H-mm", "dd-MM-H-mm"];
 
-    internal override Task<string> Handle(UniversalMessageInfo message)
+    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(" ");
         if (split.Length < 2) { return Task.FromResult(Utils.Responses.Fail); }

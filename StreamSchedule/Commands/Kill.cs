@@ -12,6 +12,7 @@ internal class Kill : Command
     internal override string Help => "kill the bot: [time] (in seconds, optional)";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Minute);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
+    internal override string[]? Arguments => null;
 
     private async Task KillTask(TimeSpan delay)
     {
@@ -19,7 +20,7 @@ internal class Kill : Command
         Environment.Exit(0);
     }
 
-    internal override Task<string> Handle(UniversalMessageInfo message)
+    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
         int duration = 1;
@@ -29,6 +30,6 @@ internal class Kill : Command
         }
         TimeSpan delay = TimeSpan.FromSeconds(Math.Min(1, duration));
         Task.Run(() => KillTask(delay));
-        return Task.FromResult("buhbye ");
+        return Task.FromResult(new CommandResult("buhbye ", false));
     }
 }

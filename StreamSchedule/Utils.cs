@@ -1,5 +1,6 @@
 ﻿using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
+using System.Text;
 
 namespace StreamSchedule;
 
@@ -7,9 +8,9 @@ internal static class Utils
 {
     internal static class Responses
     {
-        internal static string Fail => "NOIDONTTHINKSO ";
-        internal static string Ok => "ok ";
-        internal static string Surprise => "oh ";
+        internal static CommandResult Fail => new("NOIDONTTHINKSO ", false);
+        internal static CommandResult Ok => new("ok ", false);
+        internal static CommandResult Surprise => new("oh ", false);
     }
 
     internal static Privileges ParsePrivilege(string text)
@@ -55,5 +56,19 @@ internal static class Utils
         }
         context.SaveChanges();
         return uDb;
+    }
+
+    internal static string RetrieveArguments(string[] args, string input, out List<string> usedArgs)
+    {
+        usedArgs = [];
+        foreach (var arg in args)
+        {
+            if (input.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase))
+            {
+                input = input.Replace($"-{arg}", "", StringComparison.InvariantCultureIgnoreCase);
+                usedArgs.Add(arg.ToLower());
+            }
+        }
+        return input;
     }
 }

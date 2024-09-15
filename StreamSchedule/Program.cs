@@ -4,6 +4,7 @@ using StreamSchedule.Commands;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using TwitchLib.Api;
+using TwitchLib.Api.Helix.Models.Chat.Emotes;
 using TwitchLib.Api.Services;
 using TwitchLib.Api.Services.Events;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
@@ -37,7 +38,7 @@ internal class Body
 
     public static List<Command?> CurrentCommands { get; private set; } = [];
 
-    private static readonly string _commandChars = "♿!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.🫃‽？！‼⁉❢♯";
+    private static readonly string _commandChars = "♿!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.🫃‽？！‼⁉❢♯[]{}";
 
     private Dictionary<string, bool> _channelLiveState;
 
@@ -45,6 +46,8 @@ internal class Body
 
     public List<ChatMessage> MessageCache { get; private set; } = [];
     private int _cacheSize = 300;
+
+    public static GlobalEmote[]? GlobalEmotes { get; private set; }
 
     private async Task ConfigLiveMonitorAsync(string[] channelNames)
     {
@@ -133,6 +136,7 @@ internal class Body
     private void Client_OnConnected(object? sender, OnConnectedArgs e)
     {
         Console.WriteLine($"Connected {e.AutoJoinChannel}");
+        GlobalEmotes ??= api.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
     }
 
     private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
@@ -186,8 +190,19 @@ internal class Body
                     if (userSent.privileges >= c.MinPrivilege)
                     {
                         trimmedMessage = trimmedMessage[(idx + c.Call.Length)..];
-                        string response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
-                        _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, response + bypassSameMessage);
+
+                        CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
+                        if (!string.IsNullOrEmpty(response.ToString()))
+                        {
+                            if (response.reply)
+                            {
+                                _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, (response + bypassSameMessage).ToString());
+                            }
+                            else
+                            {
+                                _client.SendMessage(e.ChatMessage.Channel, (response + bypassSameMessage).ToString());
+                            }
+                        }
                     }
                     else
                     {

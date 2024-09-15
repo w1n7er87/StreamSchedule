@@ -9,15 +9,16 @@ internal class Schedule : Command
     internal override string Help => "show streams for the next week per day.";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
+    internal override string[]? Arguments => null;
 
-    internal override Task<string> Handle(UniversalMessageInfo message)
+    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        DateOnly inAWeek = DateOnly.FromDateTime(DateTime.Now + TimeSpan.FromDays(8));
+        DateOnly inAWeek = DateOnly.FromDateTime(DateTime.Now + TimeSpan.FromDays(7));
         var streams = Body.dbContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(DateTime.Now) && s.StreamDate <= inAWeek);
-        string response = "";
+        CommandResult response = new("");
         foreach (var stream in streams)
         {
-            response += new DateTime(stream.StreamDate, stream.StreamTime).ToString("ddd") + ": " + stream.StreamTitle?[..Math.Min(25, stream.StreamTitle.Length)] + ".  ";
+            response += new DateTime(stream.StreamDate, stream.StreamTime).ToString("ddd") + ": " + stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)] + ".  ";
         }
         return Task.FromResult(response);
     }
