@@ -12,10 +12,10 @@ internal class Userscore
 {
     public static RatioScore GetRatioAndScore(User u)
     {
-        int offline = u.MessagesOffline;
-        int online = u.MessagesOnline;
-        float ratio = (online == 0) ? 1 : MathF.Round(offline / (offline + online), 4);
-        float score = MathF.Round((MathF.Log(offline + 1) - MathF.Log10(online + 1)) * ratio, 4);
-        return new RatioScore(ratio, score);
+        int offline = (u.MessagesOffline == 0) ? 1 : u.MessagesOffline;
+        int online = (u.MessagesOnline == 0) ? 1 : u.MessagesOnline;
+        float ratio = offline / (offline + online);
+        float score = (MathF.Log(offline) - MathF.Log10(online)) * ratio;
+        return new RatioScore(MathF.Round(ratio, 4), MathF.Round(score, 4));
     }
 }
