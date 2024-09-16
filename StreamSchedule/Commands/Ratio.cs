@@ -20,12 +20,12 @@ internal class Ratio : Command
 
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
-            targetUsername = split[0].Replace("@", "");
+            targetUsername = split[0];
             result = new(targetUsername + "'s ");
         }
 
-        User? u = Body.dbContext.Users.SingleOrDefault(x => x.Username == targetUsername);
-        if (u is null)
+
+        if (!Utils.TryGetUser(targetUsername, out User u))
         {
             return Task.FromResult(Utils.Responses.Fail + " unknown user ");
         }

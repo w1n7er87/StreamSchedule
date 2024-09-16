@@ -13,6 +13,6 @@ internal class Time : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        return Task.FromResult(new CommandResult(DateTime.Now.ToString("ddd HH:mm:ss") + "BST. Latege ", false));
+        return Task.FromResult(new CommandResult(DateTime.Now.ToString("ddd HH:mm:ss") + " British . Latege ", false));
     }
 }

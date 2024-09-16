@@ -39,7 +39,7 @@ internal static class Utils
     internal static User SyncToDb(User u, ref DatabaseContext context)
     {
         User? uDb = context.Users.Find(u.Id);
-        if (uDb == null)
+        if (uDb is null)
         {
             context.Users.Add(u);
             uDb = u;
@@ -49,8 +49,8 @@ internal static class Utils
             if (uDb.Username != u.Username)
             {
                 context.Users.Update(uDb);
-                if (uDb.PreviousUsernames == null) uDb.PreviousUsernames = [];
-                uDb.PreviousUsernames!.Append(uDb.Username);
+                uDb.PreviousUsernames ??= [];
+                uDb.PreviousUsernames.Add(uDb.Username!);
                 uDb.Username = u.Username;
             }
         }
@@ -78,5 +78,16 @@ internal static class Utils
             }
         }
         return input;
+    }
+
+    internal static bool TryGetUser(string username, out User user, string? id = null)
+    {
+        username = username.ToLower().Replace("@", "");
+        if (string.IsNullOrEmpty(username)) { user = new User(); return false; }
+
+        User? u = Body.dbContext.Users.SingleOrDefault(x => (id == null) ? x.Username == username : x.Id == int.Parse(id));
+        user = u;
+        return true;
+
     }
 }

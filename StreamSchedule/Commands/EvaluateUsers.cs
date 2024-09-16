@@ -8,7 +8,7 @@ internal class EvaluateUsers : Command
     internal override string Call => "evaluate";
     internal override Privileges MinPrivilege => Privileges.Mod;
     internal override string Help => "evaluate user's scores and assign privileges accordingly: [username](optional) ";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Minute);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => ["s"];
 
@@ -20,7 +20,7 @@ internal class EvaluateUsers : Command
 
         string[] split = text.Split(' ');
         float scoreCutoff = DefaultCutoffScore;
-        string targetUsername = "";
+        string targetUsername;
         CommandResult result = new("");
 
         try
@@ -29,10 +29,9 @@ internal class EvaluateUsers : Command
             {
                 result += UpdateAll().ToString();
             }
-
-            if (split.Length >= 2) // had two things provided
+            else if (split.Length >= 2) // had two things provided
             {
-                targetUsername = split[0].Replace("@", ""); //assume first was username
+                targetUsername = split[0]; //assume first was username
 
                 if (usedArgs.Contains("s"))
                 {
@@ -49,7 +48,7 @@ internal class EvaluateUsers : Command
                 }
                 else
                 {
-                    targetUsername = split[0].Replace("@", ""); // if there was not argument used, assume it's a username
+                    targetUsername = split[0]; // if there was not argument used, assume it's a username
                     result += TryUpdateSingle(targetUsername, scoreCutoff) ? "1" : "0";
                 }
             }
@@ -76,7 +75,7 @@ internal class EvaluateUsers : Command
                 user.privileges = Privileges.Trusted;
                 count++;
             }
-            else if (user.privileges == Privileges.Trusted && score < cutoff)
+            else if (user.privileges == Privileges.Trusted && score <= cutoff)
             {
                 Body.dbContext.Update(user);
                 user.privileges = Privileges.None;
@@ -91,8 +90,7 @@ internal class EvaluateUsers : Command
     {
         cutoff ??= DefaultCutoffScore;
 
-        User? user = Body.dbContext.Users.SingleOrDefault(x => x.Username == username);
-        if (user is null) { return false; }
+        if (!Utils.TryGetUser(username, out User user)) { return false; }
 
         float score = Userscore.GetRatioAndScore(user).score;
         if (user.privileges < Privileges.Trusted && score >= cutoff)

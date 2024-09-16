@@ -131,7 +131,7 @@ internal class Body
     private void Client_OnLog(object? sender, OnLogArgs e)
     {
         
-        Console.WriteLine($"{e.DateTime.ToString()}: {e.BotUsername} - {e.Data}");
+        //Console.WriteLine($"{e.DateTime.ToString()}: {e.BotUsername} - {e.Data}");
     }
 
     private void Client_OnConnected(object? sender, OnConnectedArgs e)
@@ -196,7 +196,7 @@ internal class Body
 
                     if (userSent.privileges >= c.MinPrivilege)
                     {
-                        trimmedMessage = trimmedMessage[(idx + c.Call.Length)..];
+                        trimmedMessage = trimmedMessage[(idx + c.Call.Length)..].Replace("\U000e0000", "");
 
                         CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
                         Console.WriteLine(trimmedMessage + " -- " + response);

@@ -17,19 +17,18 @@ internal class SetPrivileges : Command
         string[] split = message.Message.Split(' ');
 
         Privileges p = Utils.ParsePrivilege(split[0]);
-        User? target = Body.dbContext.Users.SingleOrDefault(u => u.Username == split[1].ToLower().Replace("@", string.Empty));
 
-        if (target != null)
-        {
-            if (target.privileges >= message.Privileges) { return Task.FromResult(Utils.Responses.Fail); }
-            Body.dbContext.Users.Update(target);
-            target.privileges = p;
-            Body.dbContext.SaveChanges();
-            return Task.FromResult(Utils.Responses.Ok + $"{target.Username} is now {Utils.PrivilegeToString(p)}");
-        }
-        else
+        if (!Utils.TryGetUser(split[1], out User target))
         {
             return Task.FromResult(Utils.Responses.Surprise);
         }
+
+        if (target.privileges >= message.Privileges) { return Task.FromResult(Utils.Responses.Fail); }
+
+        Body.dbContext.Users.Update(target);
+        target.privileges = p;
+        Body.dbContext.SaveChanges();
+
+        return Task.FromResult(Utils.Responses.Ok + $"{target.Username} is now {Utils.PrivilegeToString(p)}");
     }
 }

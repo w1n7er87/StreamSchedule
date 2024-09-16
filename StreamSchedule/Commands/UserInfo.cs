@@ -1,4 +1,5 @@
 ﻿using StreamSchedule.Data;
+using StreamSchedule.Data.Models;
 
 namespace StreamSchedule.Commands;
 
@@ -137,18 +138,19 @@ internal class UserInfo : Command
     {
         try
         {
-            Data.Models.User? dbData = Body.dbContext.Users.SingleOrDefault(x => x.Id == int.Parse(user.Id));
+            if(!Utils.TryGetUser("lorem ipsum dolor sit amet ", out User dbData, user.Id))
+            {
+                return Utils.Responses.Surprise.ToString();
+            }
 
             List<string>? previousUsernames = dbData?.PreviousUsernames;
             string offlinerScoreText = "";
-            if(dbData is not null)
-            {
-                float offlinerScore = Userscore.GetRatioAndScore(dbData!).score;
-                offlinerScoreText = $"offliner score: {offlinerScore}.";
-            }
+
+            float offlinerScore = Userscore.GetRatioAndScore(dbData!).score;
+            offlinerScoreText = $"offliner score: {offlinerScore}.";
 
             string aka = "";
-            if (dbData != null && previousUsernames != null && previousUsernames.Count != 0)
+            if (previousUsernames is not null && previousUsernames.Count != 0)
             {
                 aka = "aka: ";
                 foreach (string name in previousUsernames)

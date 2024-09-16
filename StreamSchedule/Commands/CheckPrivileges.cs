@@ -19,11 +19,13 @@ internal class CheckPrivileges : Command
 
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
-            targetUsername = split[0].Replace("@", "");
+            targetUsername = split[0];
         }
 
-        User? u = Body.dbContext.Users.SingleOrDefault(x => x.Username == targetUsername);
-        if (u is null) { return Task.FromResult(Utils.Responses.Fail); }
+        if (!Utils.TryGetUser(targetUsername, out User u)) 
+        {
+            return Task.FromResult(Utils.Responses.Fail);
+        }
 
         return Task.FromResult(new CommandResult($"{targetUsername} is {Utils.PrivilegeToString(u.privileges)}", false));
     }
