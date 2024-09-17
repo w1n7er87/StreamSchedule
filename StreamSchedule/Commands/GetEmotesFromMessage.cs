@@ -47,7 +47,7 @@ internal class GetEmotesFromMessage : Command
 
         foreach (var channel in channels)
         {
-            response += "@" + channel + " ";
+            if(!string.IsNullOrWhiteSpace(channel)) response += "@" + channel + " ";
         }
 
         return response;

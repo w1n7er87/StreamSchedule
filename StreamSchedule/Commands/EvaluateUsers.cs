@@ -6,7 +6,7 @@ namespace StreamSchedule.Commands;
 internal class EvaluateUsers : Command
 {
     internal override string Call => "evaluate";
-    internal override Privileges MinPrivilege => Privileges.Mod;
+    internal override Privileges MinPrivilege => Privileges.Uuh;
     internal override string Help => "evaluate user's scores and assign privileges accordingly: [username](optional) ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];

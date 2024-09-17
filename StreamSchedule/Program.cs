@@ -199,7 +199,8 @@ internal class Body
                         trimmedMessage = trimmedMessage[(idx + c.Call.Length)..].Replace("\U000e0000", "");
 
                         CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
-                        Console.WriteLine(trimmedMessage + " -- " + response);
+                        
+                        Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 
                         if (!string.IsNullOrEmpty(response.ToString()))
                         {

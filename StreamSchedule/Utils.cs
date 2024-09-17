@@ -32,6 +32,7 @@ internal static class Utils
             Privileges.None => "a regular",
             Privileges.Trusted => "a VIP",
             Privileges.Mod => "a mod MONKA ",
+            Privileges.Uuh => "a uuh ",
             _ => "an alien "
         };
     }
@@ -83,11 +84,14 @@ internal static class Utils
     internal static bool TryGetUser(string username, out User user, string? id = null)
     {
         username = username.ToLower().Replace("@", "");
+
         if (string.IsNullOrEmpty(username)) { user = new User(); return false; }
 
         User? u = Body.dbContext.Users.SingleOrDefault(x => (id == null) ? x.Username == username : x.Id == int.Parse(id));
+
+        if(u is null) {  user = new User(); return false; }
+
         user = u;
         return true;
-
     }
 }

@@ -38,15 +38,16 @@ internal class UserInfo : Command
             var a = idProvided ? await Body.main.api.Helix.Users.GetUsersAsync(ids: [userIDnumber.ToString()]) : await Body.main.api.Helix.Users.GetUsersAsync(logins: [targetUsername]);
             TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users.Single();
 
+            string generalInfo = GetGeneralInfo(u);
+
+            if (usedArgs.Count == 0) { return generalInfo; }
+
+            string color = await GetColor(u.Id);
             string followers = (await GetFollowers(u.Id)).ToString() + " followers";
             string emotes = await GetEmotes(u.Id);
             string liveInfo = await GetLiveStatus(u.Id, message.Privileges);
-            string generalInfo = GetGeneralInfo(u);
-            string color = await GetColor(u.Id);
 
             if (usedArgs.Contains("a")) { return new($"{generalInfo} | {color} | {followers} | {emotes} | {liveInfo}"); }
-
-            if (usedArgs.Count == 0) { return generalInfo; }
 
             if (usedArgs.Contains("g")) { response += generalInfo + " "; }
 
