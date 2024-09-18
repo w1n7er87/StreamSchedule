@@ -14,7 +14,7 @@ internal class UserInfo : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Utils.RetrieveArguments(Arguments!, message.Message, out List<string> usedArgs);
+        string text = Utils.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
         string[] split = text.Split(' ');
         CommandResult response = new("");
 
@@ -46,17 +46,17 @@ internal class UserInfo : Command
             string emotes = await GetEmotes(u.Id);
             string liveInfo = await GetLiveStatus(u.Id, message.Privileges);
 
-            if (usedArgs.Contains("a")) { return new($"{generalInfo} | {color} | {followers} | {emotes} | {liveInfo}"); }
+            if (usedArgs.TryGetValue("a", out _)) { return new($"{generalInfo} | {color} | {followers} | {emotes} | {liveInfo}"); }
 
-            if (usedArgs.Contains("g")) { response += generalInfo + " "; }
+            if (usedArgs.TryGetValue("g", out _)) { response += generalInfo + " "; }
 
-            if (usedArgs.Contains("c")) { response += color + " "; }
+            if (usedArgs.TryGetValue("c", out _)) { response += color + " "; }
 
-            if (usedArgs.Contains("f")) { response += followers + " "; }
+            if (usedArgs.TryGetValue("f", out _)) { response += followers + " "; }
 
-            if (usedArgs.Contains("e")) { response += emotes + " "; }
+            if (usedArgs.TryGetValue("e", out _)) { response += emotes + " "; }
 
-            if (usedArgs.Contains("s")) { response += liveInfo + " "; }
+            if (usedArgs.TryGetValue("s", out _)) { response += liveInfo + " "; }
 
             return response;
         }
@@ -153,7 +153,7 @@ internal class UserInfo : Command
             if (isKnown)
             {
                 offlinerScoreText = $"offliner score: {Userscore.GetRatioAndScore(dbData!).score}.";
-            
+
                 List<string>? previousUsernames = dbData.PreviousUsernames;
                 if (previousUsernames is not null && previousUsernames.Count != 0)
                 {

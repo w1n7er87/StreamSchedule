@@ -16,10 +16,12 @@ internal class EvaluateUsers : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Utils.RetrieveArguments(Arguments!, message.Message, out List<string> usedArgs);
+        string text = Utils.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
 
         string[] split = text.Split(' ');
-        float scoreCutoff = DefaultCutoffScore;
+
+        float scoreCutoff = usedArgs.TryGetValue("s", out string? cutoff) ? float.TryParse(cutoff, out scoreCutoff) ? scoreCutoff : DefaultCutoffScore : DefaultCutoffScore;
+
         string targetUsername;
         CommandResult result = new("");
 
@@ -27,30 +29,13 @@ internal class EvaluateUsers : Command
         {
             if (string.IsNullOrWhiteSpace(split[0])) // nothing provided - run on all with default cutoff
             {
-                result += UpdateAll().ToString();
+                result += UpdateAll(scoreCutoff).ToString();
             }
-            else if (split.Length >= 2) // had two things provided
+            else // had something? assume it's a username
             {
-                targetUsername = split[0]; //assume first was username
+                targetUsername = split[0];
 
-                if (usedArgs.Contains("s"))
-                {
-                    _ = float.TryParse(split[1], out scoreCutoff); //if the second thing actually was an argument - try parse the second thing as value
-                }
                 result += TryUpdateSingle(targetUsername, scoreCutoff) ? "1" : "0";
-            }
-            else // but if had less then 2 things provided
-            {
-                if (usedArgs.Contains("s")) // if an argument was used - the only thing that's left should be the number
-                {
-                    _ = float.TryParse(split[0], out scoreCutoff); // try parse it
-                    result += UpdateAll().ToString();
-                }
-                else
-                {
-                    targetUsername = split[0]; // if there was not argument used, assume it's a username
-                    result += TryUpdateSingle(targetUsername, scoreCutoff) ? "1" : "0";
-                }
             }
             return Task.FromResult(result + " user('s) updated");
         }
@@ -61,9 +46,8 @@ internal class EvaluateUsers : Command
         }
     }
 
-    private int UpdateAll(float? cutoff = null)
+    private int UpdateAll(float cutoff)
     {
-        cutoff ??= DefaultCutoffScore;
         int count = 0;
         List<User> users = [.. Body.dbContext.Users];
         foreach (var user in users)
@@ -86,10 +70,8 @@ internal class EvaluateUsers : Command
         return count;
     }
 
-    private bool TryUpdateSingle(string username, float? cutoff = null)
+    private bool TryUpdateSingle(string username, float cutoff)
     {
-        cutoff ??= DefaultCutoffScore;
-
         if (!Utils.TryGetUser(username, out User user)) { return false; }
 
         float score = Userscore.GetRatioAndScore(user).score;

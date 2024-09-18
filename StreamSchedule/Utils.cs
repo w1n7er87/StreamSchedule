@@ -67,15 +67,20 @@ internal static class Utils
         context.SaveChanges();
     }
 
-    internal static string RetrieveArguments(string[] args, string input, out List<string> usedArgs)
+    internal static string RetrieveArguments(string[] args, string input, out Dictionary<string, string> usedArgs)
     {
         usedArgs = [];
-        foreach (var arg in args)
+        string[] split = input.Split(' ');
+
+        foreach (string ss in split)
         {
-            if (input.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase))
+            foreach (var arg in args)
             {
-                input = input.Replace($"-{arg}", "", StringComparison.InvariantCultureIgnoreCase);
-                usedArgs.Add(arg.ToLower());
+                if (ss.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "");
+                    input = input.Replace(ss, "", StringComparison.InvariantCultureIgnoreCase);
+                }
             }
         }
         return input;
@@ -89,7 +94,7 @@ internal static class Utils
 
         User? u = Body.dbContext.Users.SingleOrDefault(x => (id == null) ? x.Username == username : x.Id == int.Parse(id));
 
-        if(u is null) {  user = new User(); return false; }
+        if (u is null) { user = new User(); return false; }
 
         user = u;
         return true;
