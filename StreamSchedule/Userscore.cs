@@ -14,7 +14,7 @@ internal class Userscore
     {
         int offline = Math.Max(1, u.MessagesOffline);
         int online = Math.Max(1, u.MessagesOnline);
-        float ratio = (float)offline / ((float)offline + (float)online);
+        float ratio = (float)offline / (offline + online);
         float score = (MathF.Log((float)offline) - MathF.Log10((float)online)) * ratio;
 
         return new RatioScore(ratio, score);

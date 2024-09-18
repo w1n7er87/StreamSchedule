@@ -6,7 +6,7 @@ namespace StreamSchedule.Commands;
 internal class SetPrivileges : Command
 {
     internal override string Call => "setp";
-    internal override Privileges MinPrivilege => Privileges.Trusted;
+    internal override Privileges MinPrivilege => Privileges.Mod;
     internal override string Help => "set other user's privileges (who's privileges are < yours) to <= your privileges: [privilege](ban<ok<trusted<mod) [target](username, must be known user).";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];

@@ -15,7 +15,6 @@ internal class UserInfo : Command
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string text = Utils.RetrieveArguments(Arguments!, message.Message, out List<string> usedArgs);
-        Console.WriteLine(text);
         string[] split = text.Split(' ');
         CommandResult response = new("");
 
@@ -91,8 +90,9 @@ internal class UserInfo : Command
             }
             return result;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine(ex.ToString());
             return Utils.Responses.Surprise.ToString();
         }
     }
@@ -104,8 +104,9 @@ internal class UserInfo : Command
             var color = await Body.main.api.Helix.Chat.GetUserChatColorAsync([userID]);
             return color.Data.Single().Color.Equals("") ? "color not set" : color.Data.Single().Color;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine(ex.ToString());
             return Utils.Responses.Surprise.ToString();
         }
     }
@@ -129,8 +130,9 @@ internal class UserInfo : Command
             }
             return result;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine(ex.ToString());
             return Utils.Responses.Surprise.ToString();
         }
     }
@@ -139,32 +141,36 @@ internal class UserInfo : Command
     {
         try
         {
-            if(!Utils.TryGetUser("lorem ipsum dolor sit amet ", out User dbData, user.Id))
+            bool isKnown = true;
+            if (!Utils.TryGetUser("lorem", out User dbData, user.Id))
             {
-                return Utils.Responses.Surprise.ToString();
+                isKnown = false;
             }
 
-            List<string>? previousUsernames = dbData?.PreviousUsernames;
             string offlinerScoreText = "";
-
-            float offlinerScore = Userscore.GetRatioAndScore(dbData!).score;
-            offlinerScoreText = $"offliner score: {offlinerScore}.";
-
             string aka = "";
-            if (previousUsernames is not null && previousUsernames.Count != 0)
+
+            if (isKnown)
             {
-                aka = "aka: ";
-                foreach (string name in previousUsernames)
+                offlinerScoreText = $"offliner score: {Userscore.GetRatioAndScore(dbData!).score}.";
+            
+                List<string>? previousUsernames = dbData.PreviousUsernames;
+                if (previousUsernames is not null && previousUsernames.Count != 0)
                 {
-                    aka += name + ", ";
+                    aka = "aka: ";
+                    foreach (string name in previousUsernames)
+                    {
+                        aka += name + ", ";
+                    }
+                    aka = aka[..^2] + ". ";
                 }
-                aka = aka[..^2] + ". ";
             }
 
             return $"{user.Type} {user.BroadcasterType} {user.Login} {aka} (id:{user.Id}) {offlinerScoreText} created: {user.CreatedAt:dd/MM/yyyy}";
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine(ex.ToString());
             return Utils.Responses.Surprise.ToString();
         }
     }

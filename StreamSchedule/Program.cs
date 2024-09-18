@@ -206,7 +206,7 @@ internal class Body
                         {
                             if (response.reply)
                             {
-                                _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, (response + bypassSameMessage).ToString());
+                                _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, (response.ToString().Replace('9','*') + bypassSameMessage).ToString());
                             }
                             else
                             {
