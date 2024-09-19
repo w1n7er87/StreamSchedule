@@ -5,7 +5,7 @@ namespace StreamSchedule.Commands;
 
 internal class Ratio : Command
 {
-    internal override string Call => "ratio";
+    internal override string Call => "score";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "show user offline/online chat ratio and offliner score: [username] ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);

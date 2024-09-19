@@ -147,13 +147,10 @@ internal class UserInfo : Command
                 isKnown = false;
             }
 
-            string offlinerScoreText = "";
             string aka = "";
 
             if (isKnown)
             {
-                offlinerScoreText = $"offliner score: {Userscore.GetRatioAndScore(dbData!).score}.";
-
                 List<string>? previousUsernames = dbData.PreviousUsernames;
                 if (previousUsernames is not null && previousUsernames.Count != 0)
                 {
@@ -166,7 +163,7 @@ internal class UserInfo : Command
                 }
             }
 
-            return $"{user.Type} {user.BroadcasterType} {user.Login} {aka} (id:{user.Id}) {offlinerScoreText} created: {user.CreatedAt:dd/MM/yyyy}";
+            return $"{user.Type} {user.BroadcasterType} {user.Login} {aka} (id:{user.Id}) created: {user.CreatedAt:dd/MM/yyyy}";
         }
         catch (Exception ex)
         {
