@@ -19,6 +19,11 @@ internal class GetCommands : Command
             if (c == null) { continue; }
             if (c.MinPrivilege <= message.Privileges) { response += c.Call + ", "; }
         }
+        foreach (var c in Body.dbContext.TextCommands)
+        {
+            if (c == null) { continue; }
+            if (c.Privileges <= message.Privileges) { response += c.Name + ", "; }
+        }
         return Task.FromResult(new CommandResult(response[..^2] + ". "));
     }
 }
