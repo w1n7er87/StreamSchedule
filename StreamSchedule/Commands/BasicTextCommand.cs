@@ -7,7 +7,7 @@ internal class BasicTextCommand : Command
 {
     internal override string Call => "cmd";
     internal override Privileges MinPrivilege => Privileges.Mod;
-    internal override string Help => "manage simple text commands: [command name](required) [command content](required) ";
+    internal override string Help => "manage simple text commands: -add/-rm (-p[priv] optional) [command name](required) [command content](required) ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => ["add", "rm", "p"];
@@ -23,14 +23,13 @@ internal class BasicTextCommand : Command
 
         if(commandName.Length < 2) return Task.FromResult(Utils.Responses.Fail + (" command name should be 2 characters or longer "));
 
-
         if (usedArguments.TryGetValue("add", out string? _))
         {
             if (string.IsNullOrEmpty(text)) return Task.FromResult(Utils.Responses.Fail + (" no content provided "));
 
             if (commands.Count > 0)
             {
-                if (commands.FirstOrDefault(x => x.Name.Equals(commandName)) is not null)
+                if (commands.FirstOrDefault(x => x.Name.Equals(commandName)) is not null || Body.CurrentCommands.Any(x => x?.Call == commandName))
                 {
                     return Task.FromResult(Utils.Responses.Fail + " command with this name already exists. ");
                 }

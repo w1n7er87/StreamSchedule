@@ -202,6 +202,7 @@ internal class Body
                 {
                     if (command.Name.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))
                     {
+                        if (command.Privileges > userSent.privileges) return;
                         Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{command.Name}]:[{trimmedMessage}] - [{command.Content}] ");
                         _client.SendMessage(e.ChatMessage.Channel, (command.Content + bypassSameMessage).ToString());
                         _sameMessage = !_sameMessage;
