@@ -35,7 +35,7 @@ internal class UserInfo : Command
         try
         {
             var a = idProvided ? await Body.main.api.Helix.Users.GetUsersAsync(ids: [userIDnumber.ToString()]) : await Body.main.api.Helix.Users.GetUsersAsync(logins: [targetUsername]);
-            TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users.Single();
+            TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users.First();
 
             string generalInfo = GetGeneralInfo(u);
 
@@ -102,7 +102,7 @@ internal class UserInfo : Command
         try
         {
             var color = await Body.main.api.Helix.Chat.GetUserChatColorAsync([userID]);
-            return color.Data.Single().Color.Equals("") ? "color not set" : color.Data.Single().Color;
+            return color.Data.First().Color.Equals("") ? "color not set" : color.Data.First().Color;
         }
         catch (Exception ex)
         {
@@ -119,7 +119,7 @@ internal class UserInfo : Command
 
             var liveStatus = await Body.main.api.Helix.Streams.GetStreamsAsync(userIds: [userID]);
 
-            TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.SingleOrDefault();
+            TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.FirstOrDefault();
             if (s != null)
             {
                 result = (p >= Privileges.Trusted) ? $"Now {s.Type} : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers." : $"live {s.GameName}";

@@ -5,7 +5,7 @@ namespace StreamSchedule.Commands;
 internal class Top : Command
 {
     internal override string Call => "top";
-    internal override Privileges MinPrivilege => Privileges.Trusted;
+    internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "get top ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];

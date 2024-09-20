@@ -34,7 +34,7 @@ internal class AddStream : Command
 
         try
         {
-            Data.Models.Stream? s = Body.dbContext.Streams.SingleOrDefault(x => x.StreamDate == stream.StreamDate);
+            Data.Models.Stream? s = Body.dbContext.Streams.FirstOrDefault(x => x.StreamDate == stream.StreamDate);
             if (s == null)
             {
                 Body.dbContext.Streams.Add(stream);

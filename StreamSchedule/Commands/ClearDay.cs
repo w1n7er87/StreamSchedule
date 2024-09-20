@@ -23,7 +23,7 @@ internal class ClearDay : Command
             return Task.FromResult(Utils.Responses.Fail + "bad date ");
         }
 
-        Data.Models.Stream? interest = Body.dbContext.Streams.SingleOrDefault(s => s.StreamDate == DateOnly.FromDateTime(temp));
+        Data.Models.Stream? interest = Body.dbContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(temp));
 
         if (interest == null)
         {

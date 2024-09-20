@@ -21,7 +21,7 @@ internal class GetEmotesFromMessage : Command
             return response;
         }
 
-        ChatMessage? reply = Body.main.MessageCache.SingleOrDefault(x => x.Id == message.ReplyID);
+        ChatMessage? reply = Body.main.MessageCache.FirstOrDefault(x => x.Id == message.ReplyID);
 
         if (reply == null)
         {

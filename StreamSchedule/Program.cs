@@ -38,7 +38,7 @@ internal class Body
 
     public static List<Command?> CurrentCommands { get; private set; } = [];
 
-    private static readonly string _commandChars = "♿!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.🫃‽？！‼⁉❢♯[]{}";
+    private static readonly string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}";
 
     private Dictionary<string, bool> _channelLiveState;
 
@@ -61,6 +61,8 @@ internal class Body
 
         await Task.Delay(-1);
     }
+
+    private DateTime _textCommandLastUsed = DateTime.MinValue;
 
     public Body(string[] channelNames)
     {
@@ -184,48 +186,93 @@ internal class Body
 
         if (trimmedMessage.Length <= 1) return;
 
-        if (_commandChars.Contains(e.ChatMessage.Message[0]))
+        if (!_commandPrefixes.Contains(e.ChatMessage.Message[0])) return;
+
+        int idx = trimmedMessage[1].Equals(' ') ? 2 : 1;
+
+        string requestedCommand = trimmedMessage[idx..].Split(' ', 3)[0];
+
+        List<TextCommand> textCommands = [.. dbContext.TextCommands];
+
+        if (DateTime.Now > _textCommandLastUsed + TimeSpan.FromSeconds(5))
         {
-            int idx = trimmedMessage[1].Equals(' ') ? 2 : 1;
-
-            foreach (var c in CurrentCommands)
+            if (textCommands.Count > 0)
             {
-                if (c != null && trimmedMessage[idx..].Split(' ', 3)[0].Equals(c.Call, StringComparison.CurrentCultureIgnoreCase))
+                foreach (TextCommand command in textCommands)
                 {
-                    if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) { return; }
-
-                    if (userSent.privileges >= c.MinPrivilege)
+                    if (command.Name.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))
                     {
-                        trimmedMessage = trimmedMessage[(idx + c.Call.Length)..].Replace("\U000e0000", "");
-
-                        CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
-                        
-                        Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
-
-                        if (!string.IsNullOrEmpty(response.ToString()))
-                        {
-                            if (response.reply)
-                            {
-                                _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, (response.ToString().Replace('9','*') + bypassSameMessage).ToString());
-                            }
-                            else
-                            {
-                                _client.SendMessage(e.ChatMessage.Channel, (response + bypassSameMessage).ToString());
-                            }
-                        }
-                        else { return; }
+                        Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{command.Name}]:[{trimmedMessage}] - [{command.Content}] ");
+                        _client.SendMessage(e.ChatMessage.Channel, (command.Content + bypassSameMessage).ToString());
+                        _sameMessage = !_sameMessage;
+                        _textCommandLastUsed = DateTime.Now;
+                        return;
                     }
-                    else
-                    {
-                        _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
-                    }
-
-                    _sameMessage = !_sameMessage;
-                    c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
-
-                    break;
                 }
             }
         }
+
+        foreach (var c in CurrentCommands)
+        {
+            if (c != null && requestedCommand.Equals(c.Call, StringComparison.CurrentCultureIgnoreCase))
+            {
+                if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) { return; }
+
+                if (userSent.privileges >= c.MinPrivilege)
+                {
+                    trimmedMessage = trimmedMessage[(idx + c.Call.Length)..].Replace("\U000e0000", "");
+
+                    CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
+
+                    Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
+
+                    if (string.IsNullOrEmpty(response.ToString())) return; 
+
+                    if (response.reply)
+                    {
+                        _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, (FixNineEleven(response.content) + bypassSameMessage).ToString());
+                    }
+                    else
+                    {
+                        _client.SendMessage(e.ChatMessage.Channel, (response + bypassSameMessage).ToString());
+                    }
+                }
+                else
+                {
+                    _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
+                }
+
+                _sameMessage = !_sameMessage;
+                c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
+
+                break;
+            }
+        }
+    }
+
+    private static string FixNineEleven(string input)
+    {
+        string[] split = input.Split(' ');
+        string result = "";
+        foreach (string s in split)
+        {
+            string temp = "";
+            foreach (char c in s)
+            {
+                if (c == ('9') || c == ('1'))
+                {
+                    temp += c;
+                }
+            }
+            if (temp.Contains("911"))
+            {
+                result += s.Replace("9", "*") + " ";
+            }
+            else
+            {
+                result += s + " ";
+            }
+        }
+        return result;
     }
 }

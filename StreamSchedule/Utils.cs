@@ -78,8 +78,8 @@ internal static class Utils
             {
                 if (ss.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "");
-                    input = input.Replace(ss, "", StringComparison.InvariantCultureIgnoreCase);
+                    usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "").ToLower();
+                    input = input.Replace(ss + " ", "", StringComparison.InvariantCultureIgnoreCase);
                 }
             }
         }
@@ -92,7 +92,7 @@ internal static class Utils
 
         if (string.IsNullOrEmpty(username)) { user = new User(); return false; }
 
-        User? u = Body.dbContext.Users.SingleOrDefault(x => (id == null) ? x.Username == username : x.Id == int.Parse(id));
+        User? u = Body.dbContext.Users.FirstOrDefault(x => (id == null) ? x.Username == username : x.Id == int.Parse(id));
 
         if (u is null) { user = new User(); return false; }
 

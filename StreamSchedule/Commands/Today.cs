@@ -13,7 +13,7 @@ internal class Today : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        Data.Models.Stream? today = Body.dbContext.Streams.SingleOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.Now));
+        Data.Models.Stream? today = Body.dbContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.Now));
         if (today == null || new DateTime(today.StreamDate, today.StreamTime) < DateTime.Now)
         {
             return Task.FromResult(new CommandResult("There is no stream today DinkDonk "));
