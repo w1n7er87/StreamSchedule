@@ -81,6 +81,7 @@ internal class Body
 
         _client = new TwitchClient();
         _client.Initialize(credentials, [.. channelNames]);
+        _client.OnUnaccountedFor += Client_OnUnaccounted;
         _client.OnLog += Client_OnLog;
         _client.OnJoinedChannel += Client_OnJoinedChannel;
         _client.OnMessageReceived += Client_OnMessageReceived;
@@ -130,9 +131,19 @@ internal class Body
         Console.WriteLine("monitoring service stated");
     }
 
+    private async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
+    {
+        TwitchClient? twitchClient = sender as TwitchClient;
+        if (e.RawIRC.Contains("moderation"))
+        {
+            Console.WriteLine($"{e.RawIRC} {e.Channel} {e.Location}");
+            await Task.Delay(2000);
+            twitchClient?.SendMessage(e.Channel, "1984 ");
+        }
+    }
+
     private void Client_OnLog(object? sender, OnLogArgs e)
     {
-        
         //Console.WriteLine($"{e.DateTime.ToString()}: {e.BotUsername} - {e.Data}");
     }
 
@@ -227,7 +238,7 @@ internal class Body
 
                     Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 
-                    if (string.IsNullOrEmpty(response.ToString())) return; 
+                    if (string.IsNullOrEmpty(response.ToString())) return;
 
                     if (response.reply)
                     {

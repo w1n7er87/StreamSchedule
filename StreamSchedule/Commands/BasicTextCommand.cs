@@ -17,13 +17,13 @@ internal class BasicTextCommand : Command
         List<TextCommand> commands = [.. Body.dbContext.TextCommands];
         string text = Utils.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArguments);
         string commandName = text.Split(' ')[0];
-        text = text[commandName.Length ..];
+        text = text[commandName.Length..];
         Console.WriteLine(text);
         if (string.IsNullOrEmpty(commandName)) return Task.FromResult(Utils.Responses.Fail + (" no command name provided "));
 
-        if(commandName.Length < 2) return Task.FromResult(Utils.Responses.Fail + (" command name should be 2 characters or longer "));
+        if (commandName.Length < 2) return Task.FromResult(Utils.Responses.Fail + (" command name should be 2 characters or longer "));
 
-        if (usedArguments.TryGetValue("add", out string? _))
+        if (usedArguments.TryGetValue("add", out _))
         {
             if (string.IsNullOrEmpty(text)) return Task.FromResult(Utils.Responses.Fail + (" no content provided "));
 
@@ -49,7 +49,7 @@ internal class BasicTextCommand : Command
                 return Task.FromResult(Utils.Responses.Ok);
             }
         }
-        else if (usedArguments.TryGetValue("rm", out string? _))
+        else if (usedArguments.TryGetValue("rm", out _))
         {
             if (commands.Count <= 0)
             {

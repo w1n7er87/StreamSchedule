@@ -32,6 +32,6 @@ internal class Ratio : Command
 
         RatioScore ratioScore = Userscore.GetRatioAndScore(u);
 
-        return Task.FromResult(result + $"offliner ratio: {MathF.Round(ratioScore.ratio, 3)} , offliner score: {MathF.Round(ratioScore.score, 3)} ");
+        return Task.FromResult(result + $"offliner ratio: {MathF.Round(ratioScore.ratio, 3)}, off/n: ({u.MessagesOffline}/{u.MessagesOnline}), offliner score: {MathF.Round(ratioScore.score, 3)} ");
     }
 }

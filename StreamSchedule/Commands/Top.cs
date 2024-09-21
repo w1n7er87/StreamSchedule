@@ -9,7 +9,7 @@ internal class Top : Command
     internal override string Help => "get top ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => ["online", "offline"];
+    internal override string[]? Arguments => ["online", "offline", "score"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -22,7 +22,17 @@ internal class Top : Command
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
-                result += $">{i + 1} {user.Username}_ {user.MessagesOffline} ";
+                result += $"{i + 1} {user.Username}_ {user.MessagesOffline} Clap ";
+            }
+        }
+
+        if (args.TryGetValue("score", out _))
+        {
+            var topTen = Body.dbContext.Users.AsEnumerable().OrderByDescending(x => Userscore.GetRatioAndScore(x).score).Take(10).ToList();
+            for (int i = 0; i < topTen.Count; i++)
+            {
+                var user = topTen[i];
+                result += $"{i + 1} {user.Username}_ {MathF.Round(Userscore.GetRatioAndScore(user).score, 3)} Clap ";
             }
         }
 
@@ -32,7 +42,7 @@ internal class Top : Command
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
-                result += $">{i + 1} {user.Username}_ {user.MessagesOnline} ";
+                result += $"{i + 1} {user.Username}_ {user.MessagesOnline} Clap ";
             }
         }
 
