@@ -15,7 +15,7 @@ internal class BasicTextCommand : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         List<TextCommand> commands = [.. Body.dbContext.TextCommands];
-        string text = Utils.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArguments);
+        string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArguments);
         string commandName = text.Split(' ')[0];
         text = text[commandName.Length..];
         Console.WriteLine(text);
@@ -35,7 +35,7 @@ internal class BasicTextCommand : Command
                 }
                 else
                 {
-                    Privileges p = usedArguments.TryGetValue("p", out string? pp) ? Utils.ParsePrivilege(pp) : Privileges.None;
+                    Privileges p = usedArguments.TryGetValue("p", out string? pp) ? PrivilegesConversion.ParsePrivilege(pp) : Privileges.None;
                     Body.dbContext.TextCommands.Add(new() { Name = commandName, Content = text, Privileges = p });
                     Body.dbContext.SaveChanges();
                     return Task.FromResult(Utils.Responses.Ok);
@@ -43,7 +43,7 @@ internal class BasicTextCommand : Command
             }
             else
             {
-                Privileges p = usedArguments.TryGetValue("p", out string? pp) ? Utils.ParsePrivilege(pp) : Privileges.None;
+                Privileges p = usedArguments.TryGetValue("p", out string? pp) ? PrivilegesConversion.ParsePrivilege(pp) : Privileges.None;
                 Body.dbContext.TextCommands.Add(new() { Name = commandName, Content = text, Privileges = p });
                 Body.dbContext.SaveChanges();
                 return Task.FromResult(Utils.Responses.Ok);

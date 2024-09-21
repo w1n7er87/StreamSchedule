@@ -14,7 +14,7 @@ internal class UserInfo : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Utils.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
         string[] split = text.Split(' ');
         CommandResult response = new("");
 

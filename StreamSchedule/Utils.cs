@@ -12,31 +12,6 @@ internal static class Utils
         internal static CommandResult Surprise => new("oh ", false);
     }
 
-    internal static Privileges ParsePrivilege(string text)
-    {
-        return text.ToLower() switch
-        {
-            "ban" => Privileges.Banned,
-            "ok" => Privileges.None,
-            "trust" => Privileges.Trusted,
-            "mod" => Privileges.Mod,
-            _ => Privileges.None
-        };
-    }
-
-    internal static string PrivilegeToString(Privileges p)
-    {
-        return p switch
-        {
-            Privileges.Banned => "banned",
-            Privileges.None => "a regular",
-            Privileges.Trusted => "a VIP",
-            Privileges.Mod => "a mod MONKA ",
-            Privileges.Uuh => "a uuh ",
-            _ => "an alien "
-        };
-    }
-
     internal static User SyncToDb(User u, ref DatabaseContext context)
     {
         User? uDb = context.Users.Find(u.Id);
@@ -65,25 +40,6 @@ internal static class Utils
         u.MessagesOnline += online;
         u.MessagesOffline += offline;
         context.SaveChanges();
-    }
-
-    internal static string RetrieveArguments(string[] args, string input, out Dictionary<string, string> usedArgs)
-    {
-        usedArgs = [];
-        string[] split = input.Split(' ');
-
-        foreach (string ss in split)
-        {
-            foreach (var arg in args)
-            {
-                if (ss.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "").ToLower();
-                    input = input.Replace(ss + " ", "", StringComparison.InvariantCultureIgnoreCase);
-                }
-            }
-        }
-        return input;
     }
 
     internal static bool TryGetUser(string username, out User user, string? id = null)

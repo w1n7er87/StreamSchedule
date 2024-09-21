@@ -13,7 +13,7 @@ internal class Top : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Utils.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> args);
+        string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> args);
         CommandResult result = new("");
 
         if (args.Count == 0 || args.TryGetValue("offline", out _))

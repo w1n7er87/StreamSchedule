@@ -16,7 +16,7 @@ internal class SetPrivileges : Command
     {
         string[] split = message.Message.Split(' ');
 
-        Privileges p = Utils.ParsePrivilege(split[0]);
+        Privileges p = PrivilegesConversion.ParsePrivilege(split[0]);
 
         if (!Utils.TryGetUser(split[1], out User target))
         {
@@ -29,6 +29,6 @@ internal class SetPrivileges : Command
         target.privileges = p;
         Body.dbContext.SaveChanges();
 
-        return Task.FromResult(Utils.Responses.Ok + $"{target.Username} is now {Utils.PrivilegeToString(p)}");
+        return Task.FromResult(Utils.Responses.Ok + $"{target.Username} is now {PrivilegesConversion.PrivilegeToString(p)}");
     }
 }
