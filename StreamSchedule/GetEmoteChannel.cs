@@ -4,7 +4,7 @@
     {
         public static async Task<string> GetEmoteChannelByEmoteID(string emoteID)
         {
-            using var client = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false, UseCookies = false, UseDefaultCredentials = true, MaxConnectionsPerServer = 1 }) { Timeout = TimeSpan.FromSeconds(1) };
+            using var client = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false, UseCookies = false, UseDefaultCredentials = true, MaxConnectionsPerServer = 1 }) { Timeout = TimeSpan.FromSeconds(2) };
 
             try
             {
@@ -22,7 +22,7 @@
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                return "";
+                return Utils.Responses.Surprise.ToString();
             }
         }
     }
