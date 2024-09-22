@@ -23,17 +23,20 @@ public class Program
             new HostBuilder().Build().Run();
             return;
         }
-        Body.main = new Body(["vedal987", "w1n7er", "streamschedule"]);
+        _ = new BotCore(["vedal987", "w1n7er", "streamschedule"]);
         Console.ReadLine();
     }
 }
 
-internal class Body
+internal class BotCore
 {
-    public static DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
-    public static Body main;
-    private TwitchClient _client;
+    private BotCore() { }
+
+    public static DatabaseContext DBContext { get; private set; } = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
+    public static BotCore Instance { get; private set; }
+
     public TwitchAPI api;
+    private TwitchClient _client;
     private LiveStreamMonitorService _monitor;
 
     public static List<Command?> CurrentCommands { get; private set; } = [];
@@ -53,34 +56,32 @@ internal class Body
     {
         _monitor.SetChannelsByName([.. channelNames]);
 
-        _monitor.OnStreamOnline += OnLive;
-        _monitor.OnStreamOffline += OnOffline;
+        _monitor.OnStreamOnline += Monitor_OnLive;
+        _monitor.OnStreamOffline += Monitor_OnOffline;
         _monitor.OnChannelsSet += Monitor_OnChannelsSet;
         _monitor.OnServiceStarted += Monitor_OnServiceStarted;
-        _monitor.Start(); //Keep at the end!
+        _monitor.Start();
 
         await Task.Delay(-1);
     }
 
     private DateTime _textCommandLastUsed = DateTime.MinValue;
 
-    public Body(string[] channelNames)
+    public BotCore(string[] channelNames)
     {
+        Instance = this;
+
         api = new TwitchAPI();
         api.Settings.ClientId = Credentials.clientID;
         api.Settings.AccessToken = Credentials.oauth;
-        api.Helix.Settings.ClientId = Credentials.clientID;
-        api.Helix.Settings.AccessToken = Credentials.oauth;
         _monitor = new LiveStreamMonitorService(api, 5);
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
 
-        dbContext.Database.EnsureCreated();
-
-        ConnectionCredentials credentials = new ConnectionCredentials(Credentials.username, Credentials.oauth);
+        DBContext.Database.EnsureCreated();
 
         _client = new TwitchClient();
-        _client.Initialize(credentials, [.. channelNames]);
+        _client.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
         _client.OnUnaccountedFor += Client_OnUnaccounted;
         _client.OnLog += Client_OnLog;
         _client.OnJoinedChannel += Client_OnJoinedChannel;
@@ -106,29 +107,27 @@ internal class Body
             }
         }
     }
+    private void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
+    {
+        string r = "";
+        foreach (var c in e.Channels) { r += c + ", "; }
+        Console.WriteLine($"channels set {r}");
+    }
+    private void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
+    {
+        Console.WriteLine("monitoring service stated");
+    }
 
-    private void OnLive(object? sender, OnStreamOnlineArgs args)
+    private void Monitor_OnLive(object? sender, OnStreamOnlineArgs args)
     {
         _channelLiveState[args.Channel] = true;
         Console.WriteLine($"{args.Channel} went live");
     }
 
-    private void OnOffline(object? sender, OnStreamOfflineArgs args)
+    private void Monitor_OnOffline(object? sender, OnStreamOfflineArgs args)
     {
         _channelLiveState[args.Channel] = false;
         Console.WriteLine($"{args.Channel} went offline");
-    }
-
-    private void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
-    {
-        string r = "";
-        foreach (var c in e.Channels) { r += c + ", "; }
-        Console.WriteLine($"channels set{r}");
-    }
-
-    private void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
-    {
-        Console.WriteLine("monitoring service stated");
     }
 
     private async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
@@ -138,7 +137,7 @@ internal class Body
         {
             Console.WriteLine($"{e.RawIRC} {e.Channel} {e.Location}");
             await Task.Delay(2000);
-            twitchClient?.SendMessage(e.Channel, "1984 ");
+            twitchClient?.SendMessage(e.Channel, "moderation 1984 ");
         }
     }
 
@@ -149,13 +148,13 @@ internal class Body
 
     private void Client_OnConnected(object? sender, OnConnectedArgs e)
     {
-        Console.WriteLine($"Connected {e.AutoJoinChannel}");
+        Console.WriteLine($"{e.BotUsername} Connected ");
         GlobalEmotes ??= api.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
     }
 
     private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
-        Console.WriteLine($"Joined {e.Channel.ToString()}");
+        Console.WriteLine($"Joined {e.Channel}");
     }
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
@@ -167,19 +166,19 @@ internal class Body
             privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
         };
 
-        User userSent = Utils.SyncToDb(u, ref dbContext);
+        User userSent = User.SyncToDb(u, DBContext);
 
         if (_channelLiveState[e.ChatMessage.Channel])
         {
-            Utils.AddMessagesCounter(userSent, ref dbContext, 1);
+            User.AddMessagesCounter(userSent, DBContext, 1);
             return;
         }
 
-        Utils.AddMessagesCounter(userSent, ref dbContext, 0, 1);
-
-        string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
+        User.AddMessagesCounter(userSent, DBContext, 0, 1);
 
         if (e.ChatMessage.Message.Length < 3) return;
+
+        string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 
         MessageCache.Add(e.ChatMessage);
         if (MessageCache.Count > _cacheSize)
@@ -192,73 +191,75 @@ internal class Body
         if (e.ChatMessage.ChatReply != null)
         {
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
-            trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2)..];
+            trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2) ..];
         }
 
-        if (trimmedMessage.Length <= 1) return;
+        if (trimmedMessage.Length < 3) return;
 
-        if (!_commandPrefixes.Contains(e.ChatMessage.Message[0])) return;
+        if (!_commandPrefixes.Contains(trimmedMessage[0])) return;
 
         int idx = trimmedMessage[1].Equals(' ') ? 2 : 1;
 
-        string requestedCommand = trimmedMessage[idx..].Split(' ', 3)[0];
+        string requestedCommand = trimmedMessage[idx ..].Split(' ', 2)[0];
 
-        List<TextCommand> textCommands = [.. dbContext.TextCommands];
+        List<TextCommand> textCommands = [.. DBContext.TextCommands];
 
-        if (DateTime.Now > _textCommandLastUsed + TimeSpan.FromSeconds(5))
+        if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds(5) && textCommands.Count > 0)
         {
-            if (textCommands.Count > 0)
+            foreach (TextCommand command in textCommands)
             {
-                foreach (TextCommand command in textCommands)
+                if (!command.Name.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase)) continue;
+
+                if (userSent.privileges < command.Privileges)
                 {
-                    if (command.Name.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (command.Privileges > userSent.privileges) return;
-                        Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{command.Name}]:[{trimmedMessage}] - [{command.Content}] ");
-                        _client.SendMessage(e.ChatMessage.Channel, (command.Content + bypassSameMessage).ToString());
-                        _sameMessage = !_sameMessage;
-                        _textCommandLastUsed = DateTime.Now;
-                        return;
-                    }
+                    _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
+                    _sameMessage = !_sameMessage;
+                    _textCommandLastUsed = DateTime.Now;
+                    return;
                 }
+
+                Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
+                _client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
+                _sameMessage = !_sameMessage;
+                _textCommandLastUsed = DateTime.Now;
+                return;
             }
         }
 
         foreach (var c in CurrentCommands)
         {
-            if (c != null && requestedCommand.Equals(c.Call, StringComparison.CurrentCultureIgnoreCase))
+            if (c == null || !requestedCommand.Equals(c.Call, StringComparison.OrdinalIgnoreCase)) continue;
+
+            if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) return;
+
+            if (userSent.privileges < c.MinPrivilege)
             {
-                if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) { return; }
-
-                if (userSent.privileges >= c.MinPrivilege)
-                {
-                    trimmedMessage = trimmedMessage[(idx + c.Call.Length)..].Replace("\U000e0000", "");
-
-                    CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
-
-                    Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
-
-                    if (string.IsNullOrEmpty(response.ToString())) return;
-
-                    if (response.reply)
-                    {
-                        _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, (FixNineEleven(response.content) + bypassSameMessage).ToString());
-                    }
-                    else
-                    {
-                        _client.SendMessage(e.ChatMessage.Channel, (response + bypassSameMessage).ToString());
-                    }
-                }
-                else
-                {
-                    _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
-                }
-
+                _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
                 _sameMessage = !_sameMessage;
                 c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
-
-                break;
+                return;
             }
+
+            trimmedMessage = trimmedMessage[(idx + c.Call.Length) ..].Replace("\U000e0000", "");
+
+            CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
+
+            Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
+
+            if (string.IsNullOrEmpty(response.ToString())) return;
+
+            if (response.reply)
+            {
+                _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, FixNineEleven(response.content) + bypassSameMessage);
+            }
+            else
+            {
+                _client.SendMessage(e.ChatMessage.Channel, FixNineEleven(response.content) + bypassSameMessage);
+            }
+            
+            _sameMessage = !_sameMessage;
+            c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
+            return;
         }
     }
 

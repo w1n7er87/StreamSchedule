@@ -14,7 +14,7 @@ internal class BasicTextCommand : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        List<TextCommand> commands = [.. Body.dbContext.TextCommands];
+        List<TextCommand> commands = [.. BotCore.DBContext.TextCommands];
         string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArguments);
         string commandName = text.Split(' ')[0];
         text = text[commandName.Length..];
@@ -29,23 +29,23 @@ internal class BasicTextCommand : Command
 
             if (commands.Count > 0)
             {
-                if (commands.FirstOrDefault(x => x.Name.Equals(commandName)) is not null || Body.CurrentCommands.Any(x => x?.Call == commandName))
+                if (commands.FirstOrDefault(x => x.Name.Equals(commandName)) is not null || BotCore.CurrentCommands.Any(x => x?.Call == commandName))
                 {
                     return Task.FromResult(Utils.Responses.Fail + " command with this name already exists. ");
                 }
                 else
                 {
                     Privileges p = usedArguments.TryGetValue("p", out string? pp) ? PrivilegesConversion.ParsePrivilege(pp) : Privileges.None;
-                    Body.dbContext.TextCommands.Add(new() { Name = commandName, Content = text, Privileges = p });
-                    Body.dbContext.SaveChanges();
+                    BotCore.DBContext.TextCommands.Add(new() { Name = commandName, Content = text, Privileges = p });
+                    BotCore.DBContext.SaveChanges();
                     return Task.FromResult(Utils.Responses.Ok);
                 }
             }
             else
             {
                 Privileges p = usedArguments.TryGetValue("p", out string? pp) ? PrivilegesConversion.ParsePrivilege(pp) : Privileges.None;
-                Body.dbContext.TextCommands.Add(new() { Name = commandName, Content = text, Privileges = p });
-                Body.dbContext.SaveChanges();
+                BotCore.DBContext.TextCommands.Add(new() { Name = commandName, Content = text, Privileges = p });
+                BotCore.DBContext.SaveChanges();
                 return Task.FromResult(Utils.Responses.Ok);
             }
         }
@@ -55,13 +55,13 @@ internal class BasicTextCommand : Command
             {
                 return Task.FromResult(Utils.Responses.Fail + " there are no custom commands. ");
             }
-            TextCommand? c = Body.dbContext.TextCommands.FirstOrDefault(x => x.Name == commandName);
+            TextCommand? c = BotCore.DBContext.TextCommands.FirstOrDefault(x => x.Name == commandName);
             if (c is null)
             {
                 return Task.FromResult(Utils.Responses.Fail + " there is no command with this name. ");
             }
-            Body.dbContext.TextCommands.Remove(c);
-            Body.dbContext.SaveChanges();
+            BotCore.DBContext.TextCommands.Remove(c);
+            BotCore.DBContext.SaveChanges();
             return Task.FromResult(Utils.Responses.Ok);
         }
         return Task.FromResult(Utils.Responses.Surprise);

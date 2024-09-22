@@ -23,7 +23,7 @@ internal class ClearDay : Command
             return Task.FromResult(Utils.Responses.Fail + "bad date ");
         }
 
-        Data.Models.Stream? interest = Body.dbContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(temp));
+        Data.Models.Stream? interest = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(temp));
 
         if (interest == null)
         {
@@ -31,8 +31,8 @@ internal class ClearDay : Command
         }
         else
         {
-            Body.dbContext.Streams.Remove(interest);
-            Body.dbContext.SaveChanges();
+            BotCore.DBContext.Streams.Remove(interest);
+            BotCore.DBContext.SaveChanges();
             return Task.FromResult(Utils.Responses.Ok);
         }
     }

@@ -34,7 +34,7 @@ internal class UserInfo : Command
 
         try
         {
-            var a = idProvided ? await Body.main.api.Helix.Users.GetUsersAsync(ids: [userIDnumber.ToString()]) : await Body.main.api.Helix.Users.GetUsersAsync(logins: [targetUsername]);
+            var a = idProvided ? await BotCore.Instance.api.Helix.Users.GetUsersAsync(ids: [userIDnumber.ToString()]) : await BotCore.Instance.api.Helix.Users.GetUsersAsync(logins: [targetUsername]);
             TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users.First();
 
             string generalInfo = GetGeneralInfo(u);
@@ -76,7 +76,7 @@ internal class UserInfo : Command
     {
         try
         {
-            var emotes = await Body.main.api.Helix.Chat.GetChannelEmotesAsync(userID);
+            var emotes = await BotCore.Instance.api.Helix.Chat.GetChannelEmotesAsync(userID);
             string result = "no emotes";
 
             if (emotes.ChannelEmotes.Length > 0)
@@ -101,7 +101,7 @@ internal class UserInfo : Command
     {
         try
         {
-            var color = await Body.main.api.Helix.Chat.GetUserChatColorAsync([userID]);
+            var color = await BotCore.Instance.api.Helix.Chat.GetUserChatColorAsync([userID]);
             return color.Data.First().Color.Equals("") ? "color not set" : color.Data.First().Color;
         }
         catch (Exception ex)
@@ -117,7 +117,7 @@ internal class UserInfo : Command
         {
             string result = "";
 
-            var liveStatus = await Body.main.api.Helix.Streams.GetStreamsAsync(userIds: [userID]);
+            var liveStatus = await BotCore.Instance.api.Helix.Streams.GetStreamsAsync(userIds: [userID]);
 
             TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.FirstOrDefault();
             if (s != null)
@@ -142,7 +142,7 @@ internal class UserInfo : Command
         try
         {
             bool isKnown = true;
-            if (!Utils.TryGetUser("lorem", out User dbData, user.Id))
+            if (!User.TryGetUser("lorem", out User dbData, user.Id))
             {
                 isKnown = false;
             }
@@ -172,5 +172,5 @@ internal class UserInfo : Command
         }
     }
 
-    private static async Task<int> GetFollowers(string userID) => (await Body.main.api.Helix.Channels.GetChannelFollowersAsync(userID)).Total;
+    private static async Task<int> GetFollowers(string userID) => (await BotCore.Instance.api.Helix.Channels.GetChannelFollowersAsync(userID)).Total;
 }

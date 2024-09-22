@@ -49,40 +49,40 @@ internal class EvaluateUsers : Command
     private int UpdateAll(float cutoff)
     {
         int count = 0;
-        List<User> users = [.. Body.dbContext.Users];
+        List<User> users = [.. BotCore.DBContext.Users];
         foreach (var user in users)
         {
             float score = Userscore.GetRatioAndScore(user).score;
             if (user.privileges < Privileges.Trusted && score >= cutoff)
             {
-                Body.dbContext.Update(user);
+                BotCore.DBContext.Update(user);
                 user.privileges = Privileges.Trusted;
                 count++;
             }
             else if (user.privileges == Privileges.Trusted && score <= cutoff)
             {
-                Body.dbContext.Update(user);
+                BotCore.DBContext.Update(user);
                 user.privileges = Privileges.None;
                 count++;
             }
         }
-        Body.dbContext.SaveChanges();
+        BotCore.DBContext.SaveChanges();
         return count;
     }
 
     private bool TryUpdateSingle(string username, float cutoff)
     {
-        if (!Utils.TryGetUser(username, out User user)) { return false; }
+        if (!User.TryGetUser(username, out User user)) { return false; }
 
         float score = Userscore.GetRatioAndScore(user).score;
         if (user.privileges < Privileges.Trusted && score >= cutoff)
         {
-            Body.dbContext.Update(user);
+            BotCore.DBContext.Update(user);
             user.privileges = Privileges.Trusted;
         }
         else if (user.privileges == Privileges.Trusted && score < cutoff)
         {
-            Body.dbContext.Update(user);
+            BotCore.DBContext.Update(user);
             user.privileges = Privileges.None;
         }
         else
@@ -90,7 +90,7 @@ internal class EvaluateUsers : Command
             return false;
         }
 
-        Body.dbContext.SaveChanges();
+        BotCore.DBContext.SaveChanges();
         return true;
     }
 }

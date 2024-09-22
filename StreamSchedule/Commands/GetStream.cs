@@ -13,7 +13,7 @@ namespace StreamSchedule.Commands
 
         internal override Task<CommandResult> Handle(UniversalMessageInfo message)
         {
-            var futureStreams = Body.dbContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.Now));
+            var futureStreams = BotCore.DBContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.Now));
             Data.Models.Stream? next = null;
             foreach (var stream in futureStreams)
             {

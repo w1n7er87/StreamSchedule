@@ -15,7 +15,7 @@ internal class Helps : Command
     {
         string[] split = message.Message.Split(' ');
         if (split.Length < 1) { return Task.FromResult(new CommandResult(this.Help)); }
-        foreach (Command? c in Body.CurrentCommands)
+        foreach (Command? c in BotCore.CurrentCommands)
         {
             if (c == null) { continue; }
 

@@ -21,7 +21,7 @@ internal class GetEmotesFromMessage : Command
             return response;
         }
 
-        ChatMessage? reply = Body.main.MessageCache.FirstOrDefault(x => x.Id == message.ReplyID);
+        ChatMessage? reply = BotCore.Instance.MessageCache.FirstOrDefault(x => x.Id == message.ReplyID);
 
         if (reply == null)
         {
@@ -37,7 +37,7 @@ internal class GetEmotesFromMessage : Command
         for (int i = 0; i < emotes.Count; i++)
         {
             Emote? emote = emotes[i];
-            if ((Body.GlobalEmotes ?? []).Any(x => x.Id == emote.Id))
+            if ((BotCore.GlobalEmotes ?? []).Any(x => x.Id == emote.Id))
             {
                 channels.Add("twitch");
                 continue;

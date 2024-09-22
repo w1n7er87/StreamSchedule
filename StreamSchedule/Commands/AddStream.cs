@@ -34,18 +34,18 @@ internal class AddStream : Command
 
         try
         {
-            Data.Models.Stream? s = Body.dbContext.Streams.FirstOrDefault(x => x.StreamDate == stream.StreamDate);
+            Data.Models.Stream? s = BotCore.DBContext.Streams.FirstOrDefault(x => x.StreamDate == stream.StreamDate);
             if (s == null)
             {
-                Body.dbContext.Streams.Add(stream);
+                BotCore.DBContext.Streams.Add(stream);
             }
             else
             {
-                Body.dbContext.Streams.Update(s);
+                BotCore.DBContext.Streams.Update(s);
                 s.StreamTime = stream.StreamTime;
                 s.StreamTitle = stream.StreamTitle;
             }
-            Body.dbContext.SaveChanges();
+            BotCore.DBContext.SaveChanges();
         }
         catch (Exception e)
         {

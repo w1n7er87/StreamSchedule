@@ -14,7 +14,7 @@ internal class Schedule : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         DateOnly inAWeek = DateOnly.FromDateTime(DateTime.Now + TimeSpan.FromDays(7));
-        var streams = Body.dbContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(DateTime.Now) && s.StreamDate <= inAWeek);
+        var streams = BotCore.DBContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(DateTime.Now) && s.StreamDate <= inAWeek);
         CommandResult response = new("");
         foreach (var stream in streams)
         {

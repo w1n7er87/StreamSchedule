@@ -22,7 +22,7 @@ internal class CheckPrivileges : Command
             targetUsername = split[0];
         }
 
-        if (!Utils.TryGetUser(targetUsername, out User u))
+        if (!User.TryGetUser(targetUsername, out User u))
         {
             targetUsername = message.Username;
         }

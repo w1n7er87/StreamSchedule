@@ -18,16 +18,16 @@ internal class SetPrivileges : Command
 
         Privileges p = PrivilegesConversion.ParsePrivilege(split[0]);
 
-        if (!Utils.TryGetUser(split[1], out User target))
+        if (!User.TryGetUser(split[1], out User target))
         {
             return Task.FromResult(Utils.Responses.Surprise);
         }
 
         if (target.privileges >= message.Privileges) { return Task.FromResult(Utils.Responses.Fail); }
 
-        Body.dbContext.Users.Update(target);
+        BotCore.DBContext.Users.Update(target);
         target.privileges = p;
-        Body.dbContext.SaveChanges();
+        BotCore.DBContext.SaveChanges();
 
         return Task.FromResult(Utils.Responses.Ok + $"{target.Username} is now {PrivilegesConversion.PrivilegeToString(p)}");
     }

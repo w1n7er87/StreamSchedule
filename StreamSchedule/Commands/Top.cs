@@ -18,7 +18,7 @@ internal class Top : Command
 
         if (args.Count == 0 || args.TryGetValue("offline", out _))
         {
-            var topTen = Body.dbContext.Users.OrderByDescending(x => x.MessagesOffline).Take(10).ToList();
+            var topTen = BotCore.DBContext.Users.OrderByDescending(x => x.MessagesOffline).Take(10).ToList();
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
@@ -28,7 +28,7 @@ internal class Top : Command
 
         if (args.TryGetValue("score", out _))
         {
-            var topTen = Body.dbContext.Users.AsEnumerable().OrderByDescending(x => Userscore.GetRatioAndScore(x).score).Take(10).ToList();
+            var topTen = BotCore.DBContext.Users.AsEnumerable().OrderByDescending(x => Userscore.GetRatioAndScore(x).score).Take(10).ToList();
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
@@ -38,7 +38,7 @@ internal class Top : Command
 
         if (args.TryGetValue("online", out _))
         {
-            var topTen = Body.dbContext.Users.OrderByDescending(x => x.MessagesOnline).Take(10).ToList();
+            var topTen = BotCore.DBContext.Users.OrderByDescending(x => x.MessagesOnline).Take(10).ToList();
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];

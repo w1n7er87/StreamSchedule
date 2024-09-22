@@ -25,7 +25,7 @@ internal class Ratio : Command
         }
 
 
-        if (!Utils.TryGetUser(targetUsername, out User u))
+        if (!User.TryGetUser(targetUsername, out User u))
         {
             return Task.FromResult(Utils.Responses.Fail + " unknown user ");
         }
