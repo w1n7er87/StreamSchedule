@@ -28,6 +28,5 @@ internal class CheckPrivileges : Command
         }
 
         return Task.FromResult(new CommandResult($"{targetUsername} is {PrivilegesConversion.PrivilegeToString(u.privileges)}", false));
-
     }
 }

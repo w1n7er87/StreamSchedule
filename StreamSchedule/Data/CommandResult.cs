@@ -1,5 +1,4 @@
-﻿
-using System.Text;
+﻿using System.Text;
 
 namespace StreamSchedule.Data
 {
@@ -8,7 +7,7 @@ namespace StreamSchedule.Data
         private CommandResult() { this.content = string.Empty; this.reply = false; }
 
         public string content;
-        public bool reply;        
+        public bool reply;
 
         public CommandResult(string content)
         {
@@ -16,7 +15,7 @@ namespace StreamSchedule.Data
             this.reply = true;
         }
 
-        public CommandResult(string content, bool reply) 
+        public CommandResult(string content, bool reply)
         {
             this.content = content;
             this.reply = reply;

@@ -11,7 +11,6 @@
 
     internal static class PrivilegesConversion
     {
-
         internal static Privileges ParsePrivilege(string text)
         {
             return text.ToLower() switch

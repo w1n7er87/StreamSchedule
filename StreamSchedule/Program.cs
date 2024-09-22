@@ -107,12 +107,14 @@ internal class BotCore
             }
         }
     }
+
     private void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
     {
         string r = "";
         foreach (var c in e.Channels) { r += c + ", "; }
         Console.WriteLine($"channels set {r}");
     }
+
     private void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
     {
         Console.WriteLine("monitoring service stated");
@@ -191,7 +193,7 @@ internal class BotCore
         if (e.ChatMessage.ChatReply != null)
         {
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
-            trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2) ..];
+            trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2)..];
         }
 
         if (trimmedMessage.Length < 3) return;
@@ -200,7 +202,7 @@ internal class BotCore
 
         int idx = trimmedMessage[1].Equals(' ') ? 2 : 1;
 
-        string requestedCommand = trimmedMessage[idx ..].Split(' ', 2)[0];
+        string requestedCommand = trimmedMessage[idx..].Split(' ', 2)[0];
 
         List<TextCommand> textCommands = [.. DBContext.TextCommands];
 
@@ -240,7 +242,7 @@ internal class BotCore
                 return;
             }
 
-            trimmedMessage = trimmedMessage[(idx + c.Call.Length) ..].Replace("\U000e0000", "");
+            trimmedMessage = trimmedMessage[(idx + c.Call.Length)..].Replace("\U000e0000", "");
 
             CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
 
@@ -256,7 +258,7 @@ internal class BotCore
             {
                 _client.SendMessage(e.ChatMessage.Channel, FixNineEleven(response.content) + bypassSameMessage);
             }
-            
+
             _sameMessage = !_sameMessage;
             c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
             return;

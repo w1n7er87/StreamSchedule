@@ -18,7 +18,7 @@ internal class Userscore
 
         if (offline != 0)
         {
-            ratio = (float) offline / (offline + online);
+            ratio = (float)offline / (offline + online);
         }
 
         float score = (MathF.Log(MathF.Max(1, offline)) - MathF.Log10(MathF.Max(1, online))) * ratio;
