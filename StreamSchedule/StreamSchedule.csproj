@@ -28,6 +28,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="TwitchLib" Version="3.5.3" />
     <PackageReference Include="TwitchLib.Api" Version="3.9.0" />
+    <PackageReference Include="Unicode.net" Version="2.0.0" />
   </ItemGroup>
 
 </Project>

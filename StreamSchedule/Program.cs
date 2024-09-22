@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using NeoSmart.Unicode;
 using StreamSchedule.Commands;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
@@ -198,9 +199,20 @@ internal class BotCore
 
         if (trimmedMessage.Length < 3) return;
 
-        if (!_commandPrefixes.Contains(trimmedMessage[0])) return;
+        List<Codepoint> emojiStuff = Emoji.SkinTones.All;
+        emojiStuff.Add(Emoji.ZeroWidthJoiner);
+        emojiStuff.Add(Emoji.ObjectReplacementCharacter);
+        emojiStuff.Add(Emoji.Keycap);
 
-        int idx = trimmedMessage[1].Equals(' ') ? 2 : 1;
+        var firstLetters = trimmedMessage.Letters().TakeWhile(x => _commandPrefixes.Letters().Contains(x) || Emoji.IsEmoji(x) || emojiStuff.Contains(x.Codepoints().First()));
+        
+        string prefixUsed = String.Join("", firstLetters);
+
+        if (string.IsNullOrWhiteSpace(prefixUsed)) return;
+
+        trimmedMessage = trimmedMessage.Replace(prefixUsed, "");
+
+        int idx = trimmedMessage[0].Equals(' ') ? 1 : 0;
 
         string requestedCommand = trimmedMessage[idx..].Split(' ', 2)[0];
 
