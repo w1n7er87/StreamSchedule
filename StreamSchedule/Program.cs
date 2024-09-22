@@ -135,6 +135,7 @@ internal class BotCore
 
     private async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
     {
+        Console.WriteLine($"[{e.Channel}] [{e.RawIRC}]");
         TwitchClient? twitchClient = sender as TwitchClient;
         if (e.RawIRC.Contains("moderation"))
         {
@@ -196,21 +197,31 @@ internal class BotCore
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
             trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2)..];
         }
+        var msgAsCodepoints = trimmedMessage.Codepoints();
+
+        var firstLetters = msgAsCodepoints.TakeWhile(x => 
+            x == Emoji.ZeroWidthJoiner || 
+            x == Emoji.ObjectReplacementCharacter || 
+            x == Emoji.Keycap || 
+            Emoji.IsEmoji(x.AsString()) || 
+            Emoji.SkinTones.All.Any(y => x == y) ||
+            x == Emoji.VariationSelector || 
+            _commandPrefixes.Any(y => y == x));
+
+        if (!firstLetters.Any()) return;
+
+        var noPrefix = msgAsCodepoints.Where(x => !firstLetters.Contains(x));
+        string restoredMessage = "";
+        foreach (var l in noPrefix) 
+        {
+            restoredMessage += l.AsString();
+        }
+
+        Console.WriteLine(restoredMessage);
+        
+        trimmedMessage = restoredMessage;
 
         if (trimmedMessage.Length < 3) return;
-
-        List<Codepoint> emojiStuff = Emoji.SkinTones.All;
-        emojiStuff.Add(Emoji.ZeroWidthJoiner);
-        emojiStuff.Add(Emoji.ObjectReplacementCharacter);
-        emojiStuff.Add(Emoji.Keycap);
-
-        var firstLetters = trimmedMessage.Letters().TakeWhile(x => _commandPrefixes.Letters().Contains(x) || Emoji.IsEmoji(x) || emojiStuff.Contains(x.Codepoints().First()));
-        
-        string prefixUsed = String.Join("", firstLetters);
-
-        if (string.IsNullOrWhiteSpace(prefixUsed)) return;
-
-        trimmedMessage = trimmedMessage.Replace(prefixUsed, "");
 
         int idx = trimmedMessage[0].Equals(' ') ? 1 : 0;
 

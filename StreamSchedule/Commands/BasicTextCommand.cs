@@ -16,7 +16,7 @@ internal class BasicTextCommand : Command
     {
         List<TextCommand> commands = [.. BotCore.DBContext.TextCommands];
         string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArguments);
-        string commandName = text.Split(' ')[0];
+        string commandName = text.Split(' ')[0].ToLower();
         text = text[commandName.Length..];
         Console.WriteLine(text);
         if (string.IsNullOrEmpty(commandName)) return Task.FromResult(Utils.Responses.Fail + (" no command name provided "));
