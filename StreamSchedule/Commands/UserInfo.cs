@@ -122,7 +122,7 @@ internal class UserInfo : Command
             TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.FirstOrDefault();
             if (s != null)
             {
-                result = (p >= Privileges.Trusted) ? $"Now {s.Type} : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers." : $"live {s.GameName}";
+                result = (p >= Privileges.Trusted) ? $"Now {s.Type} : {s.GameName} - \" {s.Title[..30]} \" for {s.ViewerCount} viewers." : $"live {s.GameName}";
             }
             else
             {
