@@ -6,7 +6,7 @@ internal class Top : Command
 {
     internal override string Call => "top";
     internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get top ";
+    internal override string Help => "get top chatters by messages sent offline(default)/online/score ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => ["online", "offline", "score"];
@@ -22,7 +22,7 @@ internal class Top : Command
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
-                result += $"{i + 1} {user.Username}_ {user.MessagesOffline} Clap ";
+                result += $"{i + 1} {user.Username}󠀀 {user.MessagesOffline} ppL ";
             }
         }
 
@@ -32,7 +32,7 @@ internal class Top : Command
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
-                result += $"{i + 1} {user.Username}_ {MathF.Round(Userscore.GetRatioAndScore(user).score, 3)} Clap ";
+                result += $"{i + 1} {user.Username}󠀀 {MathF.Round(Userscore.GetRatioAndScore(user).score, 3)} ppL ";
             }
         }
 
@@ -42,7 +42,7 @@ internal class Top : Command
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
-                result += $"{i + 1} {user.Username}_ {user.MessagesOnline} Clap ";
+                result += $"{i + 1} {user.Username}󠀀 {user.MessagesOnline} ppL ";
             }
         }
 

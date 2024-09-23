@@ -135,14 +135,15 @@ internal class BotCore
 
     private async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
     {
-        Console.WriteLine($"[{e.Channel}] [{e.RawIRC}]");
-        TwitchClient? twitchClient = sender as TwitchClient;
         if (e.RawIRC.Contains("moderation"))
         {
+            TwitchClient? twitchClient = sender as TwitchClient;
             Console.WriteLine($"{e.RawIRC} {e.Channel} {e.Location}");
             await Task.Delay(2000);
             twitchClient?.SendMessage(e.Channel, "moderation 1984 ");
+            return;
         }
+        Console.WriteLine($"[{e.Channel}] [{e.RawIRC}]");
     }
 
     private void Client_OnLog(object? sender, OnLogArgs e)
@@ -170,7 +171,7 @@ internal class BotCore
             privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
         };
 
-        User userSent = User.SyncToDb(u, DBContext);
+        User userSent = await User.SyncToDb(u, DBContext);
 
         if (_channelLiveState[e.ChatMessage.Channel])
         {
@@ -180,15 +181,10 @@ internal class BotCore
 
         User.AddMessagesCounter(userSent, DBContext, 0, 1);
 
-        if (e.ChatMessage.Message.Length < 3) return;
-
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 
         MessageCache.Add(e.ChatMessage);
-        if (MessageCache.Count > _cacheSize)
-        {
-            MessageCache.RemoveAt(0);
-        }
+        if (MessageCache.Count > _cacheSize) { MessageCache.RemoveAt(0); }
 
         string? replyID = null;
         string trimmedMessage = e.ChatMessage.Message;
@@ -216,16 +212,14 @@ internal class BotCore
         {
             restoredMessage += l.AsString();
         }
-
-        Console.WriteLine(restoredMessage);
         
         trimmedMessage = restoredMessage;
 
         if (trimmedMessage.Length < 3) return;
 
-        int idx = trimmedMessage[0].Equals(' ') ? 1 : 0;
+        trimmedMessage = trimmedMessage[0].Equals(' ') ? trimmedMessage.Remove(0, 1) : trimmedMessage;
 
-        string requestedCommand = trimmedMessage[idx..].Split(' ', 2)[0];
+        string requestedCommand = trimmedMessage.Split(' ', 2)[0];
 
         List<TextCommand> textCommands = [.. DBContext.TextCommands];
 
@@ -265,7 +259,7 @@ internal class BotCore
                 return;
             }
 
-            trimmedMessage = trimmedMessage[(idx + c.Call.Length)..].Replace("\U000e0000", "");
+            trimmedMessage = trimmedMessage[c.Call.Length..].Replace("\U000e0000", "");
 
             CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
 

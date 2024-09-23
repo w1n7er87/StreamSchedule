@@ -18,7 +18,7 @@ internal static class Commands
                 if (ss.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase))
                 {
                     usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "").ToLower();
-                    input = input.Replace(ss + " ", "", StringComparison.InvariantCultureIgnoreCase);
+                    input = input.Replace(ss, "", StringComparison.InvariantCultureIgnoreCase);
                 }
             }
         }

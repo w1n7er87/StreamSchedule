@@ -12,7 +12,7 @@ public class UniversalMessageInfo
 
     public UniversalMessageInfo(ChatMessage chatMessage, string commandTrimmedContent, string? replyID, Privileges senderPrivileges)
     {
-        Message = commandTrimmedContent.Length > 1 && commandTrimmedContent[0].Equals(' ') ? commandTrimmedContent[1..] : commandTrimmedContent;
+        Message = commandTrimmedContent[0].Equals(' ') ? commandTrimmedContent.Remove(0, 1) : commandTrimmedContent;
         Username = chatMessage.Username;
         UserId = chatMessage.UserId;
         ReplyID = replyID;

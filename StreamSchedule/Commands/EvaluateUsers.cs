@@ -14,7 +14,7 @@ internal class EvaluateUsers : Command
 
     internal float DefaultCutoffScore => 3.5f;
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
 
@@ -29,68 +29,72 @@ internal class EvaluateUsers : Command
         {
             if (string.IsNullOrWhiteSpace(split[0])) // nothing provided - run on all with default cutoff
             {
-                result += UpdateAll(scoreCutoff).ToString();
+                result += (await UpdateAll(scoreCutoff)).ToString() + $" user('s) updated ({scoreCutoff})";
             }
             else // had something? assume it's a username
             {
                 targetUsername = split[0];
 
-                result += TryUpdateSingle(targetUsername, scoreCutoff) ? "1" : "0";
+                result += await TryUpdateSingle(targetUsername, scoreCutoff) ? $"{targetUsername}'s privileges have been updated ({scoreCutoff})" : $"{targetUsername}'s privileges nave not been updated ({scoreCutoff})";
             }
-            return Task.FromResult(result + " user('s) updated");
+            return result;
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return Task.FromResult(Utils.Responses.Surprise);
+            return Utils.Responses.Surprise;
         }
     }
 
-    private int UpdateAll(float cutoff)
+    private static async Task<int> UpdateAll(float cutoff)
     {
         int count = 0;
-        List<User> users = [.. BotCore.DBContext.Users];
-        foreach (var user in users)
+        var users = BotCore.DBContext.Users.AsAsyncEnumerable();
+        await foreach (var user in users)
         {
+            if (user.privileges == Privileges.Banned) continue;
+
             float score = Userscore.GetRatioAndScore(user).score;
+
             if (user.privileges < Privileges.Trusted && score >= cutoff)
             {
-                BotCore.DBContext.Update(user);
                 user.privileges = Privileges.Trusted;
                 count++;
+                await BotCore.DBContext.SaveChangesAsync();
+                continue;
             }
-            else if (user.privileges == Privileges.Trusted && score <= cutoff)
+
+            if (user.privileges == Privileges.Trusted && score < cutoff)
             {
-                BotCore.DBContext.Update(user);
                 user.privileges = Privileges.None;
                 count++;
+                await BotCore.DBContext.SaveChangesAsync();
+                continue;
             }
         }
-        BotCore.DBContext.SaveChanges();
         return count;
     }
 
-    private bool TryUpdateSingle(string username, float cutoff)
+    private static async Task<bool> TryUpdateSingle(string username, float cutoff)
     {
-        if (!User.TryGetUser(username, out User user)) { return false; }
+        if (!User.TryGetUser(username, out User user)) return false;
+
+        if (user.privileges == Privileges.Banned || user.privileges >= Privileges.Mod) return false;
 
         float score = Userscore.GetRatioAndScore(user).score;
+
         if (user.privileges < Privileges.Trusted && score >= cutoff)
         {
-            BotCore.DBContext.Update(user);
             user.privileges = Privileges.Trusted;
+            await BotCore.DBContext.SaveChangesAsync();
+            return true;
         }
-        else if (user.privileges == Privileges.Trusted && score < cutoff)
+        if (user.privileges == Privileges.Trusted && score < cutoff)
         {
-            BotCore.DBContext.Update(user);
             user.privileges = Privileges.None;
+            await BotCore.DBContext.SaveChangesAsync();
+            return true;
         }
-        else
-        {
-            return false;
-        }
-
-        BotCore.DBContext.SaveChanges();
-        return true;
+        return false;
     }
 }
