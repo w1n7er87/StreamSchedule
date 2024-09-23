@@ -17,8 +17,8 @@ internal class BasicTextCommand : Command
         List<TextCommand> commands = [.. BotCore.DBContext.TextCommands];
         string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArguments);
         string commandName = text.Split(' ')[0].ToLower();
-        text = text[commandName.Length..];
-        Console.WriteLine(text);
+        text = text.Replace(commandName, "");
+
         if (string.IsNullOrEmpty(commandName)) return Task.FromResult(Utils.Responses.Fail + (" no command name provided "));
 
         if (commandName.Length < 2) return Task.FromResult(Utils.Responses.Fail + (" command name should be 2 characters or longer "));

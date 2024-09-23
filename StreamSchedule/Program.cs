@@ -215,11 +215,11 @@ internal class BotCore
         
         trimmedMessage = restoredMessage;
 
-        if (trimmedMessage.Length < 3) return;
+        if (trimmedMessage.Length < 2) return;
 
-        trimmedMessage = trimmedMessage[0].Equals(' ') ? trimmedMessage.Remove(0, 1) : trimmedMessage;
+        trimmedMessage = trimmedMessage.TrimStart();
 
-        string requestedCommand = trimmedMessage.Split(' ', 2)[0];
+        string requestedCommand = trimmedMessage.Split(' ')[0];
 
         List<TextCommand> textCommands = [.. DBContext.TextCommands];
 
@@ -259,7 +259,7 @@ internal class BotCore
                 return;
             }
 
-            trimmedMessage = trimmedMessage[c.Call.Length..].Replace("\U000e0000", "");
+            trimmedMessage = trimmedMessage.Replace(c.Call, "", StringComparison.InvariantCultureIgnoreCase).Replace("\U000e0000", "");
 
             CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
 
