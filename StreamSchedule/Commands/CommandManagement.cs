@@ -20,7 +20,7 @@ internal class CommandManagement : Command
         string commandName = text.Split(' ')[0].ToLower();
         text = text[commandName.Length..];
 
-        Privileges privileges = usedArguments.TryGetValue("p", out string? pp) ? PrivilegesConversion.ParsePrivilege(pp) : Privileges.None;
+        Privileges privileges = usedArguments.TryGetValue("p", out string? pp) ? PrivilegeUtils.ParsePrivilege(pp) : Privileges.None;
 
         if (string.IsNullOrEmpty(commandName)) return Task.FromResult(Utils.Responses.Fail + (" no command name provided "));
         if (commandName.Length < 2) return Task.FromResult(Utils.Responses.Fail + (" command name should be 2 characters or longer "));
@@ -39,7 +39,7 @@ internal class CommandManagement : Command
 
         BotCore.DBContext.TextCommands.Add(new() { Name = commandName, Content = content, Privileges = privileges });
         BotCore.DBContext.SaveChanges();
-        return $"{Utils.Responses.Ok} added command \"{commandName}\" for {PrivilegesConversion.PrivilegeToString(privileges)}";
+        return $"{Utils.Responses.Ok} added command \"{commandName}\" for {PrivilegeUtils.PrivilegeToString(privileges)}";
     }
 
     private static string RemoveCommand(string commandName, in List<TextCommand> commands)

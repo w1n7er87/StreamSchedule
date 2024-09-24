@@ -27,6 +27,6 @@ internal class CheckPrivileges : Command
             targetUsername = message.Username;
         }
 
-        return Task.FromResult(new CommandResult($"{targetUsername} is {PrivilegesConversion.PrivilegeToString(u.privileges)}", false));
+        return Task.FromResult(new CommandResult($"{targetUsername} is {PrivilegeUtils.PrivilegeToString(u.privileges)}", false));
     }
 }
