@@ -44,9 +44,9 @@ internal class UserInfo : Command
             string color = await GetColor(u.Id);
             string followers = (await GetFollowers(u.Id)).ToString() + " followers";
             string emotes = await GetEmotes(u.Id);
-            string liveInfo = await GetLiveStatus(u.Id, message.Privileges);
+            string[] liveInfo = await GetLiveStatus(u.Id);
 
-            if (usedArgs.TryGetValue("a", out _)) { return new($"{generalInfo} | {color} | {followers} | {emotes} | {liveInfo}"); }
+            if (usedArgs.TryGetValue("a", out _)) { return new($"{generalInfo} | {color} | {followers} | {emotes} | {liveInfo[0]}"); }
 
             if (usedArgs.TryGetValue("g", out _)) { response += generalInfo + " "; }
 
@@ -56,7 +56,7 @@ internal class UserInfo : Command
 
             if (usedArgs.TryGetValue("e", out _)) { response += emotes + " "; }
 
-            if (usedArgs.TryGetValue("s", out _)) { response += liveInfo + " "; }
+            if (usedArgs.TryGetValue("s", out _)) { response += message.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0] + " "; }
 
             return response;
         }
@@ -82,11 +82,12 @@ internal class UserInfo : Command
             if (emotes.ChannelEmotes.Length > 0)
             {
                 result = emotes.ChannelEmotes.Length + " emotes";
-                result += " (" + emotes.ChannelEmotes.Count(e => e.Tier == "1000") + "-T1; " +
-                    emotes.ChannelEmotes.Count(e => e.Tier == "2000") + "-T2; " +
-                    emotes.ChannelEmotes.Count(e => e.Tier == "3000") + "-T3; " +
-                    emotes.ChannelEmotes.Count(e => e.EmoteType == "follower") + "-Flw; " +
-                    emotes.ChannelEmotes.Count(e => e.EmoteType == "bitstier") + "-Bits)";
+                result += $" ({emotes.ChannelEmotes.Count(e => e.Format.Contains("animated"))} animated)";
+                result += " (" + emotes.ChannelEmotes.Count(e => e.Tier == "1000") + " T1; " +
+                    emotes.ChannelEmotes.Count(e => e.Tier == "2000") + " T2; " +
+                    emotes.ChannelEmotes.Count(e => e.Tier == "3000") + " T3; " +
+                    emotes.ChannelEmotes.Count(e => e.EmoteType == "follower") + " Flw; " +
+                    emotes.ChannelEmotes.Count(e => e.EmoteType == "bitstier") + " Bits)";
             }
             return result;
         }
@@ -111,29 +112,31 @@ internal class UserInfo : Command
         }
     }
 
-    private static async Task<string> GetLiveStatus(string userID, Privileges p)
+    private static async Task<string[]> GetLiveStatus(string userID)
     {
         try
         {
-            string result = "";
+            string[] result = ["", ""];
 
             var liveStatus = await BotCore.Instance.api.Helix.Streams.GetStreamsAsync(userIds: [userID]);
 
             TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.FirstOrDefault();
             if (s != null)
             {
-                result = (p >= Privileges.Trusted) ? $"Now {s.Type} : {s.GameName} - \" {s.Title[..30]} \" for {s.ViewerCount} viewers." : $"live {s.GameName}";
+                TimeSpan durationSpan = DateTime.Now - s.StartedAt.ToLocalTime();
+                string duration = durationSpan.Days > 0 ? durationSpan.ToString("d\\:hh\\:mm\\:ss") : durationSpan.ToString("hh\\:mm\\:ss");
+                result = [$"live {s.GameName}", $"Now {s.Type} ({duration}) : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers."];
             }
             else
             {
-                result = "offline";
+                result = ["offline", "offline"];
             }
             return result;
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.ToString());
-            return Utils.Responses.Surprise.ToString();
+            return [Utils.Responses.Surprise.ToString(), Utils.Responses.Surprise.ToString()];
         }
     }
 
