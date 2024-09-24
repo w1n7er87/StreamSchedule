@@ -48,8 +48,10 @@ internal class BotCore
 
     private bool _sameMessage = false;
 
+    private DateTime _textCommandLastUsed = DateTime.MinValue;
+
     public List<ChatMessage> MessageCache { get; private set; } = [];
-    private int _cacheSize = 300;
+    private static readonly int _cacheSize = 300;
 
     public static GlobalEmote[]? GlobalEmotes { get; private set; }
 
@@ -65,8 +67,6 @@ internal class BotCore
 
         await Task.Delay(-1);
     }
-
-    private DateTime _textCommandLastUsed = DateTime.MinValue;
 
     public BotCore(string[] channelNames)
     {
@@ -107,59 +107,6 @@ internal class BotCore
                 }
             }
         }
-    }
-
-    private void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
-    {
-        string r = "";
-        foreach (var c in e.Channels) { r += c + ", "; }
-        Console.WriteLine($"channels set {r}");
-    }
-
-    private void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
-    {
-        Console.WriteLine("monitoring service stated");
-    }
-
-    private void Monitor_OnLive(object? sender, OnStreamOnlineArgs args)
-    {
-        _channelLiveState[args.Channel] = true;
-        Console.WriteLine($"{args.Channel} went live");
-    }
-
-    private void Monitor_OnOffline(object? sender, OnStreamOfflineArgs args)
-    {
-        _channelLiveState[args.Channel] = false;
-        Console.WriteLine($"{args.Channel} went offline");
-    }
-
-    private async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
-    {
-        if (e.RawIRC.Contains("moderation"))
-        {
-            TwitchClient? twitchClient = sender as TwitchClient;
-            Console.WriteLine($"{e.RawIRC} {e.Channel} {e.Location}");
-            await Task.Delay(2000);
-            twitchClient?.SendMessage(e.Channel, "moderation 1984 ");
-            return;
-        }
-        Console.WriteLine($"[{e.Channel}] [{e.RawIRC}]");
-    }
-
-    private void Client_OnLog(object? sender, OnLogArgs e)
-    {
-        //Console.WriteLine($"{e.DateTime.ToString()}: {e.BotUsername} - {e.Data}");
-    }
-
-    private void Client_OnConnected(object? sender, OnConnectedArgs e)
-    {
-        Console.WriteLine($"{e.BotUsername} Connected ");
-        GlobalEmotes ??= api.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
-    }
-
-    private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
-    {
-        Console.WriteLine($"Joined {e.Channel}");
     }
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
@@ -281,6 +228,63 @@ internal class BotCore
             return;
         }
     }
+
+    #region EVENTS 
+
+    private void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
+    {
+        string r = "";
+        foreach (var c in e.Channels) { r += c + ", "; }
+        Console.WriteLine($"channels set {r}");
+    }
+
+    private void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
+    {
+        Console.WriteLine("monitoring service stated");
+    }
+
+    private void Monitor_OnLive(object? sender, OnStreamOnlineArgs args)
+    {
+        _channelLiveState[args.Channel] = true;
+        Console.WriteLine($"{args.Channel} went live");
+    }
+
+    private void Monitor_OnOffline(object? sender, OnStreamOfflineArgs args)
+    {
+        _channelLiveState[args.Channel] = false;
+        Console.WriteLine($"{args.Channel} went offline");
+    }
+
+    private async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
+    {
+        if (e.RawIRC.Contains("moderation"))
+        {
+            TwitchClient? twitchClient = sender as TwitchClient;
+            Console.WriteLine($"{e.RawIRC} {e.Channel} {e.Location}");
+            await Task.Delay(2000);
+            twitchClient?.SendMessage(e.Channel, "moderation 1984 ");
+            return;
+        }
+        Console.WriteLine($"[{e.Channel}] [{e.RawIRC}]");
+    }
+
+    private void Client_OnLog(object? sender, OnLogArgs e)
+    {
+        //Console.WriteLine($"{e.DateTime.ToString()}: {e.BotUsername} - {e.Data}");
+    }
+
+    private void Client_OnConnected(object? sender, OnConnectedArgs e)
+    {
+        Console.WriteLine($"{e.BotUsername} Connected ");
+        GlobalEmotes ??= api.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
+    }
+
+    private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
+    {
+        Console.WriteLine($"Joined {e.Channel}");
+    }
+
+    #endregion
 
     private static string FixNineEleven(string input)
     {
