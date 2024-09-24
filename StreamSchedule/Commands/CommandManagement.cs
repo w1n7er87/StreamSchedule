@@ -15,23 +15,22 @@ internal class CommandManagement : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         List<TextCommand> commands = [.. BotCore.DBContext.TextCommands];
+
         string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArguments);
         string commandName = text.Split(' ')[0].ToLower();
-        text = text.Replace(commandName, "");
+        text = text[commandName.Length..];
+
         Privileges privileges = usedArguments.TryGetValue("p", out string? pp) ? PrivilegesConversion.ParsePrivilege(pp) : Privileges.None;
 
         if (string.IsNullOrEmpty(commandName)) return Task.FromResult(Utils.Responses.Fail + (" no command name provided "));
-
         if (commandName.Length < 2) return Task.FromResult(Utils.Responses.Fail + (" command name should be 2 characters or longer "));
-
-        if (usedArguments.TryGetValue("add", out _)) return Task.FromResult(new CommandResult(AddCommands(commandName, text, privileges, commands)));
-
+        if (usedArguments.TryGetValue("add", out _)) return Task.FromResult(new CommandResult(AddCommand(commandName, text, privileges, commands)));
         if (usedArguments.TryGetValue("rm", out _)) return Task.FromResult(new CommandResult(RemoveCommand(commandName, commands)));
 
         return Task.FromResult(Utils.Responses.Surprise);
     }
 
-    private static string AddCommands(string commandName, string content, Privileges privileges, in List<TextCommand> commands)
+    private static string AddCommand(string commandName, string content, Privileges privileges, in List<TextCommand> commands)
     {
         if (string.IsNullOrEmpty(content)) return (Utils.Responses.Fail + " no content provided ").ToString();
 
@@ -40,7 +39,7 @@ internal class CommandManagement : Command
 
         BotCore.DBContext.TextCommands.Add(new() { Name = commandName, Content = content, Privileges = privileges });
         BotCore.DBContext.SaveChanges();
-        return Utils.Responses.Ok.ToString();
+        return $"{Utils.Responses.Ok} added command \"{commandName}\" for {PrivilegesConversion.PrivilegeToString(privileges)}";
     }
 
     private static string RemoveCommand(string commandName, in List<TextCommand> commands)
