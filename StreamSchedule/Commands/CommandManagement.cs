@@ -46,7 +46,7 @@ internal class CommandManagement : Command
     {
         if (commands.Count <= 0) return (Utils.Responses.Fail + " there are no custom commands. ").ToString();
 
-        TextCommand? c = BotCore.DBContext.TextCommands.FirstOrDefault(x => x.Name == commandName);
+        TextCommand? c = BotCore.DBContext.TextCommands.FirstOrDefault(x => x.Name.ToLower() == commandName);
 
         if (c is null) return (Utils.Responses.Fail + " there is no command with this name. ").ToString();
 

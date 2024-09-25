@@ -41,22 +41,41 @@ internal class UserInfo : Command
 
             if (usedArgs.Count == 0) { return generalInfo; }
 
-            string color = await GetColor(u.Id);
-            string followers = (await GetFollowers(u.Id)).ToString() + " followers";
-            string emotes = await GetEmotes(u.Id);
-            string[] liveInfo = await GetLiveStatus(u.Id);
+            string color = "";
+            string followers = "";
+            string[] emotes = [];
+            string[] liveInfo = [];
 
-            if (usedArgs.TryGetValue("a", out _)) { return new($"{generalInfo} | {color} | {followers} | {emotes} | {liveInfo[0]}"); }
 
-            if (usedArgs.TryGetValue("g", out _)) { response += generalInfo + " "; }
+            if (usedArgs.TryGetValue("g", out _) || usedArgs.TryGetValue("a", out _))
+            { response += generalInfo + " "; }
 
-            if (usedArgs.TryGetValue("c", out _)) { response += color + " "; }
+            if (usedArgs.TryGetValue("c", out _) || usedArgs.TryGetValue("a", out _))
+            {
+                color = await GetColor(u.Id);
+                response += color + " ";
+            }
 
-            if (usedArgs.TryGetValue("f", out _)) { response += followers + " "; }
+            if (usedArgs.TryGetValue("f", out _) || usedArgs.TryGetValue("a", out _))
+            {
+                followers = (await GetFollowers(u.Id)).ToString() + " followers";
+                response += followers + " ";
+            }
 
-            if (usedArgs.TryGetValue("e", out _)) { response += emotes + " "; }
+            if (usedArgs.TryGetValue("e", out _) || usedArgs.TryGetValue("a", out _))
+            {
+                emotes = await GetEmotes(u.Id);
+                response += emotes[1] + " ";
+            }
 
-            if (usedArgs.TryGetValue("s", out _)) { response += message.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0] + " "; }
+            if (usedArgs.TryGetValue("s", out _) || usedArgs.TryGetValue("a", out _))
+            {
+                liveInfo = await GetLiveStatus(u.Id);
+                response += (message.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
+            }
+
+            if (usedArgs.TryGetValue("a", out _))
+            { return new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}"); }
 
             return response;
         }
@@ -72,29 +91,43 @@ internal class UserInfo : Command
         }
     }
 
-    private static async Task<string> GetEmotes(string userID)
+    private static async Task<string[]> GetEmotes(string userID)
     {
         try
         {
-            var emotes = await BotCore.Instance.api.Helix.Chat.GetChannelEmotesAsync(userID);
-            string result = "no emotes";
+            var emotes = (await BotCore.Instance.api.Helix.Chat.GetChannelEmotesAsync(userID)).ChannelEmotes;
+            string[] result = ["no emotes", "no emotes"];
 
-            if (emotes.ChannelEmotes.Length > 0)
+            if (emotes.Length > 0)
             {
-                result = emotes.ChannelEmotes.Length + " emotes";
-                result += $" ({emotes.ChannelEmotes.Count(e => e.Format.Contains("animated"))} animated)";
-                result += " (" + emotes.ChannelEmotes.Count(e => e.Tier == "1000") + " T1; " +
-                    emotes.ChannelEmotes.Count(e => e.Tier == "2000") + " T2; " +
-                    emotes.ChannelEmotes.Count(e => e.Tier == "3000") + " T3; " +
-                    emotes.ChannelEmotes.Count(e => e.EmoteType == "follower") + " Flw; " +
-                    emotes.ChannelEmotes.Count(e => e.EmoteType == "bitstier") + " Bits)";
+                result[1] = emotes.Length + " emotes";
+                result[1] += $" ({emotes.Count(e => e.Format.Contains("animated"))} animated) ";
+
+                result[0] = result[1];
+
+                int t1 = emotes.Count(e => e.Tier == "1000");
+                int t1a = emotes.Count(e => e.Tier == "1000" && e.Format.Contains("animated"));
+
+                int t2 = emotes.Count(e => e.Tier == "2000");
+                int t2a = emotes.Count(e => e.Tier == "2000" && e.Format.Contains("animated"));
+
+                int t3 = emotes.Count(e => e.Tier == "3000");
+                int t3a = emotes.Count(e => e.Tier == "3000" && e.Format.Contains("animated"));
+
+                int bits = emotes.Count(e => e.EmoteType == "bitstier");
+                int bitsa = emotes.Count(e => e.EmoteType == "bitstier" && e.Format.Contains("animated"));
+
+                int follow = emotes.Count(e => e.EmoteType == "follower");
+                int followa = emotes.Count(e => e.EmoteType == "follower" && e.Format.Contains("animated"));
+
+                result[1] += $": T1:{t1}({t1a}); T2:{t2}({t2a}); T3:{t3}({t3a}); Bits:{bits}({bitsa}); Follow:{follow}({followa});";
             }
             return result;
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.ToString());
-            return Utils.Responses.Surprise.ToString();
+            return [Utils.Responses.Surprise.ToString(), Utils.Responses.Surprise.ToString()];
         }
     }
 
