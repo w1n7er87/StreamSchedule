@@ -15,6 +15,9 @@ internal class Schedule : Command
     {
         DateOnly inAWeek = DateOnly.FromDateTime(DateTime.Now + TimeSpan.FromDays(7));
         var streams = BotCore.DBContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(DateTime.Now) && s.StreamDate <= inAWeek);
+
+        if (!streams.Any()) { return Task.FromResult(new CommandResult("The schedule is empty. SadCat ")); }
+
         CommandResult response = new("");
         foreach (var stream in streams)
         {
