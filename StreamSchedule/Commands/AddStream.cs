@@ -1,4 +1,5 @@
-﻿using StreamSchedule.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
@@ -29,30 +30,33 @@ internal class AddStream : Command
         {
             StreamDate = DateOnly.FromDateTime(temp),
             StreamTime = TimeOnly.FromDateTime(temp),
-            StreamTitle = message.Message[(split[0].Length + 1)..]
+            StreamTitle = message.Message[(split[0].Length + 1)..],
+            StreamStatus = StreamStatus.Confirmed,
         };
 
         try
         {
-            Data.Models.Stream? s = BotCore.DBContext.Streams.FirstOrDefault(x => x.StreamDate == stream.StreamDate);
-            if (s == null)
+            var existingStreamsOnThatDay = BotCore.DBContext.Streams.Where(x => x.StreamDate == stream.StreamDate);
+
+
+            if (!existingStreamsOnThatDay.Any(x => x.StreamTime == stream.StreamTime))
             {
                 BotCore.DBContext.Streams.Add(stream);
+                BotCore.DBContext.SaveChanges();
+                return Task.FromResult(Utils.Responses.Ok + $" added a new stream \"{stream.StreamTitle[..15]}\"");
             }
             else
             {
-                BotCore.DBContext.Streams.Update(s);
-                s.StreamTime = stream.StreamTime;
-                s.StreamTitle = stream.StreamTitle;
+                var s = existingStreamsOnThatDay.First(x => x.StreamTime == stream.StreamTime);
+                s = stream;
+                BotCore.DBContext.SaveChanges();
+                return Task.FromResult(Utils.Responses.Ok + $" added a new stream \"{stream.StreamTitle[..15]}\"");
             }
-            BotCore.DBContext.SaveChanges();
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             return Task.FromResult(Utils.Responses.Fail);
         }
-
-        return Task.FromResult(Utils.Responses.Ok);
     }
 }
