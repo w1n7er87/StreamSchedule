@@ -46,35 +46,36 @@ internal class UserInfo : Command
             string[] emotes = [];
             string[] liveInfo = [];
 
+            bool all = usedArgs.TryGetValue("a", out _);
 
-            if (usedArgs.TryGetValue("g", out _) || usedArgs.TryGetValue("a", out _))
+            if (usedArgs.TryGetValue("g", out _) || all)
             { response += generalInfo + " "; }
 
-            if (usedArgs.TryGetValue("c", out _) || usedArgs.TryGetValue("a", out _))
+            if (usedArgs.TryGetValue("c", out _) || all)
             {
                 color = await GetColor(u.Id);
                 response += color + " ";
             }
 
-            if (usedArgs.TryGetValue("f", out _) || usedArgs.TryGetValue("a", out _))
+            if (usedArgs.TryGetValue("f", out _) || all)
             {
                 followers = (await GetFollowers(u.Id)).ToString() + " followers";
                 response += followers + " ";
             }
 
-            if (usedArgs.TryGetValue("e", out _) || usedArgs.TryGetValue("a", out _))
+            if (usedArgs.TryGetValue("e", out _) || all)
             {
                 emotes = await GetEmotes(u.Id);
                 response += emotes[1] + " ";
             }
 
-            if (usedArgs.TryGetValue("s", out _) || usedArgs.TryGetValue("a", out _))
+            if (usedArgs.TryGetValue("s", out _) || all)
             {
                 liveInfo = await GetLiveStatus(u.Id);
                 response += (message.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
             }
 
-            if (usedArgs.TryGetValue("a", out _))
+            if (all)
             { return new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}"); }
 
             return response;
@@ -100,9 +101,7 @@ internal class UserInfo : Command
 
             if (emotes.Length > 0)
             {
-                result[1] = emotes.Length + " emotes";
-                result[1] += $" ({emotes.Count(e => e.Format.Contains("animated"))} animated) ";
-
+                result[1] = $"{emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated) ";
                 result[0] = result[1];
 
                 int t1 = emotes.Count(e => e.Tier == "1000");
