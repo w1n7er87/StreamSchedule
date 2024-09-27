@@ -153,7 +153,8 @@ internal class BotCore
 
         if (!firstLetters.Any()) return;
 
-        var noPrefix = msgAsCodepoints.Where(x => !firstLetters.Contains(x));
+        var noPrefix = msgAsCodepoints.Skip(firstLetters.Count());
+
         string restoredMessage = "";
         foreach (var l in noPrefix) 
         {
@@ -176,13 +177,7 @@ internal class BotCore
             {
                 if (!command.Name.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase)) continue;
 
-                if (userSent.privileges < command.Privileges)
-                {
-                    _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
-                    _sameMessage = !_sameMessage;
-                    _textCommandLastUsed = DateTime.Now;
-                    return;
-                }
+                if (userSent.privileges < command.Privileges)return;
 
                 Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
                 _client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
@@ -198,13 +193,7 @@ internal class BotCore
 
             if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) return;
 
-            if (userSent.privileges < c.MinPrivilege)
-            {
-                _client.SendMessage(e.ChatMessage.Channel, "✋ unauthorized action" + bypassSameMessage);
-                _sameMessage = !_sameMessage;
-                c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
-                return;
-            }
+            if (userSent.privileges < c.MinPrivilege) return;
 
             trimmedMessage = trimmedMessage.Replace(c.Call, "", StringComparison.InvariantCultureIgnoreCase).Replace("\U000e0000", "");
 
