@@ -121,7 +121,7 @@ internal class UserInfo : Command
                     prefix = p[..prefixLength];
                 }
 
-                result[1] = $"{emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated ) \"{prefix}\"";
+                result[1] = $"{emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated) \"{prefix}\"";
                 result[0] = result[1];
 
                 int t1 = emotes.Count(e => e.Tier == "1000");
@@ -137,9 +137,8 @@ internal class UserInfo : Command
                 int bitsa = emotes.Count(e => e.EmoteType == "bitstier" && e.Format.Contains("animated"));
 
                 int follow = emotes.Count(e => e.EmoteType == "follower");
-                int followa = emotes.Count(e => e.EmoteType == "follower" && e.Format.Contains("animated"));
 
-                result[1] += $": T1:{t1}({t1a}); T2:{t2}({t2a}); T3:{t3}({t3a}); Bits:{bits}({bitsa}); Follow:{follow}({followa});";
+                result[1] += $": T1:{t1}({t1a}); T2:{t2}({t2a}); T3:{t3}({t3a}); Bits:{bits}({bitsa}); Follow:{follow};";
             }
             return result;
         }
