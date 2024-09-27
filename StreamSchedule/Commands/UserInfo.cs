@@ -101,7 +101,9 @@ internal class UserInfo : Command
 
             if (emotes.Length > 0)
             {
-                result[1] = $"{emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated) ";
+                string prefix = string.Join("", emotes.First().Name.TakeWhile(x => char.IsLower(x) || char.IsNumber(x)));
+
+                result[1] = $"{emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated) \"{prefix}\" ";
                 result[0] = result[1];
 
                 int t1 = emotes.Count(e => e.Tier == "1000");
