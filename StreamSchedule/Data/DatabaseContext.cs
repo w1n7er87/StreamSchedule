@@ -13,6 +13,7 @@ public class DatabaseContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Models.Stream> Streams => Set<Models.Stream>();
     public DbSet<TextCommand> TextCommands => Set<TextCommand>();
+    public DbSet<CommandAlias> CommandAliases => Set<CommandAlias>();
 }
 
 public class DatabaseContextFactory : IDesignTimeDbContextFactory<DatabaseContext>
