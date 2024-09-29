@@ -31,7 +31,8 @@ public class Program
 
 internal class BotCore
 {
-    private BotCore() { }
+    private BotCore()
+    { }
 
     public static DatabaseContext DBContext { get; private set; } = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
     public static BotCore Instance { get; private set; }
@@ -96,17 +97,26 @@ internal class BotCore
             _channelLiveState[channel] = new();
         }
 
+        List<CommandAlias> aliases = [.. DBContext.CommandAliases];
+
         if (CurrentCommands.Count == 0)
         {
             foreach (var c in Commands.Commands.knownCommands)
             {
                 CurrentCommands.Add((Command?)Activator.CreateInstance(c));
+
+                if (!aliases.Any(x => x.CommandName.Equals(CurrentCommands[^1]!.Call, StringComparison.OrdinalIgnoreCase)))
+                {
+                    DBContext.Add(new CommandAlias() { CommandName = CurrentCommands[^1]!.Call.ToLower() });
+                }
+
                 foreach (string channel in channelNames)
                 {
-                    CurrentCommands[^1]?.LastUsedOnChannel.Add(channel, DateTime.Now);
+                    CurrentCommands[^1]!.LastUsedOnChannel.Add(channel, DateTime.Now);
                 }
             }
         }
+        DBContext.SaveChanges();
     }
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
@@ -142,13 +152,13 @@ internal class BotCore
         }
         var msgAsCodepoints = trimmedMessage.Codepoints();
 
-        var firstLetters = msgAsCodepoints.TakeWhile(x => 
-            x == Emoji.ZeroWidthJoiner || 
-            x == Emoji.ObjectReplacementCharacter || 
-            x == Emoji.Keycap || 
-            Emoji.IsEmoji(x.AsString()) || 
+        var firstLetters = msgAsCodepoints.TakeWhile(x =>
+            x == Emoji.ZeroWidthJoiner ||
+            x == Emoji.ObjectReplacementCharacter ||
+            x == Emoji.Keycap ||
+            Emoji.IsEmoji(x.AsString()) ||
             Emoji.SkinTones.All.Any(y => x == y) ||
-            x == Emoji.VariationSelector || 
+            x == Emoji.VariationSelector ||
             _commandPrefixes.Any(y => y == x));
 
         if (!firstLetters.Any()) return;
@@ -156,11 +166,11 @@ internal class BotCore
         var noPrefix = msgAsCodepoints.Skip(firstLetters.Count());
 
         string restoredMessage = "";
-        foreach (var l in noPrefix) 
+        foreach (var l in noPrefix)
         {
             restoredMessage += l.AsString();
         }
-        
+
         trimmedMessage = restoredMessage;
 
         if (trimmedMessage.Length < 2) return;
@@ -175,9 +185,13 @@ internal class BotCore
         {
             foreach (TextCommand command in textCommands)
             {
-                if (!command.Name.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!command.Name.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (command.Aliases is null) continue;
+                    if (!command.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
+                }
 
-                if (userSent.privileges < command.Privileges)return;
+                if (userSent.privileges < command.Privileges) return;
 
                 Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
                 _client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
@@ -189,13 +203,21 @@ internal class BotCore
 
         foreach (var c in CurrentCommands)
         {
-            if (c == null || !requestedCommand.Equals(c.Call, StringComparison.OrdinalIgnoreCase)) continue;
+            if (c is null) continue;
+            string usedCall = c.Call;
+            if (!requestedCommand.Equals(c.Call, StringComparison.OrdinalIgnoreCase))
+            {
+                var aliases = DBContext.CommandAliases.Find(c.Call.ToLower());
+                if (aliases is null || aliases.Aliases is null || aliases.Aliases.Count == 0) continue;
+                if (!aliases.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
+                usedCall = requestedCommand;
+            }
 
             if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) return;
 
             if (userSent.privileges < c.MinPrivilege) return;
 
-            trimmedMessage = trimmedMessage.Replace(c.Call, "", StringComparison.InvariantCultureIgnoreCase).Replace("\U000e0000", "");
+            trimmedMessage = trimmedMessage.Replace(usedCall, "", StringComparison.OrdinalIgnoreCase).Replace("\U000e0000", "");
 
             CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
 
@@ -218,7 +240,7 @@ internal class BotCore
         }
     }
 
-    #region EVENTS 
+    #region EVENTS
 
     private void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
     {
@@ -273,7 +295,7 @@ internal class BotCore
         Console.WriteLine($"Joined {e.Channel}");
     }
 
-    #endregion
+    #endregion EVENTS
 
     private static string FixNineEleven(string input)
     {

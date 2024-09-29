@@ -19,6 +19,7 @@ internal class GetCommands : Command
             if (c == null) { continue; }
             if (c.MinPrivilege <= message.Privileges) { response += c.Call + ", "; }
         }
+        response = response[..^2] + ". | ";
         foreach (var c in BotCore.DBContext.TextCommands)
         {
             if (c == null) { continue; }

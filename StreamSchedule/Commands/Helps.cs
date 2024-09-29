@@ -15,21 +15,27 @@ internal class Helps : Command
     {
         string[] split = message.Message.Split(' ');
         if (split.Length < 1) { return Task.FromResult(new CommandResult(this.Help)); }
+
         foreach (Command? c in BotCore.CurrentCommands)
         {
             if (c == null) { continue; }
+            if (split[0] != c.Call) continue;
 
-            string a = "";
-            if (c.Arguments is not null)
+            var cmdAliases = BotCore.DBContext.CommandAliases.Find(c.Call.ToLower());
+
+            string aliases = "";
+            if (cmdAliases is not null && cmdAliases.Aliases is not null && cmdAliases.Aliases.Count != 0)
             {
-                a = " args: ";
-                foreach (string arg in c.Arguments)
-                {
-                    a += arg + " ";
-                }
+                aliases = $"({string.Join(",", cmdAliases.Aliases)}) ";
             }
 
-            if (split[0] == c.Call) { return Task.FromResult(new CommandResult(c.Help + a)); }
+            string args = "";
+            if (c.Arguments is not null)
+            {
+                args = $" args: {string.Join(", ", c.Arguments)}";
+            }
+
+            return Task.FromResult(new CommandResult(aliases + c.Help + args));
         }
         return Task.FromResult(new CommandResult(this.Help));
     }

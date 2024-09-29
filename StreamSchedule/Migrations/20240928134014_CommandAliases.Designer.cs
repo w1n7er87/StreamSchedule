@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StreamSchedule.Data;
 
@@ -10,9 +11,11 @@ using StreamSchedule.Data;
 namespace StreamSchedule.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20240928134014_CommandAliases")]
+    partial class CommandAliases
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
@@ -32,15 +35,8 @@ namespace StreamSchedule.Migrations
 
             modelBuilder.Entity("StreamSchedule.Data.Models.Stream", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateOnly>("StreamDate")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("StreamStatus")
-                        .HasColumnType("INTEGER");
 
                     b.Property<TimeOnly>("StreamTime")
                         .HasColumnType("TEXT");
@@ -48,7 +44,7 @@ namespace StreamSchedule.Migrations
                     b.Property<string>("StreamTitle")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("StreamDate");
 
                     b.ToTable("Streams");
                 });

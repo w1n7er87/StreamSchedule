@@ -6,6 +6,7 @@ namespace StreamSchedule.Data.Models;
 public class TextCommand
 {
     public required string Name { get; set; }
+    public List<string>? Aliases { get; set; }
     public required string Content { get; set; }
     public Privileges Privileges { get; set; }
 }
