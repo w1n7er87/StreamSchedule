@@ -174,9 +174,10 @@ internal class UserInfo : Command
             TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.FirstOrDefault();
             if (s != null)
             {
+                string mature = s.IsMature? " 🔞":"";
                 TimeSpan durationSpan = DateTime.Now - s.StartedAt.ToLocalTime();
                 string duration = durationSpan.Days > 0 ? durationSpan.ToString("d\\:hh\\:mm\\:ss") : durationSpan.ToString("hh\\:mm\\:ss");
-                result = [$"live {s.GameName}", $"Now {s.Type} ({duration}) : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers."];
+                result = [$"live{mature} {s.GameName}", $"Now {s.Type}{mature} ({duration}) : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers.{mature}"];
             }
             else
             {
