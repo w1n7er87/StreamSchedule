@@ -105,14 +105,14 @@ internal class BotCore
             {
                 CurrentCommands.Add((Command?)Activator.CreateInstance(c));
 
-                if (!aliases.Any(x => x.CommandName.Equals(c.Name, StringComparison.OrdinalIgnoreCase)))
+                if (!aliases.Any(x => x.CommandName.Equals(CurrentCommands[^1]!.Call, StringComparison.OrdinalIgnoreCase)))
                 {
-                    DBContext.Add(new CommandAlias() { CommandName = c.Name.ToLower() });
+                    DBContext.Add(new CommandAlias() { CommandName = CurrentCommands[^1]!.Call.ToLower() });
                 }
 
                 foreach (string channel in channelNames)
                 {
-                    CurrentCommands[^1]?.LastUsedOnChannel.Add(channel, DateTime.Now);
+                    CurrentCommands[^1]!.LastUsedOnChannel.Add(channel, DateTime.Now);
                 }
             }
         }
@@ -204,19 +204,20 @@ internal class BotCore
         foreach (var c in CurrentCommands)
         {
             if (c is null) continue;
-
+            string usedCall = c.Call;
             if (!requestedCommand.Equals(c.Call, StringComparison.OrdinalIgnoreCase))
             {
                 var aliases = DBContext.CommandAliases.Find(c.Call.ToLower());
                 if (aliases is null || aliases.Aliases is null || aliases.Aliases.Count == 0) continue;
                 if (!aliases.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
+                usedCall = requestedCommand;
             }
 
             if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) return;
 
             if (userSent.privileges < c.MinPrivilege) return;
 
-            trimmedMessage = trimmedMessage.Replace(c.Call, "", StringComparison.OrdinalIgnoreCase).Replace("\U000e0000", "");
+            trimmedMessage = trimmedMessage.Replace(usedCall, "", StringComparison.OrdinalIgnoreCase).Replace("\U000e0000", "");
 
             CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
 
