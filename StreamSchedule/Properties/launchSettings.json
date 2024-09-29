@@ -1,7 +1,9 @@
 {
   "profiles": {
     "StreamSchedule": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "workingDirectory": "Z:\\GIT\\StreamSchedule\\StreamSchedule",
+      "nativeDebugging": true
     },
     "Container (Dockerfile)": {
       "commandName": "Docker"
