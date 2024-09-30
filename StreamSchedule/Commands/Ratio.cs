@@ -16,7 +16,7 @@ internal class Ratio : Command
     {
         string[] split = message.Message.Split(' ');
         string targetUsername = message.Username;
-        CommandResult result = new("Your ");
+        CommandResult result = new("");
 
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
@@ -31,6 +31,6 @@ internal class Ratio : Command
 
         RatioScore ratioScore = Userscore.GetRatioAndScore(u);
 
-        return Task.FromResult(result + $"offliner ratio: {MathF.Round(ratioScore.ratio, 3)}, off/n: ({u.MessagesOffline}/{u.MessagesOnline}), offliner score: {MathF.Round(ratioScore.score, 3)} ");
+        return Task.FromResult(result + $"messages: {u.MessagesOffline}/{u.MessagesOnline} ({MathF.Round(ratioScore.ratio, 3)}), offliner score: {MathF.Round(ratioScore.score, 3)} ");
     }
 }
