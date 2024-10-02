@@ -5,7 +5,7 @@ namespace StreamSchedule.Commands;
 
 internal class CommandManagement : Command
 {
-    internal override string Call => "cmd";
+    internal override string Call => "cmmd";
     internal override Privileges MinPrivilege => Privileges.Mod;
     internal override string Help => "manage simple text commands: -add/-rm (-p[priv] optional) [command name](required) [command content](required) ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
@@ -44,7 +44,7 @@ internal class CommandManagement : Command
     {
         if (string.IsNullOrEmpty(content)) return (Utils.Responses.Fail + " no content provided ").ToString();
 
-        if (!Commands.CheckNameAvailability(commandName)) {return (Utils.Responses.Fail + " command with this name/alias already exists. ").ToString(); }
+        if (!Commands.CheckNameAvailability(commandName)) { return (Utils.Responses.Fail + " command with this name/alias already exists. ").ToString(); }
 
         BotCore.DBContext.TextCommands.Add(new() { Name = commandName, Content = content, Privileges = privileges });
         BotCore.DBContext.SaveChanges();
@@ -57,7 +57,7 @@ internal class CommandManagement : Command
 
         TextCommand? c = BotCore.DBContext.TextCommands.FirstOrDefault(x => x.Name.ToLower() == commandName);
 
-        if (c is null) return (Utils.Responses.Fail + " there is no command with this name. ").ToString();
+        if (c is null) return ($"{Utils.Responses.Fail} no command \"{commandName}\"").ToString(;
 
         BotCore.DBContext.TextCommands.Remove(c);
         BotCore.DBContext.SaveChanges();
@@ -111,6 +111,6 @@ internal class CommandManagement : Command
             BotCore.DBContext.SaveChanges();
             return $"{Utils.Responses.Ok} removed \" {alias} \" as alias for {c.CommandName} command";
         }
-        return $"{Utils.Responses.Fail} no command \" {commandName} \"";
+        return $"{Utils.Responses.Fail} there is no\" {commandName} \" command ";
     }
 }

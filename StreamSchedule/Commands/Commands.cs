@@ -74,5 +74,6 @@ internal static class Commands
     }
 
     internal static void AddAlias(string alias) => _currentAliases.Add(alias);
+
     internal static void RemoveAlias(string alias) => _currentAliases.Remove(alias);
 }
