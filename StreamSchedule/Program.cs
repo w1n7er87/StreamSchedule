@@ -95,6 +95,7 @@ internal class BotCore
         }
 
         Commands.Commands.InitializeCommands(channelNames, DBContext);
+
     }
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
@@ -181,19 +182,20 @@ internal class BotCore
 
         foreach (var c in Commands.Commands.CurrentCommands)
         {
-
+            string usedCall = c.Call;
             if (!requestedCommand.Equals(c.Call, StringComparison.OrdinalIgnoreCase))
             {
                 var aliases = DBContext.CommandAliases.Find(c.Call.ToLower());
                 if (aliases is null || aliases.Aliases is null || aliases.Aliases.Count == 0) continue;
                 if (!aliases.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
+                usedCall = requestedCommand;
             }
 
             if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) return;
 
             if (userSent.privileges < c.MinPrivilege) return;
 
-            trimmedMessage = trimmedMessage.Replace(c.Call, "", StringComparison.OrdinalIgnoreCase).Replace("\U000e0000", "");
+            trimmedMessage = trimmedMessage.Replace(usedCall, "", StringComparison.OrdinalIgnoreCase).Replace("\U000e0000", "");
 
             CommandResult response = await c.Handle(new(e.ChatMessage, trimmedMessage, replyID, userSent.privileges));
 
