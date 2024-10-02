@@ -5,7 +5,7 @@ namespace StreamSchedule.Commands;
 
 internal class CommandManagement : Command
 {
-    internal override string Call => "cmmd";
+    internal override string Call => "cmd";
     internal override Privileges MinPrivilege => Privileges.Mod;
     internal override string Help => "manage simple text commands: -add/-rm (-p[priv] optional) [command name](required) [command content](required) ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);

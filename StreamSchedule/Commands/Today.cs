@@ -22,7 +22,7 @@ internal class Today : Command
         {
             DateTime fullDate = new DateTime(today.StreamDate, today.StreamTime);
             TimeSpan span = fullDate - DateTime.Now;
-            return Task.FromResult(new CommandResult($"The {today.StreamTitle} is in {Math.Floor(span.TotalHours).ToString() + span.ToString("'h 'm'm 's's'")} DinkDonk "));
+            return Task.FromResult(new CommandResult($"The {today.StreamTitle} is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}DinkDonk "));
         }
     }
 }

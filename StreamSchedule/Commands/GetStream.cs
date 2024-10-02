@@ -24,7 +24,7 @@ internal class GetStream : Command
         {
             DateTime fullDate = new DateTime(next.StreamDate, next.StreamTime);
             TimeSpan span = fullDate - DateTime.Now;
-            return Task.FromResult(new CommandResult($"Next stream is in {Math.Floor(span.TotalHours).ToString() + span.ToString("'h 'm'm 's's'")} : {next.StreamTitle}"));
+            return Task.FromResult(new CommandResult($"Next stream is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '} : {next.StreamTitle}"));
         }
     }
 }
