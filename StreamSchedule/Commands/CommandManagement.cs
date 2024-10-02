@@ -57,7 +57,7 @@ internal class CommandManagement : Command
 
         TextCommand? c = BotCore.DBContext.TextCommands.FirstOrDefault(x => x.Name.ToLower() == commandName);
 
-        if (c is null) return ($"{Utils.Responses.Fail} no command \"{commandName}\"").ToString(;
+        if (c is null) return $"{Utils.Responses.Fail} there is no \" {commandName} \" command ";
 
         BotCore.DBContext.TextCommands.Remove(c);
         BotCore.DBContext.SaveChanges();
@@ -87,7 +87,7 @@ internal class CommandManagement : Command
             BotCore.DBContext.SaveChanges();
             return $"{Utils.Responses.Ok} added \" {alias} \" as alias for {c.CommandName} command";
         }
-        return $"{Utils.Responses.Fail} no command \"{commandName}\"";
+        return $"{Utils.Responses.Fail} there is no \" {commandName} \" command ";
     }
 
     private static string RemoveAlias(string commandName, string alias, ref List<TextCommand> textCommands)
@@ -111,6 +111,6 @@ internal class CommandManagement : Command
             BotCore.DBContext.SaveChanges();
             return $"{Utils.Responses.Ok} removed \" {alias} \" as alias for {c.CommandName} command";
         }
-        return $"{Utils.Responses.Fail} there is no\" {commandName} \" command ";
+        return $"{Utils.Responses.Fail} there is no \" {commandName} \" command ";
     }
 }
