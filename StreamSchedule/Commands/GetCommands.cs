@@ -14,15 +14,13 @@ internal class GetCommands : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string response = "";
-        foreach (var c in BotCore.CurrentCommands)
+        foreach (var c in Commands.CurrentCommands)
         {
-            if (c == null) { continue; }
             if (c.MinPrivilege <= message.Privileges) { response += c.Call + ", "; }
         }
         response = response[..^2] + ". | ";
         foreach (var c in BotCore.DBContext.TextCommands)
         {
-            if (c == null) { continue; }
             if (c.Privileges <= message.Privileges) { response += c.Name + ", "; }
         }
         return Task.FromResult(new CommandResult(response[..^2] + ". "));

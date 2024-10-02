@@ -16,9 +16,8 @@ internal class Helps : Command
         string[] split = message.Message.Split(' ');
         if (split.Length < 1) { return Task.FromResult(new CommandResult(this.Help)); }
 
-        foreach (Command? c in BotCore.CurrentCommands)
+        foreach (Command c in Commands.CurrentCommands)
         {
-            if (c == null) { continue; }
             if (split[0] != c.Call) continue;
 
             var cmdAliases = BotCore.DBContext.CommandAliases.Find(c.Call.ToLower());

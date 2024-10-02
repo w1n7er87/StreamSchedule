@@ -37,12 +37,9 @@ internal class BotCore
     public static DatabaseContext DBContext { get; private set; } = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
     public static BotCore Instance { get; private set; }
 
-    public TwitchAPI api;
+    public TwitchAPI API { get; private set; }
     private TwitchClient _client;
     private LiveStreamMonitorService _monitor;
-
-    public static List<Command?> CurrentCommands { get; private set; } = [];
-
     private static readonly string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}";
 
     private Dictionary<string, bool> _channelLiveState;
@@ -73,10 +70,10 @@ internal class BotCore
     {
         Instance = this;
 
-        api = new TwitchAPI();
-        api.Settings.ClientId = Credentials.clientID;
-        api.Settings.AccessToken = Credentials.oauth;
-        _monitor = new LiveStreamMonitorService(api, 5);
+        API = new TwitchAPI();
+        API.Settings.ClientId = Credentials.clientID;
+        API.Settings.AccessToken = Credentials.oauth;
+        _monitor = new LiveStreamMonitorService(API, 5);
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
 
@@ -97,26 +94,7 @@ internal class BotCore
             _channelLiveState[channel] = new();
         }
 
-        List<CommandAlias> aliases = [.. DBContext.CommandAliases];
-
-        if (CurrentCommands.Count == 0)
-        {
-            foreach (var c in Commands.Commands.knownCommands)
-            {
-                CurrentCommands.Add((Command?)Activator.CreateInstance(c));
-
-                if (!aliases.Any(x => x.CommandName.Equals(c.Name, StringComparison.OrdinalIgnoreCase)))
-                {
-                    DBContext.Add(new CommandAlias() { CommandName = c.Name.ToLower() });
-                }
-
-                foreach (string channel in channelNames)
-                {
-                    CurrentCommands[^1]?.LastUsedOnChannel.Add(channel, DateTime.Now);
-                }
-            }
-        }
-        DBContext.SaveChanges();
+        Commands.Commands.InitializeCommands(channelNames, DBContext);
     }
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
@@ -201,9 +179,8 @@ internal class BotCore
             }
         }
 
-        foreach (var c in CurrentCommands)
+        foreach (var c in Commands.Commands.CurrentCommands)
         {
-            if (c is null) continue;
 
             if (!requestedCommand.Equals(c.Call, StringComparison.OrdinalIgnoreCase))
             {
@@ -286,7 +263,7 @@ internal class BotCore
     private void Client_OnConnected(object? sender, OnConnectedArgs e)
     {
         Console.WriteLine($"{e.BotUsername} Connected ");
-        GlobalEmotes ??= api.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
+        GlobalEmotes ??= API.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
     }
 
     private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
