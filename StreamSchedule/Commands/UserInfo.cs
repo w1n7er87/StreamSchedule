@@ -10,7 +10,7 @@ internal class UserInfo : Command
     internal override string Help => "user info: [username]";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => ["f", "e", "s", "a", "g", "c"];
+    internal override string[]? Arguments => ["f", "e", "s", "a", "g", "c", "n"];
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -50,6 +50,11 @@ internal class UserInfo : Command
 
             if (usedArgs.TryGetValue("g", out _) || all)
             { response += generalInfo + " "; }
+
+            if (usedArgs.TryGetValue("n", out _))
+            {
+                response += PreviousUsernames(u.Login) + " ";
+            }
 
             if (usedArgs.TryGetValue("c", out _) || all)
             {
@@ -200,29 +205,7 @@ internal class UserInfo : Command
     {
         try
         {
-            bool isKnown = true;
-            if (!User.TryGetUser("lorem", out User dbData, user.Id))
-            {
-                isKnown = false;
-            }
-
-            string aka = "";
-
-            if (isKnown)
-            {
-                List<string>? previousUsernames = dbData.PreviousUsernames;
-                if (previousUsernames is not null && previousUsernames.Count != 0)
-                {
-                    aka = "aka: ";
-                    foreach (string name in previousUsernames)
-                    {
-                        aka += name + ", ";
-                    }
-                    aka = aka[..^2] + ". ";
-                }
-            }
-
-            return $"{user.Type} {user.BroadcasterType} {user.Login} {aka} (id:{user.Id}) created: {user.CreatedAt:dd/MM/yyyy}";
+            return $"{user.Type} {user.BroadcasterType} {user.Login} (id:{user.Id}) created: {user.CreatedAt:dd/MM/yyyy}";
         }
         catch (Exception ex)
         {
@@ -232,4 +215,14 @@ internal class UserInfo : Command
     }
 
     private static async Task<int> GetFollowers(string userID) => (await BotCore.Instance.API.Helix.Channels.GetChannelFollowersAsync(userID)).Total;
+
+    private static string PreviousUsernames(string username)
+    {
+        if (!User.TryGetUser(username, out User dbData)) return "Unknown user";
+
+        List<string>? previousUsernames = dbData.PreviousUsernames;
+        if (previousUsernames is null || previousUsernames.Count == 0) return "Nothing recorded so far";
+
+        return $"aka: {string.Join(", ", previousUsernames)}.";
+    }
 }
