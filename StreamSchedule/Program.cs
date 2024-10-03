@@ -39,7 +39,7 @@ internal class BotCore
     public TwitchAPI API { get; private set; }
     private TwitchClient _client;
     private LiveStreamMonitorService _monitor;
-    private static readonly string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}";
+    private static readonly string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
 
     private Dictionary<string, bool> _channelLiveState;
 
@@ -48,7 +48,7 @@ internal class BotCore
     private DateTime _textCommandLastUsed = DateTime.MinValue;
 
     public List<ChatMessage> MessageCache { get; private set; } = [];
-    private static readonly int _cacheSize = 300;
+    private static readonly int _cacheSize = 800;
 
     public static GlobalEmote[]? GlobalEmotes { get; private set; }
 
@@ -109,11 +109,11 @@ internal class BotCore
 
         if (_channelLiveState[e.ChatMessage.Channel])
         {
-            User.AddMessagesCounter(userSent, DBContext, 1);
+            User.AddMessagesCounter(userSent, DBContext, online: 1);
             return;
         }
 
-        User.AddMessagesCounter(userSent, DBContext, 0, 1);
+        User.AddMessagesCounter(userSent, DBContext, offline: 1);
 
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 
@@ -148,11 +148,9 @@ internal class BotCore
             restoredMessage += l.AsString();
         }
 
-        trimmedMessage = restoredMessage;
+        trimmedMessage = restoredMessage.TrimStart();
 
         if (trimmedMessage.Length < 2) return;
-
-        trimmedMessage = trimmedMessage.TrimStart();
 
         string requestedCommand = trimmedMessage.Split(' ')[0];
 
@@ -282,7 +280,7 @@ internal class BotCore
             string temp = "";
             foreach (char c in s)
             {
-                if (c == ('9') || c == ('1'))
+                if (c.Equals('9') || c.Equals('1'))
                 {
                     temp += c;
                 }
