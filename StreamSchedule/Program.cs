@@ -94,7 +94,6 @@ internal class BotCore
         }
 
         Commands.Commands.InitializeCommands(channelNames, DBContext);
-
     }
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)

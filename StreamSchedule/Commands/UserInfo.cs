@@ -53,7 +53,7 @@ internal class UserInfo : Command
 
             if (usedArgs.TryGetValue("c", out _) || all)
             {
-                color = await GetColor(u.Id);
+                color = await GetColor(u.Id, detailedInfo: !all);
                 response += color + " ";
             }
 
@@ -149,12 +149,16 @@ internal class UserInfo : Command
         }
     }
 
-    private static async Task<string> GetColor(string userID)
+    private static async Task<string> GetColor(string userID, bool detailedInfo = false)
     {
         try
         {
             var color = await BotCore.Instance.API.Helix.Chat.GetUserChatColorAsync([userID]);
-            return color.Data.First().Color.Equals("") ? "color not set" : color.Data.First().Color;
+
+            if (color.Data.First().Color.Equals("")) return "color not set";
+            string value = color.Data.First().Color;
+            if (!detailedInfo) return value;
+            return $"{value} {(await ColorInfo.GetColor(value))}";
         }
         catch (Exception ex)
         {
