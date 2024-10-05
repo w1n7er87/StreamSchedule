@@ -105,7 +105,7 @@ internal class BotCore
             privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
         };
 
-        User userSent = await User.SyncToDb(u, DBContext);
+        User userSent = User.SyncToDb(u, DBContext);
 
         if (_channelLiveState[e.ChatMessage.Channel])
         {

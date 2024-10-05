@@ -126,24 +126,29 @@ internal class UserInfo : Command
                     prefix = p[..prefixLength];
                 }
 
-                result[1] = $"{emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated) \"{prefix}\"";
+                result[1] = $"\"{prefix}\" {emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated)";
                 result[0] = result[1];
 
                 int t1 = emotes.Count(e => e.Tier == "1000");
                 int t1a = emotes.Count(e => e.Tier == "1000" && e.Format.Contains("animated"));
+                string T1 = $"{(t1 == 0 ? "" : $"T1: {t1}")}{(t1a == 0 ? "" : $"({t1a})")}";
 
                 int t2 = emotes.Count(e => e.Tier == "2000");
                 int t2a = emotes.Count(e => e.Tier == "2000" && e.Format.Contains("animated"));
+                string T2 = $"{(t2 == 0 ? "" : $"T2: {t2}")}{(t2a == 0 ? "" : $"({t2a})")}";
 
                 int t3 = emotes.Count(e => e.Tier == "3000");
                 int t3a = emotes.Count(e => e.Tier == "3000" && e.Format.Contains("animated"));
+                string T3 = $"{(t3 == 0 ? "" : $"T3: {t3}")}{(t3a == 0 ? "" : $"({t3a})")}";
 
                 int bits = emotes.Count(e => e.EmoteType == "bitstier");
                 int bitsa = emotes.Count(e => e.EmoteType == "bitstier" && e.Format.Contains("animated"));
+                string B = $"{(bits == 0 ? "" : $"Bits: {bits}")}{(bitsa == 0 ? "" : $"({bitsa})")}";
 
                 int follow = emotes.Count(e => e.EmoteType == "follower");
+                string F = $"{(follow == 0 ? "" : $"Follow: {follow}")}";
 
-                result[1] += $": T1:{t1}({t1a}); T2:{t2}({t2a}); T3:{t3}({t3a}); Bits:{bits}({bitsa}); Follow:{follow};";
+                result[1] += $": {T1} {T2} {T3} {B} {F}".Trim();
             }
             return result;
         }
