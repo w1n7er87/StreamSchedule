@@ -16,6 +16,7 @@ public class User
         {
             context.Users.Add(u);
             uDb = u;
+            context.SaveChanges();
         }
         else
         {
@@ -24,9 +25,9 @@ public class User
                 uDb.PreviousUsernames ??= [];
                 uDb.PreviousUsernames.Add(uDb.Username!);
                 uDb.Username = u.Username;
+                context.SaveChanges();
             }
         }
-        context.SaveChanges();
         return uDb;
     }
 
