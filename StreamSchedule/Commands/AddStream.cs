@@ -18,12 +18,13 @@ internal class AddStream : Command
         string[] split = message.Message.Split(" ");
         if (split.Length < 2) { return Task.FromResult(Utils.Responses.Fail); }
 
-        DateTime temp = DateTime.Now;
+        DateTime temp = DateTime.UtcNow;
 
-        if (!DateTime.TryParseExact(split[0], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
+        if (!DateTime.TryParseExact(split[0], inputPatterns, null,System.Globalization.DateTimeStyles.AssumeUniversal, out temp))
         {
             return Task.FromResult(Utils.Responses.Fail + "bad date ");
         }
+        temp = temp.ToUniversalTime();
 
         Data.Models.Stream stream = new()
         {

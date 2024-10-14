@@ -1,4 +1,5 @@
-﻿using StreamSchedule.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
@@ -13,8 +14,10 @@ internal class GetStream : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        var next = BotCore.DBContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.Now)).ToList()
-            .OrderBy(x => new DateTime(x.StreamDate, x.StreamTime)).FirstOrDefault(x => new DateTime(x.StreamDate, x.StreamTime) >= DateTime.Now);
+        var next = BotCore.DBContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+            .ToList()
+            .OrderBy(x => new DateTime(x.StreamDate, x.StreamTime))
+            .FirstOrDefault(x => new DateTime(x.StreamDate, x.StreamTime) >= DateTime.UtcNow);
 
         if (next == null)
         {
@@ -22,7 +25,7 @@ internal class GetStream : Command
         }
         else
         {
-            DateTime fullDate = TimeZoneInfo.ConvertTimeFromUtc(new DateTime(next.StreamDate, next.StreamTime), TimeZoneInfo.Local);
+            DateTime fullDate = new DateTime(next.StreamDate, next.StreamTime).ToLocalTime();
             TimeSpan span = fullDate - DateTime.Now;
             return Task.FromResult(new CommandResult($"Next stream is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '} : {next.StreamTitle}"));
         }

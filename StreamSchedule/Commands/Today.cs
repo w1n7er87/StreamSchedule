@@ -13,14 +13,14 @@ internal class Today : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        Data.Models.Stream? today = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.Now));
-        if (today == null || new DateTime(today.StreamDate, today.StreamTime) < DateTime.Now)
+        Data.Models.Stream? today = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.UtcNow));
+        if (today == null || new DateTime(today.StreamDate, today.StreamTime) < DateTime.UtcNow)
         {
             return Task.FromResult(new CommandResult("There is no stream today DinkDonk "));
         }
         else
         {
-            DateTime fullDate = TimeZoneInfo.ConvertTimeFromUtc(new DateTime(today.StreamDate, today.StreamTime), TimeZoneInfo.Local);
+            DateTime fullDate = new DateTime(today.StreamDate, today.StreamTime).ToLocalTime();
             TimeSpan span = fullDate - DateTime.Now;
             return Task.FromResult(new CommandResult($"The {today.StreamTitle} is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}DinkDonk "));
         }
