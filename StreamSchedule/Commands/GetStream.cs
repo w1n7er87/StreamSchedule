@@ -22,7 +22,7 @@ internal class GetStream : Command
         }
         else
         {
-            DateTime fullDate = new DateTime(next.StreamDate, next.StreamTime);
+            DateTime fullDate = TimeZoneInfo.ConvertTimeFromUtc(new DateTime(next.StreamDate, next.StreamTime), TimeZoneInfo.Local);
             TimeSpan span = fullDate - DateTime.Now;
             return Task.FromResult(new CommandResult($"Next stream is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '} : {next.StreamTitle}"));
         }

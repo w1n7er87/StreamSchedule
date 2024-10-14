@@ -20,7 +20,7 @@ internal class Today : Command
         }
         else
         {
-            DateTime fullDate = new DateTime(today.StreamDate, today.StreamTime);
+            DateTime fullDate = TimeZoneInfo.ConvertTimeFromUtc(new DateTime(today.StreamDate, today.StreamTime), TimeZoneInfo.Local);
             TimeSpan span = fullDate - DateTime.Now;
             return Task.FromResult(new CommandResult($"The {today.StreamTitle} is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}DinkDonk "));
         }
