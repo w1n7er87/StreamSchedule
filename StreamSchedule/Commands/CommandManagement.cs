@@ -44,12 +44,11 @@ internal class CommandManagement : Command
     {
         if (string.IsNullOrEmpty(content)) return (Utils.Responses.Fail + " no content provided ").ToString();
 
-        if (commands.Any(x => x.Name == commandName) || BotCore.CurrentCommands.Any(x => x?.Call == commandName))
-        { return (Utils.Responses.Fail + " command with this name already exists. ").ToString(); }
+        if (!Commands.CheckNameAvailability(commandName)) { return (Utils.Responses.Fail + " command with this name/alias already exists. ").ToString(); }
 
         BotCore.DBContext.TextCommands.Add(new() { Name = commandName, Content = content, Privileges = privileges });
         BotCore.DBContext.SaveChanges();
-        return $"{Utils.Responses.Ok} added command \"{commandName}\" for {PrivilegeUtils.PrivilegeToString(privileges)}";
+        return $"{Utils.Responses.Ok} added command \" {commandName} \" for {PrivilegeUtils.PrivilegeToString(privileges)}";
     }
 
     private static string RemoveCommand(string commandName, in List<TextCommand> commands)
@@ -58,58 +57,60 @@ internal class CommandManagement : Command
 
         TextCommand? c = BotCore.DBContext.TextCommands.FirstOrDefault(x => x.Name.ToLower() == commandName);
 
-        if (c is null) return (Utils.Responses.Fail + " there is no command with this name. ").ToString();
+        if (c is null) return $"{Utils.Responses.Fail} there is no \" {commandName} \" command ";
 
         BotCore.DBContext.TextCommands.Remove(c);
         BotCore.DBContext.SaveChanges();
         return Utils.Responses.Ok.ToString();
     }
 
-    private static string AddAlias(string commandName, string alias, ref List<TextCommand> commands)
+    private static string AddAlias(string commandName, string alias, ref List<TextCommand> textCommands)
     {
-        if (commands.Any(x => x.Name == commandName))
-        {
-            if (commandName.Equals(alias, StringComparison.OrdinalIgnoreCase)) return Utils.Responses.Fail.ToString() + $"{commandName} = {alias} Stare ";
+        if (!Commands.CheckNameAvailability(alias)) { return (Utils.Responses.Fail + " command with this name/alias already exists. ").ToString(); }
 
-            var c = commands.First(x => x.Name == commandName);
+        if (textCommands.Any(x => x.Name == commandName))
+        {
+            var c = textCommands.First(x => x.Name == commandName);
             c.Aliases ??= [alias];
-            if (!c.Aliases.Contains(alias)) { c.Aliases.Add(alias); }
+            c.Aliases.Add(alias);
+            Commands.AddAlias(alias);
             BotCore.DBContext.SaveChanges();
-            return $"{Utils.Responses.Ok} added \"{alias}\" as alias for {c.Name} command";
+            return $"{Utils.Responses.Ok} added \" {alias} \" as alias for {c.Name} command";
         }
 
-        if (BotCore.CurrentCommands.Any(x => x!.Call == commandName))
+        if (Commands.CurrentCommands.Any(x => x.Call == commandName))
         {
-            if (commandName.Equals(alias, StringComparison.OrdinalIgnoreCase)) return Utils.Responses.Fail.ToString() + $"{commandName} = {alias} Stare ";
-
             var c = BotCore.DBContext.CommandAliases.First(x => x.CommandName.ToLower() == commandName);
             c.Aliases ??= [alias];
-            if (!c.Aliases.Contains(alias)) { c.Aliases.Add(alias); }
+            c.Aliases.Add(alias);
+            Commands.AddAlias(alias);
             BotCore.DBContext.SaveChanges();
-            return $"{Utils.Responses.Ok} added \"{alias}\" as alias for {c.CommandName} command";
+            return $"{Utils.Responses.Ok} added \" {alias} \" as alias for {c.CommandName} command";
         }
-        return $"{Utils.Responses.Fail} no command \"{commandName}\"";
+        return $"{Utils.Responses.Fail} there is no \" {commandName} \" command ";
     }
 
-    private static string RemoveAlias(string commandName, string alias, ref List<TextCommand> commands)
+    private static string RemoveAlias(string commandName, string alias, ref List<TextCommand> textCommands)
     {
-        if (commands.Any(x => x.Name == commandName))
+        if (textCommands.Any(x => x.Name == commandName))
         {
-            var c = commands.First(x => x.Name == commandName);
-            if (c.Aliases is null) return Utils.Responses.Fail.ToString() + $"{commandName} has no aliases ";
+            var c = textCommands.First(x => x.Name == commandName);
+            if (c.Aliases is null) return Utils.Responses.Fail.ToString() + $" {commandName} has no aliases ";
             c.Aliases.Remove(alias);
+            Commands.RemoveAlias(alias);
             BotCore.DBContext.SaveChanges();
-            return $"{Utils.Responses.Ok} removed \"{alias}\" as alias for {c.Name} command";
+            return $"{Utils.Responses.Ok} removed \" {alias} \" as alias for {c.Name} command";
         }
 
-        if (BotCore.CurrentCommands.Any(x => x!.Call == commandName))
+        if (Commands.CurrentCommands.Any(x => x.Call == commandName))
         {
             var c = BotCore.DBContext.CommandAliases.First(x => x.CommandName == commandName);
-            if (c.Aliases is null) return Utils.Responses.Fail.ToString() + $"{commandName} has no aliases ";
+            if (c.Aliases is null) return Utils.Responses.Fail.ToString() + $" {commandName} has no aliases ";
             c.Aliases.Remove(alias);
+            Commands.RemoveAlias(alias);
             BotCore.DBContext.SaveChanges();
-            return $"{Utils.Responses.Ok} removed \"{alias}\" as alias for {c.CommandName} command";
+            return $"{Utils.Responses.Ok} removed \" {alias} \" as alias for {c.CommandName} command";
         }
-        return $"{Utils.Responses.Fail} no command \"{commandName}\"";
+        return $"{Utils.Responses.Fail} there is no \" {commandName} \" command ";
     }
 }

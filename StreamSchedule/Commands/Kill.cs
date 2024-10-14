@@ -8,9 +8,9 @@ namespace StreamSchedule.Commands;
 internal class Kill : Command
 {
     internal override string Call => "kill";
-    internal override Privileges MinPrivilege => Privileges.Mod;
+    internal override Privileges MinPrivilege => Privileges.Uuh;
     internal override string Help => "kill the bot: [time] (in seconds, optional)";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Minute);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Short);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
 

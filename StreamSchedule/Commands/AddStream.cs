@@ -21,10 +21,11 @@ internal class AddStream : Command
 
         DateTime temp = DateTime.Now;
 
-        if (!DateTime.TryParseExact(split[0], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
+        if (!DateTime.TryParseExact(split[0], inputPatterns, null,System.Globalization.DateTimeStyles.AssumeLocal, out temp))
         {
             return Task.FromResult(Utils.Responses.Fail + "bad date ");
         }
+        temp = temp.ToUniversalTime();
 
         Data.Models.Stream stream = new()
         {

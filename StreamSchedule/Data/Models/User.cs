@@ -9,13 +9,14 @@ public class User
     public int MessagesOffline { get; set; }
     public int MessagesOnline { get; set; }
 
-    internal static async Task<User> SyncToDb(User u, DatabaseContext context)
+    internal static User SyncToDb(User u, DatabaseContext context)
     {
         User? uDb = context.Users.Find(u.Id);
         if (uDb is null)
         {
             context.Users.Add(u);
             uDb = u;
+            context.SaveChanges();
         }
         else
         {
@@ -24,17 +25,17 @@ public class User
                 uDb.PreviousUsernames ??= [];
                 uDb.PreviousUsernames.Add(uDb.Username!);
                 uDb.Username = u.Username;
+                context.SaveChanges();
             }
         }
-        await context.SaveChangesAsync();
         return uDb;
     }
 
-    internal static async void AddMessagesCounter(User u, DatabaseContext context, int online = 0, int offline = 0)
+    internal static void AddMessagesCounter(User u, DatabaseContext context, int online = 0, int offline = 0)
     {
         u.MessagesOnline += online;
         u.MessagesOffline += offline;
-        await context.SaveChangesAsync();
+        context.SaveChanges();
     }
 
     internal static bool TryGetUser(string username, out User user, string? id = null)
