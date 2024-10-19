@@ -9,39 +9,41 @@ internal class Kill : Command
     internal override string Help => "kill the bot: [time] (in seconds, optional)";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Short);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    internal override string[]? Arguments => ["frfr"];
 
     private async Task KillTask(TimeSpan delay)
     {
-        BotCore.DBContext.SaveChanges();
         await Task.Delay(delay);
+        BotCore.DBContext.SaveChanges();
         Environment.Exit(0);
     }
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        if (message.Privileges < Privileges.Uuh)
-        {
-            string target = message.Message.Split(' ')[0];
+        string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
 
-            if(Random.Shared.Next(int.Parse(message.UserId)) > 15)
+        if (message.Privileges == Privileges.Uuh && usedArgs.TryGetValue("frfr", out _))
+        {
+            string[] split = message.Message.Split(' ');
+            int duration = 1;
+            if (split.Length > 0)
             {
-                return Task.FromResult(new CommandResult("✋ unauthorized action. "));
+                _ = int.TryParse(split[0], out duration);
             }
-            else
-            {
-                return Task.FromResult(new CommandResult($"MEGALUL {target}"));
-            }
+            TimeSpan delay = TimeSpan.FromSeconds(Math.Min(1, duration));
+            Task.Run(() => KillTask(delay));
+            return Task.FromResult(new CommandResult("buhbye ", false));
         }
 
-        string[] split = message.Message.Split(' ');
-        int duration = 1;
-        if (split.Length > 0)
+        string target = message.Message.Split(' ')[0];
+
+        if(Random.Shared.Next(101) > 15)
         {
-            _ = int.TryParse(split[0], out duration);
+            return Task.FromResult(new CommandResult("✋ unauthorized action. "));
         }
-        TimeSpan delay = TimeSpan.FromSeconds(Math.Min(1, duration));
-        Task.Run(() => KillTask(delay));
-        return Task.FromResult(new CommandResult("buhbye ", false));
+        else
+        {
+            return Task.FromResult(new CommandResult($"MEGALUL {target}"));
+        }
     }
 }
