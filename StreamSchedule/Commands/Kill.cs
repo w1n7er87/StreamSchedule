@@ -39,11 +39,11 @@ internal class Kill : Command
 
         if(Random.Shared.Next(101) > 15)
         {
-            return Task.FromResult(new CommandResult("✋ unauthorized action. "));
+            return Task.FromResult(new CommandResult("✋ unauthorized action. ", false));
         }
         else
         {
-            return Task.FromResult(new CommandResult($"MEGALUL {target}"));
+            return Task.FromResult(new CommandResult($"MEGALUL 🔪 {target}", false));
         }
     }
 }
