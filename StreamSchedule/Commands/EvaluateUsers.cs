@@ -60,7 +60,6 @@ internal class EvaluateUsers : Command
             {
                 user.privileges = Privileges.Trusted;
                 count++;
-                await BotCore.DBContext.SaveChangesAsync();
                 continue;
             }
 
@@ -68,10 +67,10 @@ internal class EvaluateUsers : Command
             {
                 user.privileges = Privileges.None;
                 count++;
-                await BotCore.DBContext.SaveChangesAsync();
                 continue;
             }
         }
+        await BotCore.DBContext.SaveChangesAsync();
         return count;
     }
 

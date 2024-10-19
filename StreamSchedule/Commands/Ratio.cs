@@ -15,22 +15,17 @@ internal class Ratio : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
-        string targetUsername = message.Username;
+        User target = message.Sender;
         CommandResult result = new("");
 
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
-            targetUsername = split[0];
-            result = new(targetUsername + "'s ");
+            target = User.TryGetUser(split[0], out User t) ? t : target;
+            result = new(target.Username + "'s ");
         }
 
-        if (!User.TryGetUser(targetUsername, out User u))
-        {
-            return Task.FromResult(Utils.Responses.Fail + " unknown user ");
-        }
+        RatioScore ratioScore = Userscore.GetRatioAndScore(target);
 
-        RatioScore ratioScore = Userscore.GetRatioAndScore(u);
-
-        return Task.FromResult(result + $"messages: {u.MessagesOffline}/{u.MessagesOnline} ({MathF.Round(ratioScore.ratio, 3)}), offliner score: {MathF.Round(ratioScore.score, 3)} ");
+        return Task.FromResult(result + $"messages: {target.MessagesOffline}/{target.MessagesOnline} ({MathF.Round(ratioScore.ratio, 3)}), offliner score: {MathF.Round(ratioScore.score, 3)} ");
     }
 }

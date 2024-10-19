@@ -1,12 +1,9 @@
-﻿using TwitchLib.Client.Models;
-
+﻿using StreamSchedule.Data.Models;
 namespace StreamSchedule.Data;
 
-public class UniversalMessageInfo(ChatMessage chatMessage, string commandTrimmedContent, string? replyID, Privileges senderPrivileges)
+public class UniversalMessageInfo(User sender, string commandTrimmedContent, string? replyID)
 {
     public string Message = commandTrimmedContent.TrimStart();
-    public string Username = chatMessage.Username;
-    public string UserId = chatMessage.UserId;
+    public User Sender = sender;
     public string? ReplyID = replyID;
-    public Privileges Privileges = senderPrivileges;
 }

@@ -16,12 +16,12 @@ internal class GetCommands : Command
         string response = "";
         foreach (var c in Commands.CurrentCommands)
         {
-            if (c.MinPrivilege <= message.Privileges) { response += c.Call + ", "; }
+            if (c.MinPrivilege <= message.Sender.privileges) { response += c.Call + ", "; }
         }
         response = response[..^2] + ". | ";
         foreach (var c in BotCore.DBContext.TextCommands)
         {
-            if (c.Privileges <= message.Privileges) { response += c.Name + ", "; }
+            if (c.Privileges <= message.Sender.privileges) { response += c.Name + ", "; }
         }
         return Task.FromResult(new CommandResult(response[..^2] + ". "));
     }

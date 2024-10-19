@@ -20,7 +20,7 @@ internal class UserInfo : Command
 
         int userIDnumber = 0;
         bool idProvided = false;
-        string targetUsername = message.Username;
+        string targetUsername = message.Sender.Username;
 
         if (!string.IsNullOrWhiteSpace(split[0])) // do i have anything provided
         {
@@ -77,7 +77,7 @@ internal class UserInfo : Command
             if (usedArgs.TryGetValue("s", out _) || all)
             {
                 liveInfo = await GetLiveStatus(u.Id);
-                response += (message.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
+                response += (message.Sender.privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
             }
 
             if (all)

@@ -7,7 +7,7 @@ internal class Kill : Command
     internal override string Call => "kill";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "kill the bot: [time] (in seconds, optional)";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Short);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => ["frfr"];
 
@@ -22,7 +22,7 @@ internal class Kill : Command
     {
         string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
 
-        if (message.Privileges == Privileges.Uuh && usedArgs.TryGetValue("frfr", out _))
+        if (message.Sender.privileges == Privileges.Uuh && usedArgs.TryGetValue("frfr", out _))
         {
             string[] split = message.Message.Split(' ');
             int duration = 1;

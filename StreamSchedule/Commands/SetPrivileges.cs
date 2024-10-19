@@ -23,7 +23,7 @@ internal class SetPrivileges : Command
             return Task.FromResult(Utils.Responses.Surprise);
         }
 
-        if (target.privileges >= message.Privileges) { return Task.FromResult(Utils.Responses.Fail); }
+        if (target.privileges >= message.Sender.privileges) { return Task.FromResult(Utils.Responses.Fail); }
 
         BotCore.DBContext.Users.Update(target);
         target.privileges = p;
