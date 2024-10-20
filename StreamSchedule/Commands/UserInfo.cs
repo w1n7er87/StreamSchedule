@@ -20,7 +20,7 @@ internal class UserInfo : Command
 
         int userIDnumber = 0;
         bool idProvided = false;
-        string targetUsername = message.Sender.Username;
+        string targetUsername = message.Sender.Username!;
 
         if (!string.IsNullOrWhiteSpace(split[0])) // do i have anything provided
         {

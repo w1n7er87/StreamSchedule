@@ -34,6 +34,8 @@ internal class GetEmotesFromMessage : Command
 
         HashSet<string> channels = [];
 
+        List<Task<string>> tasks = [];
+
         for (int i = 0; i < emotes.Count; i++)
         {
             Emote? emote = emotes[i];
@@ -42,7 +44,13 @@ internal class GetEmotesFromMessage : Command
                 channels.Add("twitch");
                 continue;
             }
-            channels.Add(await GetEmoteChannel.GetEmoteChannelByEmoteID(emote.Id));
+            tasks.Add(GetEmoteChannel.GetEmoteChannelByEmoteID(emote.Id));
+        }
+
+        await Task.WhenAll(tasks);
+        foreach (var task in tasks)
+        {
+            channels.Add(task.Result);
         }
 
         foreach (var channel in channels)
