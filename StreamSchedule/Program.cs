@@ -37,9 +37,10 @@ internal class BotCore
     public static BotCore Instance { get; private set; }
 
     public TwitchAPI API { get; private set; }
-    private TwitchClient _client;
+    public TwitchClient Client { get; private set; }
     private LiveStreamMonitorService _monitor;
-    private static readonly string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
+
+    private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
 
     private Dictionary<string, bool> _channelLiveState;
 
@@ -53,6 +54,7 @@ internal class BotCore
     public static GlobalEmote[]? GlobalEmotes { get; private set; }
 
     private static int _dbSaveCounter = 0;
+    private const int _dbUpdateCountInterval = 10;
 
     private async Task ConfigLiveMonitorAsync(string[] channelNames)
     {
@@ -80,14 +82,14 @@ internal class BotCore
 
         DBContext.Database.EnsureCreated();
 
-        _client = new TwitchClient();
-        _client.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
-        _client.OnUnaccountedFor += Client_OnUnaccounted;
-        _client.OnLog += Client_OnLog;
-        _client.OnJoinedChannel += Client_OnJoinedChannel;
-        _client.OnMessageReceived += Client_OnMessageReceived;
-        _client.OnConnected += Client_OnConnected;
-        _client.Connect();
+        Client = new TwitchClient();
+        Client.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
+        Client.OnUnaccountedFor += Client_OnUnaccounted;
+        Client.OnLog += Client_OnLog;
+        Client.OnJoinedChannel += Client_OnJoinedChannel;
+        Client.OnMessageReceived += Client_OnMessageReceived;
+        Client.OnConnected += Client_OnConnected;
+        Client.Connect();
 
         _channelLiveState = [];
         foreach (string channel in channelNames)
@@ -106,13 +108,13 @@ internal class BotCore
         if (_channelLiveState[e.ChatMessage.Channel])
         {
             User.AddMessagesCounter(userSent, online: 1);
-            if (_dbSaveCounter >= 10) { DBContext.SaveChanges(); _dbSaveCounter = 0; }
+            if (_dbSaveCounter >= _dbUpdateCountInterval) { DBContext.SaveChanges(); _dbSaveCounter = 0; }
             return;
         }
 
         User.AddMessagesCounter(userSent, offline: 1);
 
-        if (_dbSaveCounter >= 10) { DBContext.SaveChanges(); _dbSaveCounter = 0; }
+        if (_dbSaveCounter >= _dbUpdateCountInterval) { DBContext.SaveChanges(); _dbSaveCounter = 0; }
 
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 
@@ -152,7 +154,7 @@ internal class BotCore
         if (trimmedMessage.Length < 2) return;
 
         string requestedCommand = trimmedMessage.Split(' ')[0];
-
+        
         List<TextCommand> textCommands = [.. DBContext.TextCommands];
 
         if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds(5) && textCommands.Count > 0)
@@ -168,7 +170,7 @@ internal class BotCore
                 if (userSent.privileges < command.Privileges) return;
 
                 Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
-                _client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
+                Client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
                 _sameMessage = !_sameMessage;
                 _textCommandLastUsed = DateTime.Now;
                 return;
@@ -200,11 +202,11 @@ internal class BotCore
 
             if (response.reply)
             {
-                _client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, FixNineEleven(response.content) + bypassSameMessage);
+                Client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, FixNineEleven(response.content) + bypassSameMessage);
             }
             else
             {
-                _client.SendMessage(e.ChatMessage.Channel, FixNineEleven(response.content) + bypassSameMessage);
+                Client.SendMessage(e.ChatMessage.Channel, FixNineEleven(response.content) + bypassSameMessage);
             }
 
             _sameMessage = !_sameMessage;
