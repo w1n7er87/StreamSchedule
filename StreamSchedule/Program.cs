@@ -38,11 +38,11 @@ internal class BotCore
 
     public TwitchAPI API { get; private set; }
     public TwitchClient Client { get; private set; }
-    private LiveStreamMonitorService _monitor;
+    private readonly LiveStreamMonitorService _monitor;
 
     private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
-
-    private Dictionary<string, bool> _channelLiveState;
+     
+    private readonly Dictionary<string, bool> _channelLiveState;
 
     private bool _sameMessage = false;
 
