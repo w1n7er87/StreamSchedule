@@ -52,6 +52,8 @@ internal class BotCore
 
     public static GlobalEmote[]? GlobalEmotes { get; private set; }
 
+    private static int _dbSaveCounter = 0;
+
     private async Task ConfigLiveMonitorAsync(string[] channelNames)
     {
         _monitor.SetChannelsByName([.. channelNames]);
@@ -98,22 +100,19 @@ internal class BotCore
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-        User u = new()
-        {
-            Id = int.Parse(e.ChatMessage.UserId),
-            Username = e.ChatMessage.Username,
-            privileges = e.ChatMessage.UserType > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
-        };
-
-        User userSent = User.SyncToDb(u, DBContext);
+        User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType, DBContext);
+        _dbSaveCounter++;
 
         if (_channelLiveState[e.ChatMessage.Channel])
         {
-            User.AddMessagesCounter(userSent, DBContext, online: 1);
+            User.AddMessagesCounter(userSent, online: 1);
+            if (_dbSaveCounter >= 10) { DBContext.SaveChanges(); _dbSaveCounter = 0; }
             return;
         }
 
-        User.AddMessagesCounter(userSent, DBContext, offline: 1);
+        User.AddMessagesCounter(userSent, offline: 1);
+
+        if (_dbSaveCounter >= 10) { DBContext.SaveChanges(); _dbSaveCounter = 0; }
 
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 

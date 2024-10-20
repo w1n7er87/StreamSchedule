@@ -9,33 +9,41 @@ public class User
     public int MessagesOffline { get; set; }
     public int MessagesOnline { get; set; }
 
-    internal static User SyncToDb(User u, DatabaseContext context)
+    internal static User SyncToDb(string userID, string username, TwitchLib.Client.Enums.UserType usertype, DatabaseContext context)
     {
-        User? uDb = context.Users.Find(u.Id);
+        int userIDNumber = int.Parse(userID);
+
+        User? uDb = context.Users.Find(userIDNumber);
         if (uDb is null)
         {
+            User u = new()
+            {
+                Id = userIDNumber,
+                Username = username,
+                privileges = usertype > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
+            };
+
             context.Users.Add(u);
             uDb = u;
             context.SaveChanges();
         }
         else
         {
-            if (uDb.Username != u.Username)
+            if (uDb.Username != username)
             {
                 uDb.PreviousUsernames ??= [];
                 uDb.PreviousUsernames.Add(uDb.Username!);
-                uDb.Username = u.Username;
+                uDb.Username = username;
                 context.SaveChanges();
             }
         }
         return uDb;
     }
 
-    internal static void AddMessagesCounter(User u, DatabaseContext context, int online = 0, int offline = 0)
+    internal static void AddMessagesCounter(User u, int online = 0, int offline = 0)
     {
         u.MessagesOnline += online;
         u.MessagesOffline += offline;
-        context.SaveChanges();
     }
 
     internal static bool TryGetUser(string username, out User user, string? id = null)
