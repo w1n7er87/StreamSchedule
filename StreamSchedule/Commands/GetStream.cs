@@ -15,7 +15,7 @@ internal class GetStream : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         var next = BotCore.DBContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.UtcNow))
-            .AsNoTracking()
+            .ToList()
             .OrderBy(x => new DateTime(x.StreamDate, x.StreamTime))
             .FirstOrDefault(x => new DateTime(x.StreamDate, x.StreamTime) >= DateTime.UtcNow);
 

@@ -23,7 +23,7 @@ internal class Top : Command
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
-                result += $"{i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOffline} ppL ";
+                result += $"{i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOffline} er ";
             }
         }
 
@@ -33,7 +33,7 @@ internal class Top : Command
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
-                result += $"{i + 1} {user.Username!.Insert(1, "󠀀")} {MathF.Round(Userscore.GetRatioAndScore(user).score, 3)} ppL ";
+                result += $"{i + 1} {user.Username!.Insert(1, "󠀀")} {MathF.Round(Userscore.GetRatioAndScore(user).score, 3)} er ";
             }
         }
 
@@ -43,7 +43,7 @@ internal class Top : Command
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
-                result += $"{i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOnline} ppL ";
+                result += $"{i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOnline} er ";
             }
         }
 
