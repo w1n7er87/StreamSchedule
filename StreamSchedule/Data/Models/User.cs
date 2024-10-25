@@ -5,7 +5,7 @@ public class User
     public int Id { get; set; }
     public string? Username { get; set; }
     public List<string>? PreviousUsernames { get; set; }
-    public Privileges privileges { get; set; } = Privileges.None;
+    public Privileges Privileges { get; set; } = Privileges.None;
     public int MessagesOffline { get; set; }
     public int MessagesOnline { get; set; }
 
@@ -20,23 +20,21 @@ public class User
             {
                 Id = userIDNumber,
                 Username = username,
-                privileges = usertype > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
+                Privileges = usertype > TwitchLib.Client.Enums.UserType.Viewer ? Privileges.Mod : Privileges.None,
             };
 
             context.Users.Add(u);
             uDb = u;
-            context.SaveChanges();
         }
         else
         {
-            if (uDb.Username != username)
-            {
-                uDb.PreviousUsernames ??= [];
-                uDb.PreviousUsernames.Add(uDb.Username!);
-                uDb.Username = username;
-                context.SaveChanges();
-            }
+            if (uDb.Username == username) return uDb;
+            uDb.PreviousUsernames ??= [];
+            uDb.PreviousUsernames.Add(uDb.Username!);
+            uDb.Username = username;
         }
+
+        context.SaveChanges();
         return uDb;
     }
 

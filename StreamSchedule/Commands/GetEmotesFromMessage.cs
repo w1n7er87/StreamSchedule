@@ -36,9 +36,8 @@ internal class GetEmotesFromMessage : Command
 
         List<Task<string>> tasks = [];
 
-        for (int i = 0; i < emotes.Count; i++)
+        foreach (Emote? emote in emotes)
         {
-            Emote? emote = emotes[i];
             if ((BotCore.GlobalEmotes ?? []).Any(x => x.Id == emote.Id))
             {
                 channels.Add("twitch");

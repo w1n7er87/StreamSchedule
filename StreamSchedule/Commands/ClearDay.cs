@@ -11,14 +11,14 @@ internal class ClearDay : Command
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
 
-    private readonly string[] inputPatterns = ["d-M-yy", "dd-MM-yy"];
+    private readonly string[] _inputPatterns = ["d-M-yy", "dd-MM-yy"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Message.Split(' ');
         DateTime temp = new();
 
-        if (split.Length < 1 || !DateTime.TryParseExact(split[0], inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
+        if (split.Length < 1 || !DateTime.TryParseExact(split[0], _inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
         {
             return Task.FromResult(Utils.Responses.Fail + "bad date ");
         }

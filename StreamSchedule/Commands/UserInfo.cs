@@ -16,9 +16,9 @@ internal class UserInfo : Command
     {
         string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
         string[] split = text.Split(' ');
-        CommandResult response = new("");
+        CommandResult response = new();
 
-        int userIDnumber = 0;
+        int userIDNumber = 0;
         bool idProvided = false;
         string targetUsername = message.Sender.Username!;
 
@@ -26,7 +26,7 @@ internal class UserInfo : Command
         {
             if (split[0].StartsWith('#'))
             {
-                idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDnumber); // if i have numbers with prefix - treat them as userid
+                idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber); // if i have numbers with prefix - treat them as userid
             }
 
             if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); } // if there was no prefix or conversion failed, treat it as a username
@@ -34,7 +34,7 @@ internal class UserInfo : Command
 
         try
         {
-            var a = idProvided ? await BotCore.Instance.API.Helix.Users.GetUsersAsync(ids: [userIDnumber.ToString()]) : await BotCore.Instance.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
+            var a = idProvided ? await BotCore.Instance.API.Helix.Users.GetUsersAsync(ids: [userIDNumber.ToString()]) : await BotCore.Instance.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
             TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users.First();
 
             string generalInfo = GetGeneralInfo(u);
@@ -64,7 +64,7 @@ internal class UserInfo : Command
 
             if (usedArgs.TryGetValue("f", out _) || all)
             {
-                followers = (await GetFollowers(u.Id)).ToString() + " followers";
+                followers = await GetFollowers(u.Id) + " followers";
                 response += followers + " ";
             }
 
@@ -77,13 +77,10 @@ internal class UserInfo : Command
             if (usedArgs.TryGetValue("s", out _) || all)
             {
                 liveInfo = await GetLiveStatus(u.Id);
-                response += (message.Sender.privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
+                response += (message.Sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
             }
 
-            if (all)
-            { return new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}"); }
-
-            return response;
+            return all ? new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}") : response;
         }
         catch (Exception ex)
         {
@@ -104,52 +101,51 @@ internal class UserInfo : Command
             var emotes = (await BotCore.Instance.API.Helix.Chat.GetChannelEmotesAsync(userID)).ChannelEmotes;
             string[] result = ["no emotes", "no emotes"];
 
-            if (emotes.Length > 0)
+            if (emotes.Length <= 0) return result;
+            
+            string prefix;
+
+            if (emotes.Length == 1)
             {
-                string prefix = "";
-
-                if (emotes.Length == 1)
-                {
-                    prefix = String.Join("", emotes.First().Name.TakeWhile(x => char.IsLower(x) || char.IsNumber(x))) + "(?)";
-                }
-                else
-                {
-                    string p = emotes.First().Name;
-                    int prefixLength = p.Length;
-
-                    foreach (var emote in emotes)
-                    {
-                        int i = 0;
-                        while (i < prefixLength && i < emote.Name.Length && emote.Name[i] == p[i]) { i++; }
-                        prefixLength = i;
-                    }
-                    prefix = p[..prefixLength];
-                }
-
-                result[1] = $"\"{prefix}\" {emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated)";
-                result[0] = result[1];
-
-                int t1 = emotes.Count(e => e.Tier == "1000");
-                int t1a = emotes.Count(e => e.Tier == "1000" && e.Format.Contains("animated"));
-                string T1 = $"{(t1 == 0 ? "" : $"T1: {t1}")}{(t1a == 0 ? "" : $"({t1a})")}";
-
-                int t2 = emotes.Count(e => e.Tier == "2000");
-                int t2a = emotes.Count(e => e.Tier == "2000" && e.Format.Contains("animated"));
-                string T2 = $"{(t2 == 0 ? "" : $"T2: {t2}")}{(t2a == 0 ? "" : $"({t2a})")}";
-
-                int t3 = emotes.Count(e => e.Tier == "3000");
-                int t3a = emotes.Count(e => e.Tier == "3000" && e.Format.Contains("animated"));
-                string T3 = $"{(t3 == 0 ? "" : $"T3: {t3}")}{(t3a == 0 ? "" : $"({t3a})")}";
-
-                int bits = emotes.Count(e => e.EmoteType == "bitstier");
-                int bitsa = emotes.Count(e => e.EmoteType == "bitstier" && e.Format.Contains("animated"));
-                string B = $"{(bits == 0 ? "" : $"Bits: {bits}")}{(bitsa == 0 ? "" : $"({bitsa})")}";
-
-                int follow = emotes.Count(e => e.EmoteType == "follower");
-                string F = $"{(follow == 0 ? "" : $"Follow: {follow}")}";
-
-                result[1] += $": {T1} {T2} {T3} {B} {F}".Trim();
+                prefix = string.Join("", emotes.First().Name.TakeWhile(x => char.IsLower(x) || char.IsNumber(x))) + "(?)";
             }
+            else
+            {
+                string p = emotes.First().Name;
+                int prefixLength = p.Length;
+
+                foreach (var emote in emotes)
+                {
+                    int i = 0;
+                    while (i < prefixLength && i < emote.Name.Length && emote.Name[i] == p[i]) { i++; }
+                    prefixLength = i;
+                }
+                prefix = p[..prefixLength];
+            }
+
+            result[1] = $"\"{prefix}\" {emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated)";
+            result[0] = result[1];
+
+            int t1 = emotes.Count(e => e.Tier == "1000");
+            int t1a = emotes.Count(e => e.Tier == "1000" && e.Format.Contains("animated"));
+            string T1 = $"{(t1 == 0 ? "" : $"T1: {t1}")}{(t1a == 0 ? "" : $"({t1a})")}";
+
+            int t2 = emotes.Count(e => e.Tier == "2000");
+            int t2a = emotes.Count(e => e.Tier == "2000" && e.Format.Contains("animated"));
+            string T2 = $"{(t2 == 0 ? "" : $"T2: {t2}")}{(t2a == 0 ? "" : $"({t2a})")}";
+
+            int t3 = emotes.Count(e => e.Tier == "3000");
+            int t3a = emotes.Count(e => e.Tier == "3000" && e.Format.Contains("animated"));
+            string T3 = $"{(t3 == 0 ? "" : $"T3: {t3}")}{(t3a == 0 ? "" : $"({t3a})")}";
+
+            int bits = emotes.Count(e => e.EmoteType == "bitstier");
+            int bitsa = emotes.Count(e => e.EmoteType == "bitstier" && e.Format.Contains("animated"));
+            string B = $"{(bits == 0 ? "" : $"Bits: {bits}")}{(bitsa == 0 ? "" : $"({bitsa})")}";
+
+            int follow = emotes.Count(e => e.EmoteType == "follower");
+            string F = $"{(follow == 0 ? "" : $"Follow: {follow}")}";
+
+            result[1] += $": {T1} {T2} {T3} {B} {F}".Trim();
             return result;
         }
         catch (Exception ex)
@@ -167,8 +163,7 @@ internal class UserInfo : Command
 
             if (color.Data.First().Color.Equals("")) return "color not set";
             string value = color.Data.First().Color;
-            if (!detailedInfo) return value;
-            return $"{value} {(await ColorInfo.GetColor(value))}";
+            return !detailedInfo ? value : $"{value} {await ColorInfo.GetColor(value)}";
         }
         catch (Exception ex)
         {
@@ -181,7 +176,7 @@ internal class UserInfo : Command
     {
         try
         {
-            string[] result = ["", ""];
+            string[] result;
 
             var liveStatus = await BotCore.Instance.API.Helix.Streams.GetStreamsAsync(userIds: [userID]);
 
@@ -190,7 +185,7 @@ internal class UserInfo : Command
             {
                 string mature = s.IsMature? " 🔞":"";
                 TimeSpan durationSpan = DateTime.Now - s.StartedAt.ToLocalTime();
-                string duration = durationSpan.Days > 0 ? durationSpan.ToString("d\\:hh\\:mm\\:ss") : durationSpan.ToString("hh\\:mm\\:ss");
+                string duration = durationSpan.Days > 0 ? durationSpan.ToString(@"d\:hh\:mm\:ss") : durationSpan.ToString(@"hh\:mm\:ss");
                 result = [$"live{mature} {s.GameName}", $"Now {s.Type}{mature} ({duration}) : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers.{mature}"];
             }
             else

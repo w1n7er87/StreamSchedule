@@ -12,7 +12,7 @@ internal class EvaluateUsers : Command
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => ["s"];
 
-    internal float DefaultCutoffScore => 3.5f;
+    private static float DefaultCutoffScore => 3.5f;
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -22,18 +22,17 @@ internal class EvaluateUsers : Command
 
         float scoreCutoff = usedArgs.TryGetValue("s", out string? cutoff) ? float.TryParse(cutoff, out scoreCutoff) ? scoreCutoff : DefaultCutoffScore : DefaultCutoffScore;
 
-        string targetUsername;
-        CommandResult result = new("");
+        CommandResult result = new();
 
         try
         {
             if (string.IsNullOrWhiteSpace(split[0])) // nothing provided - run on all with default cutoff
             {
-                result += (await UpdateAll(scoreCutoff)).ToString() + $" user('s) updated ({scoreCutoff})";
+                result += (await UpdateAll(scoreCutoff)) + $" user('s) updated ({scoreCutoff})";
             }
             else // had something? assume it's a username
             {
-                targetUsername = split[0];
+                string targetUsername = split[0];
 
                 result += await TryUpdateSingle(targetUsername, scoreCutoff) ? $"{targetUsername}'s privileges have been updated ({scoreCutoff})" : $"{targetUsername}'s privileges nave not been updated ({scoreCutoff})";
             }
@@ -52,22 +51,20 @@ internal class EvaluateUsers : Command
         var users = BotCore.DBContext.Users.AsAsyncEnumerable();
         await foreach (var user in users)
         {
-            if (user.privileges == Privileges.Banned) continue;
+            if (user.Privileges == Privileges.Banned) continue;
 
             float score = Userscore.GetRatioAndScore(user).score;
 
-            if (user.privileges < Privileges.Trusted && score >= cutoff)
+            switch (user.Privileges)
             {
-                user.privileges = Privileges.Trusted;
-                count++;
-                continue;
-            }
-
-            if (user.privileges == Privileges.Trusted && score < cutoff)
-            {
-                user.privileges = Privileges.None;
-                count++;
-                continue;
+                case < Privileges.Trusted when score >= cutoff:
+                    user.Privileges = Privileges.Trusted;
+                    count++;
+                    continue;
+                case Privileges.Trusted when score < cutoff:
+                    user.Privileges = Privileges.None;
+                    count++;
+                    break;
             }
         }
         await BotCore.DBContext.SaveChangesAsync();
@@ -78,22 +75,22 @@ internal class EvaluateUsers : Command
     {
         if (!User.TryGetUser(username, out User user)) return false;
 
-        if (user.privileges == Privileges.Banned || user.privileges >= Privileges.Mod) return false;
+        if (user.Privileges is Privileges.Banned or >= Privileges.Mod) return false;
 
         float score = Userscore.GetRatioAndScore(user).score;
 
-        if (user.privileges < Privileges.Trusted && score >= cutoff)
+        switch (user.Privileges)
         {
-            user.privileges = Privileges.Trusted;
-            await BotCore.DBContext.SaveChangesAsync();
-            return true;
+            case < Privileges.Trusted when score >= cutoff:
+                user.Privileges = Privileges.Trusted;
+                await BotCore.DBContext.SaveChangesAsync();
+                return true;
+            case Privileges.Trusted when score < cutoff:
+                user.Privileges = Privileges.None;
+                await BotCore.DBContext.SaveChangesAsync();
+                return true;
+            default:
+                return false;
         }
-        if (user.privileges == Privileges.Trusted && score < cutoff)
-        {
-            user.privileges = Privileges.None;
-            await BotCore.DBContext.SaveChangesAsync();
-            return true;
-        }
-        return false;
     }
 }

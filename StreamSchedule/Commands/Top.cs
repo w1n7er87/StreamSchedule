@@ -1,4 +1,5 @@
-﻿using StreamSchedule.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
@@ -6,19 +7,19 @@ internal class Top : Command
 {
     internal override string Call => "top";
     internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get top chatters by messages sent offline(default)/online/score ";
+    internal override string Help => "get top chatters by messages sent offline(default)/online or by score ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => ["online", "offline", "score"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> args);
+        _ = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> args);
         CommandResult result = new("");
 
         if (args.Count == 0 || args.TryGetValue("offline", out _))
         {
-            var topTen = BotCore.DBContext.Users.OrderByDescending(x => x.MessagesOffline).Take(10).ToList();
+            var topTen = BotCore.DBContext.Users.OrderByDescending(x => x.MessagesOffline).AsNoTracking().Take(10).ToList();
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];
@@ -38,7 +39,7 @@ internal class Top : Command
 
         if (args.TryGetValue("online", out _))
         {
-            var topTen = BotCore.DBContext.Users.OrderByDescending(x => x.MessagesOnline).Take(10).ToList();
+            var topTen = BotCore.DBContext.Users.OrderByDescending(x => x.MessagesOnline).AsNoTracking().Take(10).ToList();
             for (int i = 0; i < topTen.Count; i++)
             {
                 var user = topTen[i];

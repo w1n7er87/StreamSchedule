@@ -8,7 +8,7 @@ public struct RatioScore(float r, float s)
     public float score = s;
 }
 
-internal class Userscore
+internal static class Userscore
 {
     public static RatioScore GetRatioAndScore(User u)
     {

@@ -15,19 +15,17 @@ internal class GetStream : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         var next = BotCore.DBContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.UtcNow))
-            .ToList()
+            .AsNoTracking()
             .OrderBy(x => new DateTime(x.StreamDate, x.StreamTime))
             .FirstOrDefault(x => new DateTime(x.StreamDate, x.StreamTime) >= DateTime.UtcNow);
 
-        if (next == null)
+        if (next is null)
         {
             return Task.FromResult(new CommandResult("There are no more streams scheduled DinkDonk "));
         }
-        else
-        {
-            DateTime fullDate = new DateTime(next.StreamDate, next.StreamTime).ToLocalTime();
-            TimeSpan span = fullDate - DateTime.Now;
-            return Task.FromResult(new CommandResult($"Next stream is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '} : {next.StreamTitle}"));
-        }
+
+        DateTime fullDate = new DateTime(next.StreamDate, next.StreamTime).ToLocalTime();
+        TimeSpan span = fullDate - DateTime.Now;
+        return Task.FromResult(new CommandResult($"Next stream is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '} : {next.StreamTitle}"));
     }
 }

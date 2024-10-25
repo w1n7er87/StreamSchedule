@@ -9,7 +9,7 @@ internal static class Commands
     private static List<Type> KnownCommands => Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(Command))).ToList();
 
     public static List<Command> CurrentCommands { get; private set; } = [];
-    private static List<string> _currentAliases = [];
+    private static readonly List<string> _currentAliases = [];
 
     internal static string RetrieveArguments(string[] args, string input, out Dictionary<string, string> usedArgs)
     {
@@ -20,11 +20,9 @@ internal static class Commands
         {
             foreach (var arg in args)
             {
-                if (ss.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "").ToLower();
-                    input = input.Replace(ss, "", StringComparison.InvariantCultureIgnoreCase);
-                }
+                if (!ss.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase)) continue;
+                usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "").ToLower();
+                input = input.Replace(ss, "", StringComparison.InvariantCultureIgnoreCase);
             }
         }
         return input.TrimStart();
@@ -37,13 +35,13 @@ internal static class Commands
 
         foreach (var alias in aliases)
         {
-            if (alias is null || alias.Aliases is null) continue;
+            if (alias?.Aliases is null) continue;
             _currentAliases.AddRange(alias.Aliases);
         }
 
         foreach (var cmd in textCommands)
         {
-            if (cmd is null || cmd.Aliases is null) continue;
+            if (cmd?.Aliases is null) continue;
             _currentAliases.AddRange(cmd.Aliases);
         }
 

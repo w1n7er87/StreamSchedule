@@ -33,22 +33,22 @@ internal class BotCore
     private BotCore()
     { }
 
-    public static DatabaseContext DBContext { get; private set; } = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
+    public static DatabaseContext DBContext { get; } = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
     public static BotCore Instance { get; private set; }
 
-    public TwitchAPI API { get; private set; }
-    public TwitchClient Client { get; private set; }
+    public TwitchAPI API { get; }
+    public TwitchClient Client { get; }
     private readonly LiveStreamMonitorService _monitor;
 
     private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
      
     private readonly Dictionary<string, bool> _channelLiveState;
 
-    private bool _sameMessage = false;
+    private bool _sameMessage;
 
     private DateTime _textCommandLastUsed = DateTime.MinValue;
 
-    public List<ChatMessage> MessageCache { get; private set; } = [];
+    public List<ChatMessage> MessageCache { get; } = [];
     private static readonly int _cacheSize = 800;
 
     public static GlobalEmote[]? GlobalEmotes { get; private set; }
@@ -73,9 +73,14 @@ internal class BotCore
     {
         Instance = this;
 
-        API = new TwitchAPI();
-        API.Settings.ClientId = Credentials.clientID;
-        API.Settings.AccessToken = Credentials.oauth;
+        API = new TwitchAPI
+        {
+            Settings =
+            {
+                ClientId = Credentials.clientID,
+                AccessToken = Credentials.oauth
+            }
+        };
         _monitor = new LiveStreamMonitorService(API, 5);
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
@@ -108,13 +113,13 @@ internal class BotCore
         if (_channelLiveState[e.ChatMessage.Channel])
         {
             User.AddMessagesCounter(userSent, online: 1);
-            if (_dbSaveCounter >= _dbUpdateCountInterval) { DBContext.SaveChanges(); _dbSaveCounter = 0; }
+            if (_dbSaveCounter >= _dbUpdateCountInterval) await DBContext.SaveChangesAsync(); _dbSaveCounter = 0;
             return;
         }
 
         User.AddMessagesCounter(userSent, offline: 1);
 
-        if (_dbSaveCounter >= _dbUpdateCountInterval) { DBContext.SaveChanges(); _dbSaveCounter = 0; }
+        if (_dbSaveCounter >= _dbUpdateCountInterval) { await DBContext.SaveChangesAsync(); _dbSaveCounter = 0; }
 
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 
@@ -128,7 +133,7 @@ internal class BotCore
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
             trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2)..];
         }
-        var msgAsCodepoints = trimmedMessage.Codepoints();
+        var msgAsCodepoints = trimmedMessage.Codepoints().ToList();
 
         var firstLetters = msgAsCodepoints.TakeWhile(x =>
             x == Emoji.ZeroWidthJoiner ||
@@ -137,11 +142,11 @@ internal class BotCore
             Emoji.IsEmoji(x.AsString()) ||
             Emoji.SkinTones.All.Any(y => x == y) ||
             x == Emoji.VariationSelector ||
-            _commandPrefixes.Any(y => y == x));
+            _commandPrefixes.Any(y => y == x)).ToList();
 
-        if (!firstLetters.Any()) return;
+        if (firstLetters.Count == 0) return;
 
-        var noPrefix = msgAsCodepoints.Skip(firstLetters.Count());
+        var noPrefix = msgAsCodepoints.Skip(firstLetters.Count);
 
         string restoredMessage = "";
         foreach (var l in noPrefix)
@@ -167,7 +172,7 @@ internal class BotCore
                     if (!command.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
                 }
 
-                if (userSent.privileges < command.Privileges) return;
+                if (userSent.Privileges < command.Privileges) return;
 
                 Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
                 Client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
@@ -190,7 +195,7 @@ internal class BotCore
 
             if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) return;
 
-            if (userSent.privileges < c.MinPrivilege) return;
+            if (userSent.Privileges < c.MinPrivilege) return;
 
             trimmedMessage = trimmedMessage.Replace(usedCall, "", StringComparison.OrdinalIgnoreCase).Replace("\U000e0000", "");
 

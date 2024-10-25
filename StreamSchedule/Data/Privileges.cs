@@ -19,6 +19,7 @@ internal static class PrivilegeUtils
             "ok" => Privileges.None,
             "trust" => Privileges.Trusted,
             "mod" => Privileges.Mod,
+            "uuh" => Privileges.Uuh,
             _ => Privileges.None
         };
     }

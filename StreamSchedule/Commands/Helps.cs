@@ -23,7 +23,7 @@ internal class Helps : Command
             var cmdAliases = BotCore.DBContext.CommandAliases.Find(c.Call.ToLower());
 
             string aliases = "";
-            if (cmdAliases is not null && cmdAliases.Aliases is not null && cmdAliases.Aliases.Count != 0)
+            if (cmdAliases?.Aliases is not null && cmdAliases.Aliases.Count != 0)
             {
                 aliases = $"({string.Join(",", cmdAliases.Aliases)}) ";
             }

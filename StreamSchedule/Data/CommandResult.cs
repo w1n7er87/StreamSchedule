@@ -2,23 +2,13 @@
 
 namespace StreamSchedule.Data
 {
-    internal class CommandResult
+    internal class CommandResult(string content, bool reply = true)
     {
-        private CommandResult() { this.content = string.Empty; this.reply = false; }
-
-        public string content;
-        public bool reply;
-
-        public CommandResult(string content)
+        public string content = content;
+        public bool reply = reply;
+        
+        public CommandResult() : this(string.Empty, false)
         {
-            this.content = content;
-            this.reply = true;
-        }
-
-        public CommandResult(string content, bool reply)
-        {
-            this.content = content;
-            this.reply = reply;
         }
 
         public static CommandResult operator +(CommandResult cr, string extra)

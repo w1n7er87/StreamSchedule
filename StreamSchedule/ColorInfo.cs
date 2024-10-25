@@ -42,7 +42,7 @@ namespace StreamSchedule
                 var response = await client.GetStringAsync($"https://www.thecolorapi.com/id?hex={colorHex}&format=json");
                 var cc = JsonConvert.DeserializeObject<ColorsResponse>(response);
 
-                return cc?.name.value + rgb ?? rgb;
+                return cc?.name.value + rgb;
             }
             catch
             {

@@ -17,10 +17,10 @@ internal class CheckPrivileges : Command
         string[] split = message.Message.Split(' ');
         User target = message.Sender;
 
-        if (!string.IsNullOrWhiteSpace(split[0]) && message.Sender.privileges >= Privileges.Trusted)
+        if (!string.IsNullOrWhiteSpace(split[0]) && message.Sender.Privileges >= Privileges.Trusted)
         {
             target = User.TryGetUser(split[0], out User t) ? t : target;
         }
-        return Task.FromResult(new CommandResult($"{target.Username} is {PrivilegeUtils.PrivilegeToString(target.privileges)}", false));
+        return Task.FromResult(new CommandResult($"{target.Username} is {PrivilegeUtils.PrivilegeToString(target.Privileges)}", false));
     }
 }

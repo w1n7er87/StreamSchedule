@@ -1,6 +1,6 @@
 ﻿namespace StreamSchedule;
 
-internal class Cooldowns
+internal static class Cooldowns
 {
     public static int Short => 1;
     public static int Medium => 3;

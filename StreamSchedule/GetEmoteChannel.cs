@@ -4,7 +4,16 @@
     {
         public static async Task<string> GetEmoteChannelByEmoteID(string emoteID)
         {
-            using var client = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false, UseCookies = false, UseDefaultCredentials = true, MaxConnectionsPerServer = 1 }) { Timeout = TimeSpan.FromSeconds(5) };
+            using var client = new HttpClient(
+                new HttpClientHandler
+                {
+                    AllowAutoRedirect = false,
+                    UseCookies = false,
+                    UseDefaultCredentials = true,
+                    MaxConnectionsPerServer = 1
+                });
+            
+            client.Timeout = TimeSpan.FromSeconds(5);
 
             try
             {
@@ -14,7 +23,7 @@
 
                 if (response.StatusCode >= System.Net.HttpStatusCode.Redirect)
                 {
-                    result = (response.Headers.Location?.Segments[^1]) ?? "";
+                    result = response.Headers.Location?.Segments[^1] ?? "";
                 }
 
                 return result;

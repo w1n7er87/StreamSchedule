@@ -18,11 +18,9 @@ internal class Today : Command
         {
             return Task.FromResult(new CommandResult("There is no stream today DinkDonk "));
         }
-        else
-        {
-            DateTime fullDate = new DateTime(today.StreamDate, today.StreamTime).ToLocalTime();
-            TimeSpan span = fullDate - DateTime.Now;
-            return Task.FromResult(new CommandResult($"The {today.StreamTitle} is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}DinkDonk "));
-        }
+
+        DateTime fullDate = new DateTime(today.StreamDate, today.StreamTime).ToLocalTime();
+        TimeSpan span = fullDate - DateTime.Now;
+        return Task.FromResult(new CommandResult($"The {today.StreamTitle} is in {(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}DinkDonk "));
     }
 }

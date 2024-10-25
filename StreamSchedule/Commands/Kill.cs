@@ -14,7 +14,7 @@ internal class Kill : Command
     private async Task KillTask(TimeSpan delay)
     {
         await Task.Delay(delay);
-        BotCore.DBContext.SaveChanges();
+        await BotCore.DBContext.SaveChangesAsync();
         Environment.Exit(0);
     }
 
@@ -22,9 +22,9 @@ internal class Kill : Command
     {
         string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
 
-        if (message.Sender.privileges == Privileges.Uuh && usedArgs.TryGetValue("frfr", out _))
+        if (message.Sender.Privileges == Privileges.Uuh && usedArgs.TryGetValue("frfr", out _))
         {
-            string[] split = message.Message.Split(' ');
+            string[] split = text.Split(' ');
             int duration = 1;
             if (split.Length > 0)
             {
@@ -37,13 +37,8 @@ internal class Kill : Command
 
         string target = message.Message.Split(' ')[0];
 
-        if(Random.Shared.Next(101) > 15)
-        {
-            return Task.FromResult(new CommandResult("✋ unauthorized action. ", false));
-        }
-        else
-        {
-            return Task.FromResult(new CommandResult($"MEGALUL 🔪 {target}", false));
-        }
+        if(Random.Shared.Next(101) > 15) return Task.FromResult(new CommandResult("✋ unauthorized action. ", false));
+
+        return Task.FromResult(new CommandResult($"MEGALUL 🔪 {target}", false));
     }
 }

@@ -27,7 +27,7 @@ namespace StreamSchedule.Migrations
 
                     b.HasKey("CommandName");
 
-                    b.ToTable("CommandAliases");
+                    b.ToTable("CommandAliases", (string)null);
                 });
 
             modelBuilder.Entity("StreamSchedule.Data.Models.Stream", b =>
@@ -43,7 +43,7 @@ namespace StreamSchedule.Migrations
 
                     b.HasKey("StreamDate");
 
-                    b.ToTable("Streams");
+                    b.ToTable("Streams", (string)null);
                 });
 
             modelBuilder.Entity("StreamSchedule.Data.Models.TextCommand", b =>
@@ -63,7 +63,7 @@ namespace StreamSchedule.Migrations
 
                     b.HasKey("Name");
 
-                    b.ToTable("TextCommands");
+                    b.ToTable("TextCommands", (string)null);
                 });
 
             modelBuilder.Entity("StreamSchedule.Data.Models.User", b =>
@@ -89,7 +89,7 @@ namespace StreamSchedule.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 #pragma warning restore 612, 618
         }
