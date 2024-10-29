@@ -7,7 +7,7 @@ namespace StreamSchedule.Data
         public string content = content;
         public bool reply = reply;
         
-        public CommandResult() : this(string.Empty, false)
+        public CommandResult() : this(string.Empty, true)
         {
         }
 

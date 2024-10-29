@@ -14,7 +14,7 @@ using TwitchLib.Client.Models;
 
 namespace StreamSchedule;
 
-public class Program
+public static class Program
 {
     private static void Main(string[] args)
     {
@@ -49,7 +49,7 @@ internal class BotCore
     private DateTime _textCommandLastUsed = DateTime.MinValue;
 
     public List<ChatMessage> MessageCache { get; } = [];
-    private static readonly int _cacheSize = 800;
+    private const int _cacheSize = 800;
 
     public static GlobalEmote[]? GlobalEmotes { get; private set; }
 
@@ -113,14 +113,22 @@ internal class BotCore
         if (_channelLiveState[e.ChatMessage.Channel])
         {
             User.AddMessagesCounter(userSent, online: 1);
-            if (_dbSaveCounter >= _dbUpdateCountInterval) await DBContext.SaveChangesAsync(); _dbSaveCounter = 0;
+            if (_dbSaveCounter >= _dbUpdateCountInterval)
+            {
+                Console.WriteLine($"{await DBContext.SaveChangesAsync()} changes saved");
+                _dbSaveCounter = 0;
+            }
             return;
         }
 
         User.AddMessagesCounter(userSent, offline: 1);
 
-        if (_dbSaveCounter >= _dbUpdateCountInterval) { await DBContext.SaveChangesAsync(); _dbSaveCounter = 0; }
-
+        if (_dbSaveCounter >= _dbUpdateCountInterval)
+        {
+            Console.WriteLine($"{await DBContext.SaveChangesAsync()} changes saved");
+            _dbSaveCounter = 0;
+        }
+        
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 
         MessageCache.Add(e.ChatMessage);
@@ -188,7 +196,7 @@ internal class BotCore
             if (!requestedCommand.Equals(c.Call, StringComparison.OrdinalIgnoreCase))
             {
                 var aliases = DBContext.CommandAliases.Find(c.Call.ToLower());
-                if (aliases is null || aliases.Aliases is null || aliases.Aliases.Count == 0) continue;
+                if (aliases?.Aliases is null || aliases.Aliases.Count == 0) continue;
                 if (!aliases.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
                 usedCall = requestedCommand;
             }
