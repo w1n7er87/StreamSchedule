@@ -108,32 +108,27 @@ internal class BotCore
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType, DBContext);
-        _dbSaveCounter++;
-
-        if (_channelLiveState[e.ChatMessage.Channel])
+        
+        if (e.ChatMessage.Channel.Equals("vedal987")) 
         {
-            User.AddMessagesCounter(userSent, online: 1);
+            _dbSaveCounter++;
+            if (_channelLiveState[e.ChatMessage.Channel])
+            {
+                User.AddMessagesCounter(userSent, online: 1);
+            }
+            else
+            {
+                User.AddMessagesCounter(userSent, offline: 1);
+            }
+
             if (_dbSaveCounter >= _dbUpdateCountInterval)
             {
-                Console.WriteLine($"{await DBContext.SaveChangesAsync()} changes saved");
+                await DBContext.SaveChangesAsync();
                 _dbSaveCounter = 0;
             }
-            return;
         }
 
-        User.AddMessagesCounter(userSent, offline: 1);
-
-        if (_dbSaveCounter >= _dbUpdateCountInterval)
-        {
-            Console.WriteLine($"{await DBContext.SaveChangesAsync()} changes saved");
-            _dbSaveCounter = 0;
-        }
-        
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
-
-        MessageCache.Add(e.ChatMessage);
-        if (MessageCache.Count > _cacheSize) { MessageCache.RemoveAt(0); }
-
         string? replyID = null;
         string trimmedMessage = e.ChatMessage.Message;
         if (e.ChatMessage.ChatReply != null)
@@ -141,9 +136,9 @@ internal class BotCore
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
             trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2)..];
         }
-        var msgAsCodepoints = trimmedMessage.Codepoints().ToList();
+        List<Codepoint> msgAsCodepoints = trimmedMessage.Codepoints().ToList();
 
-        var firstLetters = msgAsCodepoints.TakeWhile(x =>
+        List<Codepoint> firstLetters = msgAsCodepoints.TakeWhile(x =>
             x == Emoji.ZeroWidthJoiner ||
             x == Emoji.ObjectReplacementCharacter ||
             x == Emoji.Keycap ||
@@ -154,10 +149,10 @@ internal class BotCore
 
         if (firstLetters.Count == 0) return;
 
-        var noPrefix = msgAsCodepoints.Skip(firstLetters.Count);
+        msgAsCodepoints = msgAsCodepoints.Skip(firstLetters.Count).ToList();
 
         string restoredMessage = "";
-        foreach (var l in noPrefix)
+        foreach (var l in msgAsCodepoints)
         {
             restoredMessage += l.AsString();
         }
@@ -189,6 +184,11 @@ internal class BotCore
                 return;
             }
         }
+
+        if (_channelLiveState[e.ChatMessage.Channel]) return;
+
+        MessageCache.Add(e.ChatMessage);
+        if (MessageCache.Count > _cacheSize) { MessageCache.RemoveAt(0); }
 
         foreach (var c in Commands.Commands.CurrentCommands)
         {
