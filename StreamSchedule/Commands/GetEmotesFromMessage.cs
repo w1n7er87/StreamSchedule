@@ -14,14 +14,14 @@ internal class GetEmotesFromMessage : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        CommandResult response = new("");
+        CommandResult response = new();
 
         if (string.IsNullOrEmpty(message.ReplyID))
         {
             return response;
         }
 
-        ChatMessage? reply = BotCore.Instance.MessageCache.FirstOrDefault(x => x.Id == message.ReplyID);
+        ChatMessage? reply = BotCore.MessageCache.Find(x => x.Id == message.ReplyID);
 
         if (reply == null)
         {

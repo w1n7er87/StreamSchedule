@@ -49,7 +49,7 @@ internal class BotCore
 
     private DateTime _textCommandLastUsed = DateTime.MinValue;
 
-    public List<ChatMessage> MessageCache { get; } = [];
+    public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
 
     public static GlobalEmote[]? GlobalEmotes { get; private set; }
@@ -131,13 +131,16 @@ internal class BotCore
             }
         }
 
+        MessageCache.Add(e.ChatMessage);
+        if (MessageCache.Count > _cacheSize) { MessageCache.RemoveAt(0); }
+
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
         string? replyID = null;
         string trimmedMessage = e.ChatMessage.Message;
         if (e.ChatMessage.ChatReply != null)
         {
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
-            trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentDisplayName.Length + 2)..];
+            trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentUserLogin.Length + 2)..];
         }
         List<Codepoint> msgAsCodepoints = trimmedMessage.Codepoints().ToList();
 
@@ -189,9 +192,6 @@ internal class BotCore
         }
 
         if (_channelLiveState[e.ChatMessage.Channel]) return;
-
-        MessageCache.Add(e.ChatMessage);
-        if (MessageCache.Count > _cacheSize) { MessageCache.RemoveAt(0); }
 
         foreach (var c in Commands.Commands.CurrentCommands)
         {
@@ -272,7 +272,7 @@ internal class BotCore
 
     private void Client_OnLog(object? sender, OnLogArgs e)
     {
-        //Console.WriteLine($"{e.DateTime.ToString()}: {e.BotUsername} - {e.Data}");
+        //Console.WriteLine($"{e.DateTime}: {e.BotUsername} - {e.Data}");
     }
 
     private void Client_OnConnected(object? sender, OnConnectedArgs e)
