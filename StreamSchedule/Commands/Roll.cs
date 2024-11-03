@@ -16,9 +16,17 @@ internal class Roll : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         CommandResult result = new($"{neuros[Random.Shared.Next(neuros.Length)]} says: ");
-        Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string,string> usedArgs);
-        int maxValue = usedArgs.TryGetValue("max", out string? a) ? int.TryParse(a, out int b) ? b > 0 ? b + 1 : 101 : 101 : 101;
-        
+        ;
+
+        string[] split = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string,string> usedArgs).Split(' ');
+
+        int maxValue = int.TryParse(split[0], out int c) ? c > 0 ? c + 1 : 101 : 101;
+
+        if (usedArgs.TryGetValue("max", out string? a))
+        {
+            maxValue = int.TryParse(a, out int b) ? b > 0 ? b + 1 : 101 : 101 ;
+        }
+
         if (usedArgs.TryGetValue("flip", out _))
         {
             return Task.FromResult(result + (Random.Shared.Next(100) < 50? "YES " : "NO "));
