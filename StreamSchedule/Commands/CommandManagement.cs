@@ -71,7 +71,7 @@ internal class CommandManagement : Command
         if (textCommands.Any(x => x.Name == commandName))
         {
             var c = textCommands.First(x => x.Name == commandName);
-            c.Aliases ??= [alias];
+            c.Aliases ??= [];
             c.Aliases.Add(alias);
             Commands.AddAlias(alias);
             BotCore.DBContext.SaveChanges();
@@ -81,7 +81,7 @@ internal class CommandManagement : Command
         if (Commands.CurrentCommands.Any(x => x.Call == commandName))
         {
             var c = BotCore.DBContext.CommandAliases.First(x => x.CommandName.ToLower() == commandName);
-            c.Aliases ??= [alias];
+            c.Aliases ??= [];
             c.Aliases.Add(alias);
             Commands.AddAlias(alias);
             BotCore.DBContext.SaveChanges();
