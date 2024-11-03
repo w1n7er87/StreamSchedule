@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using NeoSmart.Unicode;
 using StreamSchedule.Data;
@@ -107,6 +108,8 @@ internal class BotCore
 
     private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
+        long start = Stopwatch.GetTimestamp();
+        
         User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType, DBContext);
         
         if (e.ChatMessage.Channel.Equals("vedal987")) 
@@ -177,7 +180,7 @@ internal class BotCore
 
                 if (userSent.Privileges < command.Privileges) return;
 
-                Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
+                Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} ({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
                 Client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
                 _sameMessage = !_sameMessage;
                 _textCommandLastUsed = DateTime.Now;
@@ -209,7 +212,7 @@ internal class BotCore
 
             CommandResult response = await c.Handle(new(userSent, trimmedMessage, replyID));
 
-            Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
+            Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} ({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 
             if (string.IsNullOrEmpty(response.ToString())) return;
 
