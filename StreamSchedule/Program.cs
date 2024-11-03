@@ -210,7 +210,7 @@ internal class BotCore
 
             trimmedMessage = trimmedMessage.Replace(usedCall, "", StringComparison.OrdinalIgnoreCase).Replace("\U000e0000", "");
 
-            CommandResult response = await c.Handle(new(userSent, trimmedMessage, replyID));
+            CommandResult response = await c.Handle(new(userSent, trimmedMessage, replyID, e.ChatMessage.RoomId));
 
             Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} ({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 

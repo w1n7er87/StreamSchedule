@@ -19,11 +19,11 @@ internal class Schedule : Command
 
         if (!streams.Any()) { return Task.FromResult(new CommandResult("The schedule is empty. SadCat ")); }
 
-        CommandResult response = new("");
+        CommandResult response = new();
         foreach (var stream in streams)
         {
-            response += new DateTime(stream.StreamDate, stream.StreamTime).ToString("ddd") + ": " + stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)] + ".  ";
+            response += $"{new DateTime(stream.StreamDate, stream.StreamTime):ddd' 'HH':'mm''} : {stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)]}. ";
         }
-        return Task.FromResult(response);
+        return Task.FromResult(response + $"(UTC{DateTime.Now:zzz})");
     }
 }

@@ -205,7 +205,7 @@ internal class UserInfo : Command
     {
         try
         {
-            return $"{user.Type} {user.BroadcasterType} {user.Login} (id:{user.Id}) created: {user.CreatedAt:dd/MM/yyyy}";
+            return $"{user.Type} {user.BroadcasterType} {user.Login} (id:{user.Id}) created: {user.CreatedAt:dd/MMM/yyyy}";
         }
         catch (Exception ex)
         {
