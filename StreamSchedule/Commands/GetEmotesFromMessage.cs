@@ -8,7 +8,7 @@ internal class GetEmotesFromMessage : Command
     internal override string Call => "emot";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "get emote owners from a message";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Long);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
 

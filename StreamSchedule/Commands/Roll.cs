@@ -7,7 +7,7 @@ internal class Roll : Command
     internal override string Call => "roll";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "get random number [0 - 100], -max[n] for [0 - n], -flip for 50/50";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds(Cooldowns.Medium);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => ["flip", "max"];
     
