@@ -34,7 +34,7 @@ internal class UserInfo : Command
 
         try
         {
-            var a = idProvided ? await BotCore.Instance.API.Helix.Users.GetUsersAsync(ids: [userIDNumber.ToString()]) : await BotCore.Instance.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
+            var a = idProvided ? await BotCore.API.Helix.Users.GetUsersAsync(ids: [userIDNumber.ToString()]) : await BotCore.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
             TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users.First();
 
             string generalInfo = GetGeneralInfo(u);
@@ -98,7 +98,7 @@ internal class UserInfo : Command
     {
         try
         {
-            var emotes = (await BotCore.Instance.API.Helix.Chat.GetChannelEmotesAsync(userID)).ChannelEmotes;
+            var emotes = (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(userID)).ChannelEmotes;
             string[] result = ["no emotes", "no emotes"];
 
             if (emotes.Length <= 0) return result;
@@ -159,7 +159,7 @@ internal class UserInfo : Command
     {
         try
         {
-            var color = await BotCore.Instance.API.Helix.Chat.GetUserChatColorAsync([userID]);
+            var color = await BotCore.API.Helix.Chat.GetUserChatColorAsync([userID]);
 
             if (color.Data.First().Color.Equals("")) return "color not set";
             string value = color.Data.First().Color;
@@ -178,7 +178,7 @@ internal class UserInfo : Command
         {
             string[] result;
 
-            var liveStatus = await BotCore.Instance.API.Helix.Streams.GetStreamsAsync(userIds: [userID]);
+            var liveStatus = await BotCore.API.Helix.Streams.GetStreamsAsync(userIds: [userID]);
 
             TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.FirstOrDefault();
             if (s != null)
@@ -214,7 +214,7 @@ internal class UserInfo : Command
         }
     }
 
-    private static async Task<int> GetFollowers(string userID) => (await BotCore.Instance.API.Helix.Channels.GetChannelFollowersAsync(userID)).Total;
+    private static async Task<int> GetFollowers(string userID) => (await BotCore.API.Helix.Channels.GetChannelFollowersAsync(userID)).Total;
 
     private static string PreviousUsernames(string username)
     {

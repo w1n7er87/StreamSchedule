@@ -24,55 +24,64 @@ public static class Program
             new HostBuilder().Build().Run();
             return;
         }
-        _ = new BotCore(["vedal987", "w1n7er", "streamschedule"]);
+
+        string[] channelNames = ["vedal987", "w1n7er", "streamschedule"];
+
+        DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
+
+        List<User> channels = [];
+
+        foreach (var name in channelNames)
+        {
+            User u = dbContext.Users.First(x => x.Username!.Equals(name));
+            if (u != null) { channels.Add(u); }
+        }
+    
+        BotCore.Init(channelNames, dbContext);
+        Scheduling.Init(channels);
         Console.ReadLine();
     }
 }
 
-internal class BotCore
+internal static class BotCore
 {
-    private BotCore()
-    { }
+    public static DatabaseContext DBContext { get; private set; }
+    public static TwitchAPI API { get; private set; }
+    public static TwitchClient Client { get; private set; }
+    private static LiveStreamMonitorService Monitor { get; set; }
+    private static Dictionary<string, bool> ChannelLiveState { get; set; }
+    public static  string[] ChannelNames { get; private set; }
 
-    public static DatabaseContext DBContext { get; } = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
-    public static BotCore Instance { get; private set; }
-
-    public TwitchAPI API { get; }
-    public TwitchClient Client { get; }
-    private readonly LiveStreamMonitorService _monitor;
-
-    private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
+    private static DateTime _textCommandLastUsed = DateTime.MinValue;
+    private static bool _sameMessage;
      
-    private readonly Dictionary<string, bool> _channelLiveState;
-
-    private bool _sameMessage;
-
-    private DateTime _textCommandLastUsed = DateTime.MinValue;
-
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
 
-    public static GlobalEmote[]? GlobalEmotes { get; private set; }
+    private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
 
     private static int _dbSaveCounter = 0;
     private const int _dbUpdateCountInterval = 10;
 
-    private async Task ConfigLiveMonitorAsync(string[] channelNames)
-    {
-        _monitor.SetChannelsByName([.. channelNames]);
+    public static GlobalEmote[]? GlobalEmotes { get; set; }
 
-        _monitor.OnStreamOnline += Monitor_OnLive;
-        _monitor.OnStreamOffline += Monitor_OnOffline;
-        _monitor.OnChannelsSet += Monitor_OnChannelsSet;
-        _monitor.OnServiceStarted += Monitor_OnServiceStarted;
-        _monitor.Start();
+    private static async Task ConfigLiveMonitorAsync(string[] channelNames)
+    {
+        Monitor.SetChannelsByName([.. channelNames]);
+
+        Monitor.OnStreamOnline += Monitor_OnLive;
+        Monitor.OnStreamOffline += Monitor_OnOffline;
+        Monitor.OnChannelsSet += Monitor_OnChannelsSet;
+        Monitor.OnServiceStarted += Monitor_OnServiceStarted;
+        Monitor.Start();
 
         await Task.Delay(-1);
     }
 
-    public BotCore(string[] channelNames)
+    public static void Init(string[] channelNames, DatabaseContext dbContext)
     {
-        Instance = this;
+        DBContext = dbContext;
+        ChannelNames = channelNames;
 
         API = new TwitchAPI
         {
@@ -82,7 +91,8 @@ internal class BotCore
                 AccessToken = Credentials.oauth
             }
         };
-        _monitor = new LiveStreamMonitorService(API, 5);
+
+        Monitor = new LiveStreamMonitorService(API, 5);
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
 
@@ -97,16 +107,16 @@ internal class BotCore
         Client.OnConnected += Client_OnConnected;
         Client.Connect();
 
-        _channelLiveState = [];
+        ChannelLiveState = [];
         foreach (string channel in channelNames)
         {
-            _channelLiveState[channel] = new();
+            ChannelLiveState[channel] = new();
         }
 
         Commands.Commands.InitializeCommands(channelNames, DBContext);
     }
 
-    private async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
+    private async static void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         long start = Stopwatch.GetTimestamp();
         
@@ -115,7 +125,7 @@ internal class BotCore
         if (e.ChatMessage.Channel.Equals("vedal987")) 
         {
             _dbSaveCounter++;
-            if (_channelLiveState[e.ChatMessage.Channel])
+            if (ChannelLiveState[e.ChatMessage.Channel])
             {
                 User.AddMessagesCounter(userSent, online: 1);
             }
@@ -191,7 +201,7 @@ internal class BotCore
             }
         }
 
-        if (_channelLiveState[e.ChatMessage.Channel]) return;
+        if (ChannelLiveState[e.ChatMessage.Channel]) return;
 
         foreach (var c in Commands.Commands.CurrentCommands)
         {
@@ -233,31 +243,31 @@ internal class BotCore
 
     #region EVENTS
 
-    private void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
+    private static void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
     {
         string r = "";
         foreach (var c in e.Channels) { r += c + ", "; }
         Console.WriteLine($"channels set {r}");
     }
 
-    private void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
+    private static void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
     {
         Console.WriteLine("monitoring service stated");
     }
 
-    private void Monitor_OnLive(object? sender, OnStreamOnlineArgs args)
+    private static void Monitor_OnLive(object? sender, OnStreamOnlineArgs args)
     {
-        _channelLiveState[args.Channel] = true;
+        ChannelLiveState[args.Channel] = true;
         Console.WriteLine($"{args.Channel} went live");
     }
 
-    private void Monitor_OnOffline(object? sender, OnStreamOfflineArgs args)
+    private static void Monitor_OnOffline(object? sender, OnStreamOfflineArgs args)
     {
-        _channelLiveState[args.Channel] = false;
+        ChannelLiveState[args.Channel] = false;
         Console.WriteLine($"{args.Channel} went offline");
     }
 
-    private async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
+    private static async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
     {
         if (e.RawIRC.Contains("moderation"))
         {
@@ -270,18 +280,18 @@ internal class BotCore
         Console.WriteLine($"[{e.Channel}] [{e.RawIRC}]");
     }
 
-    private void Client_OnLog(object? sender, OnLogArgs e)
+    private static void Client_OnLog(object? sender, OnLogArgs e)
     {
         //Console.WriteLine($"{e.DateTime}: {e.BotUsername} - {e.Data}");
     }
 
-    private void Client_OnConnected(object? sender, OnConnectedArgs e)
+    private static void Client_OnConnected(object? sender, OnConnectedArgs e)
     {
         Console.WriteLine($"{e.BotUsername} Connected ");
         GlobalEmotes ??= API.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
     }
 
-    private void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
+    private static void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
         Console.WriteLine($"Joined {e.Channel}");
     }

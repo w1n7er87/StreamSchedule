@@ -13,14 +13,8 @@ internal class Ping : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string channels = "";
-        foreach (var item in BotCore.Instance.Client.JoinedChannels)
-        {
-            channels += item.Channel + ", ";
-        }
-
-        Console.WriteLine($"is connected: {BotCore.Instance.Client.IsConnected} joined channels: {channels} \n");
-        BotCore.Instance.Client.Reconnect();
+        bool result = BotCore.Client.Connect();
+        Console.WriteLine($"is connected: {BotCore.Client.IsConnected} connect result: {result} \n");
         return Task.FromResult(new CommandResult("PotFriend ", false));
     }
 }
