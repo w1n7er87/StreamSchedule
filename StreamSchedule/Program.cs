@@ -50,7 +50,6 @@ internal static class BotCore
     public static TwitchClient Client { get; private set; }
     private static LiveStreamMonitorService Monitor { get; set; }
     private static Dictionary<string, bool> ChannelLiveState { get; set; }
-    public static  string[] ChannelNames { get; private set; }
 
     private static DateTime _textCommandLastUsed = DateTime.MinValue;
     private static bool _sameMessage;
@@ -58,6 +57,7 @@ internal static class BotCore
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
 
+    private static List<Codepoint> _emojiSpecialCharacters = [Emoji.ZeroWidthJoiner, Emoji.ObjectReplacementCharacter, Emoji.Keycap, Emoji.VariationSelector];
     private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
 
     private static int _dbSaveCounter = 0;
@@ -81,7 +81,6 @@ internal static class BotCore
     public static void Init(string[] channelNames, DatabaseContext dbContext)
     {
         DBContext = dbContext;
-        ChannelNames = channelNames;
 
         API = new TwitchAPI
         {
@@ -152,28 +151,8 @@ internal static class BotCore
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
             trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentUserLogin.Length + 2)..];
         }
-        List<Codepoint> msgAsCodepoints = trimmedMessage.Codepoints().ToList();
-
-        List<Codepoint> firstLetters = msgAsCodepoints.TakeWhile(x =>
-            x == Emoji.ZeroWidthJoiner ||
-            x == Emoji.ObjectReplacementCharacter ||
-            x == Emoji.Keycap ||
-            Emoji.IsEmoji(x.AsString()) ||
-            Emoji.SkinTones.All.Any(y => x == y) ||
-            x == Emoji.VariationSelector ||
-            _commandPrefixes.Any(y => y == x)).ToList();
-
-        if (firstLetters.Count == 0) return;
-
-        msgAsCodepoints = msgAsCodepoints.Skip(firstLetters.Count).ToList();
-
-        string restoredMessage = "";
-        foreach (var l in msgAsCodepoints)
-        {
-            restoredMessage += l.AsString();
-        }
-
-        trimmedMessage = restoredMessage.TrimStart();
+        
+        if(!ContainsPrefix(trimmedMessage, out trimmedMessage)) { return; }
 
         if (trimmedMessage.Length < 2) return;
 
@@ -201,7 +180,7 @@ internal static class BotCore
             }
         }
 
-        if (ChannelLiveState[e.ChatMessage.Channel]) return;
+        if (ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges < Privileges.Mod) return;
 
         foreach (var c in Commands.Commands.CurrentCommands)
         {
@@ -323,4 +302,34 @@ internal static class BotCore
         }
         return result;
     }
+
+    private static bool ContainsPrefix(string input, out string prefixTrimmedInput)
+    {
+
+        List<Codepoint> msgAsCodepoints = input.Codepoints().ToList();
+
+        List<Codepoint> firstLetters = msgAsCodepoints.TakeWhile(x =>
+            Emoji.IsEmoji(x.AsString()) ||
+            _emojiSpecialCharacters.Any( y => y == x) ||
+            Emoji.SkinTones.All.Any(y => y == x) ||
+            _commandPrefixes.Any(y => y == x)).ToList();
+
+        if (firstLetters.Count == 0) 
+        {
+            prefixTrimmedInput = ""; 
+            return false;
+        }
+
+        msgAsCodepoints = msgAsCodepoints.Skip(firstLetters.Count).ToList();
+
+        prefixTrimmedInput = "";
+        foreach (var l in msgAsCodepoints)
+        {
+            prefixTrimmedInput += l.AsString();
+        }
+
+        prefixTrimmedInput = prefixTrimmedInput.TrimStart();
+        return true;
+    }
+
 }
