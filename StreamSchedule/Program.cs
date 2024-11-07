@@ -38,7 +38,7 @@ public static class Program
         }
     
         BotCore.Init(channelNames, dbContext);
-        Scheduling.Init(channels);
+        Scheduling.Init([dbContext.Users.First(x => x.Username!.Equals("vedal987"))]);
         Console.ReadLine();
     }
 }
