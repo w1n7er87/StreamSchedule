@@ -18,7 +18,7 @@ internal class AddStream : Command
         string[] split = message.Message.Split(" ");
         if (split.Length < 2) { return Task.FromResult(Utils.Responses.Fail); }
 
-        if (!DateTime.TryParseExact(split[0], _inputPatterns, null,System.Globalization.DateTimeStyles.AssumeLocal, out var temp))
+        if (!DateTime.TryParseExact(split[0], _inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out var temp))
         {
             return Task.FromResult(Utils.Responses.Fail + "bad date ");
         }

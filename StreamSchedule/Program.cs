@@ -1,9 +1,9 @@
-﻿using System.Diagnostics;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using NeoSmart.Unicode;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
+using System.Diagnostics;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
 using TwitchLib.Api.Services;
@@ -11,7 +11,6 @@ using TwitchLib.Api.Services.Events;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
-using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
 
 namespace StreamSchedule;
@@ -37,7 +36,7 @@ public static class Program
             User u = dbContext.Users.First(x => x.Username!.Equals(name));
             if (u != null) { channels.Add(u); }
         }
-    
+
         BotCore.Init(channelNames, dbContext);
         Scheduling.Init([dbContext.Users.First(x => x.Username!.Equals("vedal987"))]);
         Console.ReadLine();
@@ -54,7 +53,7 @@ internal static class BotCore
 
     private static DateTime _textCommandLastUsed = DateTime.MinValue;
     private static bool _sameMessage;
-     
+
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
 
@@ -115,13 +114,13 @@ internal static class BotCore
         Commands.Commands.InitializeCommands(channelNames, DBContext);
     }
 
-    private async static void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
+    private static async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         long start = Stopwatch.GetTimestamp();
-        
+
         User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType, DBContext);
-        
-        if (e.ChatMessage.Channel.Equals("vedal987")) 
+
+        if (e.ChatMessage.Channel.Equals("vedal987"))
         {
             _dbSaveCounter++;
             if (ChannelLiveState[e.ChatMessage.Channel])
@@ -151,13 +150,13 @@ internal static class BotCore
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
             trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentUserLogin.Length + 2)..];
         }
-        
-        if(!ContainsPrefix(trimmedMessage, out trimmedMessage)) { return; }
+
+        if (!ContainsPrefix(trimmedMessage, out trimmedMessage)) { return; }
 
         if (trimmedMessage.Length < 2) return;
 
         string requestedCommand = trimmedMessage.Split(' ')[0];
-        
+
         List<TextCommand> textCommands = [.. DBContext.TextCommands];
 
         if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds(5) && textCommands.Count > 0)
@@ -300,18 +299,17 @@ internal static class BotCore
 
     private static bool ContainsPrefix(string input, out string prefixTrimmedInput)
     {
-
         List<Codepoint> msgAsCodepoints = input.Codepoints().ToList();
 
         List<Codepoint> firstLetters = msgAsCodepoints.TakeWhile(x =>
             Emoji.IsEmoji(x.AsString()) ||
-            _emojiSpecialCharacters.Any( y => y == x) ||
+            _emojiSpecialCharacters.Any(y => y == x) ||
             Emoji.SkinTones.All.Any(y => y == x) ||
             _commandPrefixes.Any(y => y == x)).ToList();
 
-        if (firstLetters.Count == 0) 
+        if (firstLetters.Count == 0)
         {
-            prefixTrimmedInput = ""; 
+            prefixTrimmedInput = "";
             return false;
         }
 
@@ -326,5 +324,4 @@ internal static class BotCore
         prefixTrimmedInput = prefixTrimmedInput.TrimStart();
         return true;
     }
-
 }

@@ -12,7 +12,7 @@ internal static class GetEmoteChannel
                 UseDefaultCredentials = true,
                 MaxConnectionsPerServer = 1
             });
-        
+
         client.Timeout = TimeSpan.FromSeconds(5);
 
         try

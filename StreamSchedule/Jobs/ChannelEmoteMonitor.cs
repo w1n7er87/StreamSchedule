@@ -10,6 +10,7 @@ internal class ChannelEmoteMonitor : IJob
     public string Username { private get; set; }
     public bool FirstRun { private get; set; }
     public List<string> Emotes { private get; set; }
+
     public async Task Execute(IJobExecutionContext context)
     {
         try
@@ -49,7 +50,7 @@ internal class ChannelEmoteMonitor : IJob
             Console.WriteLine($"{(hadChanges ? response : "no")} changes to {Username} emotes ");
             if (hadChanges) BotCore.Client.SendMessage(Username, response);
         }
-        catch 
+        catch
         {
             Console.WriteLine($"Failed to get emotes for {Username}");
         }

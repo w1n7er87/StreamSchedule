@@ -6,7 +6,7 @@ using StreamSchedule.Jobs;
 namespace StreamSchedule;
 
 internal static class Scheduling
-{   
+{
     private static IScheduler _scheduler;
     private static List<User> Channels = [];
 
@@ -56,7 +56,7 @@ internal static class Scheduling
         }
         await _scheduler.ScheduleJobs(jobs, true);
     }
-    
+
     private static async void OnProcessExit(object? sender, EventArgs? e)
     {
         await _scheduler.Shutdown();

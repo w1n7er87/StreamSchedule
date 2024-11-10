@@ -6,7 +6,7 @@ internal class CommandResult(string content, bool reply = true)
 {
     public string content = content;
     public bool reply = reply;
-    
+
     public CommandResult() : this(string.Empty, true)
     {
     }

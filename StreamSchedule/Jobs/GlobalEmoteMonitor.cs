@@ -8,6 +8,7 @@ internal class GlobalEmoteMonitor : IJob
 {
     public bool FirstRun { private get; set; }
     public List<string> Emotes { private get; set; }
+
     public async Task Execute(IJobExecutionContext context)
     {
         try

@@ -85,10 +85,12 @@ internal class EvaluateUsers : Command
                 user.Privileges = Privileges.Trusted;
                 await BotCore.DBContext.SaveChangesAsync();
                 return true;
+
             case Privileges.Trusted when score < cutoff:
                 user.Privileges = Privileges.None;
                 await BotCore.DBContext.SaveChangesAsync();
                 return true;
+
             default:
                 return false;
         }

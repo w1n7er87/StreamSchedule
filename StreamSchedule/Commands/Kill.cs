@@ -37,7 +37,7 @@ internal class Kill : Command
 
         string target = message.Message.Split(' ')[0];
 
-        if(Random.Shared.Next(101) > 15) return Task.FromResult(new CommandResult("✋ unauthorized action. ", false));
+        if (Random.Shared.Next(101) > 15) return Task.FromResult(new CommandResult("✋ unauthorized action. ", false));
 
         return Task.FromResult(new CommandResult($"MEGALUL 🔪 {target}", false));
     }

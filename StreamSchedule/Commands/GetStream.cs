@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using StreamSchedule.Data;
+﻿using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 

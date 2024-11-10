@@ -1,4 +1,5 @@
 ﻿using StreamSchedule.Data.Models;
+
 namespace StreamSchedule.Data;
 
 public class UniversalMessageInfo(User sender, string commandTrimmedContent, string? replyID, string roomID)

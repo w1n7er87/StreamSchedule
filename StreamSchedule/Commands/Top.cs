@@ -23,7 +23,7 @@ internal class Top : Command
             int.TryParse(p, out page);
             page = Math.Max(page - 1, 0);
         }
-        
+
         if (args.TryGetValue("score", out _))
         {
             var topTen = BotCore.DBContext.Users.AsNoTracking().AsEnumerable().OrderByDescending(x => Userscore.GetRatioAndScore(x).score).ToList();

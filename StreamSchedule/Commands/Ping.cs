@@ -13,6 +13,6 @@ internal class Ping : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        return Task.FromResult( new CommandResult("PotFriend ", false));
+        return Task.FromResult(new CommandResult("PotFriend ", false));
     }
 }

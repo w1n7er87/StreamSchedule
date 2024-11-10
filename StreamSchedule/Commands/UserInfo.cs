@@ -102,7 +102,7 @@ internal class UserInfo : Command
             string[] result = ["no emotes", "no emotes"];
 
             if (emotes.Length <= 0) return result;
-            
+
             string prefix;
 
             if (emotes.Length == 1)
@@ -183,7 +183,7 @@ internal class UserInfo : Command
             TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.FirstOrDefault();
             if (s != null)
             {
-                string mature = s.IsMature? " 🔞":"";
+                string mature = s.IsMature ? " 🔞" : "";
                 TimeSpan durationSpan = DateTime.Now - s.StartedAt.ToLocalTime();
                 string duration = durationSpan.Days > 0 ? durationSpan.ToString(@"d\:hh\:mm\:ss") : durationSpan.ToString(@"hh\:mm\:ss");
                 result = [$"live{mature} {s.GameName}", $"Now {s.Type}{mature} ({duration}) : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers.{mature}"];
