@@ -1,4 +1,5 @@
 ﻿using StreamSchedule.Data;
+using StreamSchedule.Data.Models;
 
 namespace StreamSchedule.Commands;
 
@@ -16,9 +17,11 @@ internal class Helps : Command
         string[] split = message.Message.Split(' ');
         if (split.Length < 1) { return Task.FromResult(new CommandResult(this.Help)); }
 
+        string requestedCommand = split[0].ToLower();
+
         foreach (Command c in Commands.CurrentCommands)
         {
-            if (split[0] != c.Call) continue;
+            if (!requestedCommand.Equals(c.Call)) continue;
 
             var cmdAliases = BotCore.DBContext.CommandAliases.Find(c.Call.ToLower());
 
@@ -36,6 +39,21 @@ internal class Helps : Command
 
             return Task.FromResult(new CommandResult(aliases + c.Help + args));
         }
+
+        List<TextCommand> textCommands = [.. BotCore.DBContext.TextCommands];
+        foreach (TextCommand c in textCommands)
+        {
+            if (!requestedCommand.Equals(c.Name)) continue;
+            if (!c.Aliases?.Contains(c.Name) ?? false) continue;
+
+            string aliases = "";
+            if (c?.Aliases is not null && c.Aliases.Count != 0)
+            {
+                aliases = $"({string.Join(",", c.Aliases)}) ";
+            }
+            return Task.FromResult(new CommandResult($"{aliases}simple text command mhm . ", false));
+        }
+
         return Task.FromResult(new CommandResult(this.Help));
     }
 }

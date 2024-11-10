@@ -11,6 +11,7 @@ using TwitchLib.Api.Services.Events;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
+using TwitchLib.Client.Extensions;
 using TwitchLib.Client.Models;
 
 namespace StreamSchedule;
@@ -100,7 +101,6 @@ internal static class BotCore
         Client = new TwitchClient();
         Client.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
         Client.OnUnaccountedFor += Client_OnUnaccounted;
-        Client.OnLog += Client_OnLog;
         Client.OnJoinedChannel += Client_OnJoinedChannel;
         Client.OnMessageReceived += Client_OnMessageReceived;
         Client.OnConnected += Client_OnConnected;
@@ -248,7 +248,7 @@ internal static class BotCore
 
     private static async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
     {
-        if (e.RawIRC.Contains("moderation"))
+        if (e.RawIRC.Contains("automod", StringComparison.InvariantCultureIgnoreCase) || e.RawIRC.Contains("moderation", StringComparison.InvariantCultureIgnoreCase))
         {
             TwitchClient? twitchClient = sender as TwitchClient;
             Console.WriteLine($"{e.RawIRC} {e.Channel} {e.Location}");
@@ -257,11 +257,6 @@ internal static class BotCore
             return;
         }
         Console.WriteLine($"[{e.Channel}] [{e.RawIRC}]");
-    }
-
-    private static void Client_OnLog(object? sender, OnLogArgs e)
-    {
-        //Console.WriteLine($"{e.DateTime}: {e.BotUsername} - {e.Data}");
     }
 
     private static void Client_OnConnected(object? sender, OnConnectedArgs e)
