@@ -47,8 +47,12 @@ internal class ChannelEmoteMonitor : IJob
             }
 
             context.JobDetail.JobDataMap.Put("Emotes", emotes);
-            Console.WriteLine($"{(hadChanges ? response : "no")} changes to {Username} emotes ");
-            if (hadChanges) BotCore.Client.SendMessage(Username, response);
+    
+            if (hadChanges) 
+            {
+                BotCore.Client.SendMessage(Username, response);
+                Console.WriteLine($"{response} changes to {Username} emotes ");
+            }
         }
         catch
         {
