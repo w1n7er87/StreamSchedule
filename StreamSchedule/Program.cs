@@ -33,8 +33,8 @@ public static class Program
 
         foreach (var name in channelNames)
         {
-            User u = dbContext.Users.First(x => x.Username!.Equals(name));
-            if (u != null) { channels.Add(u); }
+            User? u = dbContext.Users.First(x => x.Username!.Equals(name));
+            if (u is not  null) { channels.Add(u); }
         }
 
         BotCore.Init(channelNames, dbContext);
@@ -48,6 +48,9 @@ internal static class BotCore
     public static DatabaseContext DBContext { get; private set; }
     public static TwitchAPI API { get; private set; }
     public static TwitchClient Client { get; private set; }
+    
+    public static bool Silent { get; set; }
+    
     private static LiveStreamMonitorService Monitor { get; set; }
     private static Dictionary<string, bool> ChannelLiveState { get; set; }
 
@@ -57,7 +60,7 @@ internal static class BotCore
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
 
-    private static List<Codepoint> _emojiSpecialCharacters = [Emoji.ZeroWidthJoiner, Emoji.ObjectReplacementCharacter, Emoji.Keycap, Emoji.VariationSelector];
+    private static readonly List<Codepoint> _emojiSpecialCharacters = [Emoji.ZeroWidthJoiner, Emoji.ObjectReplacementCharacter, Emoji.Keycap, Emoji.VariationSelector];
     private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
 
     private static int _dbSaveCounter = 0;
@@ -159,7 +162,7 @@ internal static class BotCore
 
         List<TextCommand> textCommands = [.. DBContext.TextCommands];
 
-        if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds(5) && textCommands.Count > 0)
+        if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds(5) && !Silent && textCommands.Count > 0)
         {
             foreach (TextCommand command in textCommands)
             {
@@ -203,7 +206,9 @@ internal static class BotCore
             Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} ({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 
             if (string.IsNullOrEmpty(response.ToString())) return;
-
+            
+            if (Silent) return;
+            
             if (response.reply)
             {
                 Client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, FixNineEleven(response.content) + bypassSameMessage);
