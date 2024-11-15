@@ -53,9 +53,9 @@ internal static class Commands
                 CurrentCommands[^1].LastUsedOnChannel.Add(channel, DateTime.Now);
             }
 
-            if (!aliases.Any(x => x.CommandName.Equals(c.Name, StringComparison.OrdinalIgnoreCase)))
+            if (!aliases.Any(x => x.CommandName.Equals(CurrentCommands[^1].Call, StringComparison.OrdinalIgnoreCase)))
             {
-                context.Add(new CommandAlias() { CommandName = c.Name.ToLower() });
+                context.Add(new CommandAlias() { CommandName = CurrentCommands[^1].Call.ToLower() });
             }
         }
         context.SaveChanges();
