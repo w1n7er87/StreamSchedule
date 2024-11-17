@@ -4,7 +4,8 @@ namespace StreamSchedule.HarrisonTemple.Items;
 
 internal class Trap : Item
 {
-    protected override string View => Random.Shared.GetItems([
+    protected override string View => Random.Shared.GetItems(
+    [
         Emoji.Bomb.Sequence.AsString,
         Emoji.MouseTrap.Sequence.AsString,
         Emoji.BowAndArrow.Sequence.AsString,

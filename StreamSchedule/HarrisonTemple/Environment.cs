@@ -28,9 +28,7 @@ internal static class Environment
             Emoji.Butterfly.Sequence.AsString,
             Emoji.Beetle.Sequence.AsString,
             Emoji.Mouse.Sequence.AsString,
-            "Erm ",
             "_",
-            " "
         ];
 
         Decorations =
@@ -44,7 +42,6 @@ internal static class Environment
             Emoji.Skull.Sequence.AsString,
             Emoji.FallenLeaf.Sequence.AsString,
             Emoji.ClassicalBuilding.Sequence.AsString,
-            Emoji.Spider.Sequence.AsString,
             Emoji.Hole.Sequence.AsString,
             Emoji.Rock.Sequence.AsString,
             Emoji.FireExtinguisher.Sequence.AsString,
@@ -56,7 +53,6 @@ internal static class Environment
             "\ud83e\udeba",
             "\ud83e\udeb9",
             "_",
-            " "
         ];
     }
 }

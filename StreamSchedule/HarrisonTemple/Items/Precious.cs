@@ -4,7 +4,8 @@ namespace StreamSchedule.HarrisonTemple.Items;
 
 internal class Precious : Item
 {
-    protected override string View => Random.Shared.GetItems([
+    protected override string View => Random.Shared.GetItems(
+    [
         Emoji.MoneyBag.Sequence.AsString,
         Emoji.MoneyWithWings.Sequence.AsString,
         Emoji.Coin.Sequence.AsString,
