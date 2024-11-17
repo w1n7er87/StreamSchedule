@@ -304,6 +304,7 @@ internal static class BotCore
 
     private static bool ContainsPrefix(string input, out string prefixTrimmedInput)
     {
+        prefixTrimmedInput = "";
         List<Codepoint> msgAsCodepoints = input.Codepoints().ToList();
 
         List<Codepoint> firstLetters = msgAsCodepoints.TakeWhile(x =>
@@ -312,15 +313,10 @@ internal static class BotCore
             Emoji.SkinTones.All.Any(y => y == x) ||
             _commandPrefixes.Any(y => y == x)).ToList();
 
-        if (firstLetters.Count == 0)
-        {
-            prefixTrimmedInput = "";
-            return false;
-        }
+        if (firstLetters.Count == 0) return false;
 
         msgAsCodepoints = msgAsCodepoints.Skip(firstLetters.Count).ToList();
 
-        prefixTrimmedInput = "";
         foreach (var l in msgAsCodepoints)
         {
             prefixTrimmedInput += l.AsString();

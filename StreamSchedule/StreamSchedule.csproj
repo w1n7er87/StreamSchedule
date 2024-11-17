@@ -10,6 +10,8 @@
     <IncludeSymbols>False</IncludeSymbols>
     <StartupObject>StreamSchedule.Program</StartupObject>
     <PlatformTarget>x64</PlatformTarget>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
