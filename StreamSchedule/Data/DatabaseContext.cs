@@ -14,6 +14,7 @@ public class DatabaseContext : DbContext
     public DbSet<Models.Stream> Streams => Set<Models.Stream>();
     public DbSet<TextCommand> TextCommands => Set<TextCommand>();
     public DbSet<CommandAlias> CommandAliases => Set<CommandAlias>();
+    public DbSet<HarrisonTempleStat> HarrisonTempleStats => Set<HarrisonTempleStat>();
 }
 
 public class DatabaseContextFactory : IDesignTimeDbContextFactory<DatabaseContext>
