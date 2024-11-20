@@ -14,7 +14,7 @@ internal class Top : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        _ = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> args);
+        _ = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> args);
         CommandResult result = new();
 
         int page = 0;

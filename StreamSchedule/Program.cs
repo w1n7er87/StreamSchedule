@@ -4,6 +4,8 @@ using NeoSmart.Unicode;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using System.Diagnostics;
+using StreamSchedule.Commands;
+using StreamSchedule.Extensions;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
 using TwitchLib.Api.Services;
@@ -31,10 +33,10 @@ public static class Program
 
         List<User> channels = [];
 
-        foreach (var name in channelNames)
+        foreach (string name in channelNames)
         {
-            User? u = dbContext.Users.First(x => x.Username!.Equals(name));
-            if (u is not  null) { channels.Add(u); }
+            User u = dbContext.Users.First(x => x.Username!.Equals(name));
+            channels.Add(u);
         }
 
         BotCore.Init(channelNames, dbContext);
@@ -48,9 +50,9 @@ internal static class BotCore
     public static DatabaseContext DBContext { get; private set; }
     public static TwitchAPI API { get; private set; }
     public static TwitchClient Client { get; private set; }
-    
+
     public static bool Silent { get; set; }
-    
+
     private static LiveStreamMonitorService Monitor { get; set; }
     private static Dictionary<string, bool> ChannelLiveState { get; set; }
 
@@ -85,7 +87,7 @@ internal static class BotCore
     {
         DBContext = dbContext;
 
-        API = new TwitchAPI
+        API = new()
         {
             Settings =
             {
@@ -94,13 +96,13 @@ internal static class BotCore
             }
         };
 
-        Monitor = new LiveStreamMonitorService(API, 5);
+        Monitor = new(API, 5);
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
 
         DBContext.Database.EnsureCreated();
 
-        Client = new TwitchClient();
+        Client = new();
         Client.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
         Client.OnUnaccountedFor += Client_OnUnaccounted;
         Client.OnJoinedChannel += Client_OnJoinedChannel;
@@ -109,10 +111,7 @@ internal static class BotCore
         Client.Connect();
 
         ChannelLiveState = [];
-        foreach (string channel in channelNames)
-        {
-            ChannelLiveState[channel] = new();
-        }
+        foreach (string channel in channelNames) ChannelLiveState[channel] = new();
 
         Commands.Commands.InitializeCommands(channelNames, DBContext);
     }
@@ -127,13 +126,9 @@ internal static class BotCore
         {
             _dbSaveCounter++;
             if (ChannelLiveState[e.ChatMessage.Channel])
-            {
-                User.AddMessagesCounter(userSent, online: 1);
-            }
+                User.AddMessagesCounter(userSent, 1);
             else
-            {
                 User.AddMessagesCounter(userSent, offline: 1);
-            }
 
             if (_dbSaveCounter >= _dbUpdateCountInterval)
             {
@@ -143,30 +138,32 @@ internal static class BotCore
         }
 
         MessageCache.Add(e.ChatMessage);
-        if (MessageCache.Count > _cacheSize) { MessageCache.RemoveAt(0); }
+        if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
 
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
+
+        ReadOnlySpan<Codepoint> messageAsCodepoints = e.ChatMessage.Message.Codepoints().ToArray().AsSpan();
+
         string? replyID = null;
-        string trimmedMessage = e.ChatMessage.Message;
         if (e.ChatMessage.ChatReply != null)
         {
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
-            trimmedMessage = trimmedMessage[(e.ChatMessage.ChatReply.ParentUserLogin.Length + 2)..];
+            messageAsCodepoints = messageAsCodepoints[(e.ChatMessage.ChatReply.ParentUserLogin.Length + 2)..];
         }
 
-        if (!ContainsPrefix(trimmedMessage, out trimmedMessage)) { return; }
+        if (!ContainsPrefix(messageAsCodepoints, out messageAsCodepoints)) return;
 
-        if (trimmedMessage.Length < 2) return;
+        if (messageAsCodepoints.Length < 2) return;
 
+        string trimmedMessage = messageAsCodepoints.AsString();
         string requestedCommand = trimmedMessage.Split(' ')[0];
 
         List<TextCommand> textCommands = [.. DBContext.TextCommands];
 
         if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds(5) && !Silent && textCommands.Count > 0)
-        {
             foreach (TextCommand command in textCommands)
             {
-                if (!command.Name.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))
+                if (!requestedCommand.Equals(command.Name, StringComparison.OrdinalIgnoreCase))
                 {
                     if (command.Aliases is null) continue;
                     if (!command.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
@@ -174,22 +171,21 @@ internal static class BotCore
 
                 if (userSent.Privileges < command.Privileges) return;
 
-                Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} ({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
+                Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now):HH:mm:ss} ({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
                 Client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
                 _sameMessage = !_sameMessage;
                 _textCommandLastUsed = DateTime.Now;
                 return;
             }
-        }
 
         if (ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges < Privileges.Mod) return;
 
-        foreach (var c in Commands.Commands.CurrentCommands)
+        foreach (Command c in Commands.Commands.CurrentCommands)
         {
-            string usedCall = c.Call;
+            ReadOnlySpan<char> usedCall = c.Call;
             if (!requestedCommand.Equals(c.Call, StringComparison.OrdinalIgnoreCase))
             {
-                var aliases = DBContext.CommandAliases.Find(c.Call.ToLower());
+                CommandAlias? aliases = DBContext.CommandAliases.Find(c.Call.ToLower());
                 if (aliases?.Aliases is null || aliases.Aliases.Count == 0) continue;
                 if (!aliases.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
                 usedCall = requestedCommand;
@@ -199,24 +195,17 @@ internal static class BotCore
 
             if (userSent.Privileges < c.MinPrivilege) return;
 
-            trimmedMessage = trimmedMessage.Replace(usedCall, "", StringComparison.OrdinalIgnoreCase).Replace("\U000e0000", "");
-
+            trimmedMessage = trimmedMessage[usedCall.Length..].Replace("\U000e0000", "").TrimStart();
             CommandResult response = await c.Handle(new(userSent, trimmedMessage, replyID, e.ChatMessage.RoomId));
 
-            Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now)} {(Silent? "*silent* " : "")}({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
+            Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now):HH:mm:ss} {(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 
-            if (string.IsNullOrEmpty(response.ToString())) return;
-            
-            if (Silent) return;
+            if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
             
             if (response.reply)
-            {
                 Client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, FixNineEleven(response.content) + bypassSameMessage);
-            }
             else
-            {
                 Client.SendMessage(e.ChatMessage.Channel, FixNineEleven(response.content) + bypassSameMessage);
-            }
 
             _sameMessage = !_sameMessage;
             c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
@@ -229,7 +218,7 @@ internal static class BotCore
     private static void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
     {
         string r = "";
-        foreach (var c in e.Channels) { r += c + ", "; }
+        foreach (string? c in e.Channels) r += c + ", ";
         Console.WriteLine($"channels set {r}");
     }
 
@@ -284,45 +273,39 @@ internal static class BotCore
         {
             string temp = "";
             foreach (char c in s)
-            {
-                if (c.Equals('9') || c.Equals('1'))
-                {
-                    temp += c;
-                }
-            }
-            if (temp.Contains("911"))
-            {
-                result += s.Replace("9", "*") + " ";
-            }
-            else
-            {
-                result += s + " ";
-            }
+                if (c.Equals('9') || c.Equals('1')) temp += c;
+
+            result += temp.Contains("911") ? s.Replace("9", "*") + " " : s + " ";
         }
         return result;
     }
 
-    private static bool ContainsPrefix(string input, out string prefixTrimmedInput)
+    private static bool ContainsPrefix(ReadOnlySpan<Codepoint> input, out ReadOnlySpan<Codepoint> prefixTrimmedInput)
     {
-        prefixTrimmedInput = "";
-        List<Codepoint> msgAsCodepoints = input.Codepoints().ToList();
-
-        List<Codepoint> firstLetters = msgAsCodepoints.TakeWhile(x =>
-            Emoji.IsEmoji(x.AsString()) ||
-            _emojiSpecialCharacters.Any(y => y == x) ||
-            Emoji.SkinTones.All.Any(y => y == x) ||
-            _commandPrefixes.Any(y => y == x)).ToList();
-
-        if (firstLetters.Count == 0) return false;
-
-        msgAsCodepoints = msgAsCodepoints.Skip(firstLetters.Count).ToList();
-
-        foreach (var l in msgAsCodepoints)
+        int count = 0;
+        foreach (Codepoint codepoint in input)
         {
-            prefixTrimmedInput += l.AsString();
+            if (Emoji.IsEmoji(codepoint.AsString()) ||
+                Emoji.SkinTones.All.Any(x => x == codepoint) ||
+                _emojiSpecialCharacters.Any(x => x == codepoint) ||
+                _commandPrefixes.Any(x => x == codepoint)
+               )
+            {
+                count++;
+                continue;
+            }
+
+            if (codepoint.Equals(' ')) count++;
+            break;
         }
 
-        prefixTrimmedInput = prefixTrimmedInput.TrimStart();
+        if (count <= 1)
+        {
+            prefixTrimmedInput = [];
+            return false;
+        }
+
+        prefixTrimmedInput = input[count..];
         return true;
     }
 }

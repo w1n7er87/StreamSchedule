@@ -14,7 +14,7 @@ internal class SetPrivileges : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = message.Message.Split(' ');
+        string[] split = message.content.Split(' ');
 
         Privileges p = PrivilegeUtils.ParsePrivilege(split[0]);
 
@@ -23,7 +23,7 @@ internal class SetPrivileges : Command
             return Task.FromResult(Utils.Responses.Surprise);
         }
 
-        if (target.Privileges >= message.Sender.Privileges) { return Task.FromResult(Utils.Responses.Fail); }
+        if (target.Privileges >= message.sender.Privileges) { return Task.FromResult(Utils.Responses.Fail); }
 
         BotCore.DBContext.Users.Update(target);
         target.Privileges = p;

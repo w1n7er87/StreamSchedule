@@ -15,7 +15,7 @@ internal class ClearDay : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = message.Message.Split(' ');
+        string[] split = message.content.Split(' ');
         DateTime temp = new();
 
         if (split.Length < 1 || !DateTime.TryParseExact(split[0], _inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))

@@ -16,7 +16,7 @@ internal class CommandManagement : Command
     {
         List<TextCommand> commands = [.. BotCore.DBContext.TextCommands];
 
-        string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArguments);
+        string text = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArguments);
         string commandName = text.Split(' ')[0].ToLower();
         text = text[commandName.Length..].TrimStart();
 

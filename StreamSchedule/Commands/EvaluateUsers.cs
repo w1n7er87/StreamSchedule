@@ -16,7 +16,7 @@ internal class EvaluateUsers : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArgs);
 
         string[] split = text.Split(' ');
 

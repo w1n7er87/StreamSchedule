@@ -14,7 +14,7 @@ internal class Helps : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = message.Message.Split(' ');
+        string[] split = message.content.Split(' ');
         if (split.Length < 1) { return Task.FromResult(new CommandResult(this.Help)); }
 
         string requestedCommand = split[0].ToLower();

@@ -16,12 +16,12 @@ internal class GetEmotesFromMessage : Command
     {
         CommandResult response = new();
 
-        if (string.IsNullOrEmpty(message.ReplyID))
+        if (string.IsNullOrEmpty(message.replyID))
         {
             return response;
         }
 
-        ChatMessage? reply = BotCore.MessageCache.Find(x => x.Id == message.ReplyID);
+        ChatMessage? reply = BotCore.MessageCache.Find(x => x.Id == message.replyID);
 
         if (reply == null)
         {

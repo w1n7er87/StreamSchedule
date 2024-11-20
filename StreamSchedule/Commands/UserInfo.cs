@@ -14,13 +14,13 @@ internal class UserInfo : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArgs);
         string[] split = text.Split(' ');
         CommandResult response = new();
 
         int userIDNumber = 0;
         bool idProvided = false;
-        string targetUsername = message.Sender.Username!;
+        string targetUsername = message.sender.Username!;
 
         if (!string.IsNullOrWhiteSpace(split[0])) // do i have anything provided
         {
@@ -77,7 +77,7 @@ internal class UserInfo : Command
             if (usedArgs.TryGetValue("s", out _) || all)
             {
                 liveInfo = await GetLiveStatus(u.Id);
-                response += (message.Sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
+                response += (message.sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
             }
 
             return all ? new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}") : response;

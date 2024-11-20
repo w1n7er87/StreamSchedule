@@ -15,7 +15,7 @@ internal class AddStream : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = message.Message.Split(" ");
+        string[] split = message.content.Split(" ");
         if (split.Length < 2) { return Task.FromResult(Utils.Responses.Fail); }
 
         if (!DateTime.TryParseExact(split[0], _inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out var temp))
@@ -28,7 +28,7 @@ internal class AddStream : Command
         {
             StreamDate = DateOnly.FromDateTime(temp),
             StreamTime = TimeOnly.FromDateTime(temp),
-            StreamTitle = message.Message[(split[0].Length + 1)..]
+            StreamTitle = message.content[(split[0].Length + 1)..]
         };
 
         try

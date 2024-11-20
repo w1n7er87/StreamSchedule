@@ -14,10 +14,10 @@ internal class CheckPrivileges : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = message.Message.Split(' ');
-        User target = message.Sender;
+        string[] split = message.content.Split(' ');
+        User target = message.sender;
 
-        if (!string.IsNullOrWhiteSpace(split[0]) && message.Sender.Privileges >= Privileges.Trusted)
+        if (!string.IsNullOrWhiteSpace(split[0]) && message.sender.Privileges >= Privileges.Trusted)
         {
             target = User.TryGetUser(split[0], out User t) ? t : target;
         }

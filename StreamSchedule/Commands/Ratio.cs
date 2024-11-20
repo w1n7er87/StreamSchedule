@@ -14,8 +14,8 @@ internal class Ratio : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = message.Message.Split(' ');
-        User target = message.Sender;
+        string[] split = message.content.Split(' ');
+        User target = message.sender;
         CommandResult result = new("");
 
         if (!string.IsNullOrWhiteSpace(split[0]))

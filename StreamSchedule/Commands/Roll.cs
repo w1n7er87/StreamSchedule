@@ -18,7 +18,7 @@ internal class Roll : Command
         CommandResult result = new($"{neuros[Random.Shared.Next(neuros.Length)]} says: ");
         ;
 
-        string[] split = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs).Split(' ');
+        string[] split = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArgs).Split(' ');
 
         int maxValue = int.TryParse(split[0], out int c) ? c > 0 ? c + 1 : 101 : 101;
 

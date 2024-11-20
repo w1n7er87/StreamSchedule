@@ -20,9 +20,9 @@ internal class Kill : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments!, message.Message, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArgs);
 
-        if (message.Sender.Privileges == Privileges.Uuh && usedArgs.TryGetValue("frfr", out _))
+        if (message.sender.Privileges == Privileges.Uuh && usedArgs.TryGetValue("frfr", out _))
         {
             string[] split = text.Split(' ');
             int duration = 1;
@@ -35,7 +35,7 @@ internal class Kill : Command
             return Task.FromResult(new CommandResult("buhbye ", false));
         }
 
-        string target = message.Message.Split(' ')[0];
+        string target = message.content.Split(' ')[0];
 
         if (Random.Shared.Next(101) > 15) return Task.FromResult(new CommandResult("✋ unauthorized action. ", false));
 
