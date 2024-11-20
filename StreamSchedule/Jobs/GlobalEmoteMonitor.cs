@@ -50,6 +50,7 @@ internal class GlobalEmoteMonitor : IJob
             {
                 Console.WriteLine($"{response} changes to global emotes ");
                 BotCore.Client.SendMessage("vedal987", response);
+                BotCore.Client.SendMessage("w1n7er", response);
                 BotCore.GlobalEmotes = ee;
             }
         }
