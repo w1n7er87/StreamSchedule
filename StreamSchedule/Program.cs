@@ -299,7 +299,7 @@ internal static class BotCore
             break;
         }
 
-        if (count <= 1)
+        if (count == 0)
         {
             prefixTrimmedInput = [];
             return false;
