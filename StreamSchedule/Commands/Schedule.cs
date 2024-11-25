@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text;
+using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Data;
+using Stream = StreamSchedule.Data.Models.Stream;
 
 namespace StreamSchedule.Commands;
 
@@ -14,16 +16,30 @@ internal class Schedule : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        DateOnly inAWeek = DateOnly.FromDateTime(DateTime.Now + TimeSpan.FromDays(7));
-        var streams = BotCore.DBContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(DateTime.Now) && s.StreamDate <= inAWeek).AsNoTracking();
+        IQueryable<Stream> streams = BotCore.DBContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(DateTime.Now)).AsNoTracking();
 
         if (!streams.Any()) { return Task.FromResult(new CommandResult("The schedule is empty. SadCat ")); }
-
-        CommandResult response = new();
+        
+        DateOnly inAWeek = DateOnly.FromDateTime(DateTime.Now + TimeSpan.FromDays(7));
+        StringBuilder sb = new();
+        
+        string currentOrLatestTZ = DateTime.Now.ToString("zzz");
+        
         foreach (var stream in streams)
         {
-            response += $"{new DateTime(stream.StreamDate, stream.StreamTime):ddd' 'HH':'mm''} : {stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)]}. ";
+            DateTime streamDate = new(stream.StreamDate, stream.StreamTime);
+            string when = stream.StreamDate > inAWeek
+                ? $"{streamDate:(MMM/dd) ddd HH:mm}"
+                : $"{streamDate:ddd HH:mm}";
+            sb.Append($"{when} : {stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)]}. ");
+            
+            string streamTZ = streamDate.ToString("zzz");
+            if (currentOrLatestTZ.Equals(streamTZ)) continue;
+            currentOrLatestTZ = streamTZ;
+            sb.Append($"(UTC{DateTime.Now:zzz})");
         }
-        return Task.FromResult(response + $"(UTC{DateTime.Now:zzz})");
+
+        sb.Append($"(UTC{currentOrLatestTZ})");
+        return Task.FromResult(new CommandResult(sb.ToString()));
     }
 }

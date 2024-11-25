@@ -30,7 +30,8 @@ public static class Program
         string[] channelNames = ["vedal987", "w1n7er", "streamschedule"];
 
         DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
-
+        dbContext.Database.EnsureCreated();
+        
         List<User> channels = [];
 
         foreach (string name in channelNames)
@@ -99,8 +100,6 @@ internal static class BotCore
         Monitor = new(API, 5);
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
-
-        DBContext.Database.EnsureCreated();
 
         Client = new();
         Client.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
