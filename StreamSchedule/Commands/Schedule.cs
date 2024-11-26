@@ -27,16 +27,19 @@ internal class Schedule : Command
         
         foreach (var stream in streams)
         {
-            DateTime streamDate = new(stream.StreamDate, stream.StreamTime);
+            DateTime streamDate = new DateTime(stream.StreamDate, stream.StreamTime).ToLocalTime();
+            
+            string streamTZ = streamDate.ToString("zzz");
+            if (!currentOrLatestTZ.Equals(streamTZ))
+            {
+                currentOrLatestTZ = streamTZ;
+                sb.Append($"(UTC{DateTime.Now:zzz})");
+            }
+            
             string when = stream.StreamDate > inAWeek
                 ? $"{streamDate:(MMM/dd) ddd HH:mm}"
                 : $"{streamDate:ddd HH:mm}";
             sb.Append($"{when} : {stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)]}. ");
-            
-            string streamTZ = streamDate.ToString("zzz");
-            if (currentOrLatestTZ.Equals(streamTZ)) continue;
-            currentOrLatestTZ = streamTZ;
-            sb.Append($"(UTC{DateTime.Now:zzz})");
         }
 
         sb.Append($"(UTC{currentOrLatestTZ})");
