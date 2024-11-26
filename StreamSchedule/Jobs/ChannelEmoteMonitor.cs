@@ -31,16 +31,16 @@ internal class ChannelEmoteMonitor : IJob
             }
 
             bool hadChanges = false;
-            List<string> removed = Emotes.Except(emotes).ToList();
-            List<string> added = emotes.Except(Emotes).ToList();
+            IEnumerable<string> removed = Emotes.Except(emotes);
+            IEnumerable<string> added = emotes.Except(Emotes);
 
-            if (removed.Count != 0)
+            if (removed.Any())
             {
                 hadChanges = true;
                 response += " emotes removed: " + string.Join(" ", removed);
             }
 
-            if (added.Count != 0)
+            if (added.Any())
             {
                 hadChanges = true;
                 response += " emotes added: " + string.Join(" ", added);
