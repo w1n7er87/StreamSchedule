@@ -28,7 +28,7 @@ internal class EvaluateUsers : Command
         {
             if (string.IsNullOrWhiteSpace(split[0])) // nothing provided - run on all with default cutoff
             {
-                result += (await UpdateAll(scoreCutoff)) + $" user('s) updated ({scoreCutoff})";
+                result += (await UpdateAll(scoreCutoff)) + $" user(s) updated ({scoreCutoff})";
             }
             else // had something? assume it's a username
             {

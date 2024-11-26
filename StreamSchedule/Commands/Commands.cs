@@ -73,8 +73,8 @@ internal static class Commands
         return !commandNames.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase)) && !_allCurrentAliasStrings.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase));
     }
 
-    internal static void AddNewTextCommand( TextCommand textCommand) => CurrentTextCommands.Add(textCommand);
-    internal static void RemoveTextCommand( TextCommand textCommand) => CurrentTextCommands.Remove(textCommand);
+    internal static void AddNewTextCommand(TextCommand textCommand) => CurrentTextCommands.Add(textCommand);
+    internal static void RemoveTextCommand(TextCommand textCommand) => CurrentTextCommands.Remove(textCommand);
 
     internal static void AddAlias(string alias) => _allCurrentAliasStrings.Add(alias);
     internal static void RemoveAlias(string alias) => _allCurrentAliasStrings.Remove(alias);
