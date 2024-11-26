@@ -11,7 +11,7 @@ internal static class Commands
     public static List<Command> CurrentCommands { get; private set; } = [];
     public static List<TextCommand> CurrentTextCommands { get; private set; } = [];
 
-    private static readonly List<string> _currentAliases = [];
+    private static readonly List<string> _allCurrentAliasStrings = [];
 
     internal static string RetrieveArguments(string[] args, string input, out Dictionary<string, string> usedArgs)
     {
@@ -38,13 +38,13 @@ internal static class Commands
         foreach (var alias in aliases)
         {
             if (alias?.Aliases is null) continue;
-            _currentAliases.AddRange(alias.Aliases);
+            _allCurrentAliasStrings.AddRange(alias.Aliases);
         }
 
         foreach (var cmd in textCommands)
         {
             if (cmd?.Aliases is null) continue;
-            _currentAliases.AddRange(cmd.Aliases);
+            _allCurrentAliasStrings.AddRange(cmd.Aliases);
         }
 
         foreach (var c in KnownCommands)
@@ -70,12 +70,12 @@ internal static class Commands
         CurrentCommands.ForEach(x => commandNames.Add(x.Call));
         CurrentTextCommands.ForEach(x => commandNames.Add(x.Name));
 
-        return !commandNames.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase)) && !_currentAliases.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase));
+        return !commandNames.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase)) && !_allCurrentAliasStrings.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase));
     }
 
     internal static void AddNewTextCommand( TextCommand textCommand) => CurrentTextCommands.Add(textCommand);
     internal static void RemoveTextCommand( TextCommand textCommand) => CurrentTextCommands.Remove(textCommand);
 
-    internal static void AddAlias(string alias) => _currentAliases.Add(alias);
-    internal static void RemoveAlias(string alias) => _currentAliases.Remove(alias);
+    internal static void AddAlias(string alias) => _allCurrentAliasStrings.Add(alias);
+    internal static void RemoveAlias(string alias) => _allCurrentAliasStrings.Remove(alias);
 }
