@@ -46,8 +46,12 @@ internal class CommandManagement : Command
 
         if (!Commands.CheckNameAvailability(commandName)) { return (Utils.Responses.Fail + " command with this name/alias already exists. ").ToString(); }
 
-        BotCore.DBContext.TextCommands.Add(new() { Name = commandName, Content = content, Privileges = privileges });
+        TextCommand newCommand = new() { Name = commandName, Content = content, Privileges = privileges };
+
+        Commands.CurrentTextCommands.Add(newCommand);
+        BotCore.DBContext.TextCommands.Add(newCommand);
         BotCore.DBContext.SaveChanges();
+
         return $"{Utils.Responses.Ok} added command \" {commandName} \" for {PrivilegeUtils.PrivilegeToString(privileges)}";
     }
 
@@ -59,8 +63,10 @@ internal class CommandManagement : Command
 
         if (c is null) return $"{Utils.Responses.Fail} there is no \" {commandName} \" command ";
 
+        Commands.CurrentTextCommands.Remove(c);
         BotCore.DBContext.TextCommands.Remove(c);
         BotCore.DBContext.SaveChanges();
+
         return Utils.Responses.Ok.ToString();
     }
 

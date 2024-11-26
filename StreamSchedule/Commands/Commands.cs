@@ -9,6 +9,8 @@ internal static class Commands
     private static List<Type> KnownCommands => Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(Command))).ToList();
 
     public static List<Command> CurrentCommands { get; private set; } = [];
+    public static List<TextCommand> CurrentTextCommands { get; private set; } = [];
+
     private static readonly List<string> _currentAliases = [];
 
     internal static string RetrieveArguments(string[] args, string input, out Dictionary<string, string> usedArgs)
@@ -59,19 +61,21 @@ internal static class Commands
             }
         }
         context.SaveChanges();
+        CurrentTextCommands = textCommands;
     }
 
     internal static bool CheckNameAvailability(string alias)
     {
         List<string> commandNames = [];
-        List<TextCommand> textCommands = [.. BotCore.DBContext.TextCommands];
         CurrentCommands.ForEach(x => commandNames.Add(x.Call));
-        textCommands.ForEach(x => commandNames.Add(x.Name));
+        CurrentTextCommands.ForEach(x => commandNames.Add(x.Name));
 
         return !commandNames.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase)) && !_currentAliases.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase));
     }
 
-    internal static void AddAlias(string alias) => _currentAliases.Add(alias);
+    internal static void AddNewTextCommand( TextCommand textCommand) => CurrentTextCommands.Add(textCommand);
+    internal static void RemoveTextCommand( TextCommand textCommand) => CurrentTextCommands.Remove(textCommand);
 
+    internal static void AddAlias(string alias) => _currentAliases.Add(alias);
     internal static void RemoveAlias(string alias) => _currentAliases.Remove(alias);
 }

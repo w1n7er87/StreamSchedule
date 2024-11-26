@@ -5,7 +5,7 @@ namespace StreamSchedule.Extensions;
 
 public static class CodepointExtensions
 {
-    public static string AsString(this ReadOnlySpan<Codepoint> input)
+    public static string ToStringRepresentation(this ReadOnlySpan<Codepoint> input)
     {
         StringBuilder result = new(input.Length);
         foreach (var codepoint in input)

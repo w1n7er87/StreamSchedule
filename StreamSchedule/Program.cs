@@ -110,7 +110,7 @@ internal static class BotCore
         Client.Connect();
 
         ChannelLiveState = [];
-        foreach (string channel in channelNames) ChannelLiveState[channel] = new();
+        foreach (string channel in channelNames) ChannelLiveState[channel] = false;
 
         Commands.Commands.InitializeCommands(channelNames, DBContext);
     }
@@ -154,12 +154,13 @@ internal static class BotCore
 
         if (messageAsCodepoints.Length < 2) return;
 
-        string trimmedMessage = messageAsCodepoints.AsString();
+        string trimmedMessage = messageAsCodepoints.ToStringRepresentation();
         string requestedCommand = trimmedMessage.Split(' ')[0];
 
-        List<TextCommand> textCommands = [.. DBContext.TextCommands];
+        List<TextCommand> textCommands = Commands.Commands.CurrentTextCommands;
 
         if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds(5) && !Silent && textCommands.Count > 0)
+        {
             foreach (TextCommand command in textCommands)
             {
                 if (!requestedCommand.Equals(command.Name, StringComparison.OrdinalIgnoreCase))
@@ -176,6 +177,7 @@ internal static class BotCore
                 _textCommandLastUsed = DateTime.Now;
                 return;
             }
+        }
 
         if (ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges < Privileges.Mod) return;
 
@@ -202,9 +204,9 @@ internal static class BotCore
             if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
             
             if (response.reply)
-                Client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, FixNineEleven(response.content) + bypassSameMessage);
+                Client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, response.content + bypassSameMessage);
             else
-                Client.SendMessage(e.ChatMessage.Channel, FixNineEleven(response.content) + bypassSameMessage);
+                Client.SendMessage(e.ChatMessage.Channel, response.content + bypassSameMessage);
 
             _sameMessage = !_sameMessage;
             c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
@@ -263,21 +265,6 @@ internal static class BotCore
     }
 
     #endregion EVENTS
-
-    private static string FixNineEleven(string input)
-    {
-        string[] split = input.Split(' ');
-        string result = "";
-        foreach (string s in split)
-        {
-            string temp = "";
-            foreach (char c in s)
-                if (c.Equals('9') || c.Equals('1')) temp += c;
-
-            result += temp.Contains("911") ? s.Replace("9", "*") + " " : s + " ";
-        }
-        return result;
-    }
 
     private static bool ContainsPrefix(ReadOnlySpan<Codepoint> input, out ReadOnlySpan<Codepoint> prefixTrimmedInput)
     {
