@@ -204,9 +204,9 @@ internal static class BotCore
             if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
             
             if (response.reply)
-                Client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, response.content + bypassSameMessage);
+                Client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, response.ToString() + bypassSameMessage);
             else
-                Client.SendMessage(e.ChatMessage.Channel, response.content + bypassSameMessage);
+                Client.SendMessage(e.ChatMessage.Channel, response.ToString() + bypassSameMessage);
 
             _sameMessage = !_sameMessage;
             c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;

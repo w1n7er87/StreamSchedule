@@ -40,7 +40,7 @@ internal class Helps : Command
             return Task.FromResult(new CommandResult(aliases + c.Help + args));
         }
 
-        List<TextCommand> textCommands = [.. BotCore.DBContext.TextCommands];
+        List<TextCommand> textCommands = Commands.CurrentTextCommands;
         foreach (TextCommand c in textCommands)
         {
             if (!requestedCommand.Equals(c.Name)) continue;
