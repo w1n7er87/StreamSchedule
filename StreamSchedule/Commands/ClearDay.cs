@@ -11,7 +11,7 @@ internal class ClearDay : Command
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
 
-    private readonly string[] _inputPatterns = ["d-M-yy", "dd-MM-yy"];
+    private readonly string[] _inputPatterns = ["d-M-yy", "dd-MM-yy", "d-M-yyyy", "dd-MM-yyyy"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
