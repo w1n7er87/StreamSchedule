@@ -10,7 +10,7 @@ internal class GetStream : Command
     internal override string Help => "time until next stream on the schedule.";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["s", "m", "h"];
+    internal override string[] Arguments => ["h", "min", "s", "mic", "ms", "ns"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -30,11 +30,12 @@ internal class GetStream : Command
         TimeSpan span = fullDate - DateTime.Now;
         string time = $"{(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}";
         
-        if (usedArgs.TryGetValue("s", out _)) time = span.TotalSeconds.ToString(CultureInfo.InvariantCulture) + " seconds";
-
-        if (usedArgs.TryGetValue("m", out _)) time = span.TotalMinutes.ToString(CultureInfo.InvariantCulture) + " minutes";
-
         if (usedArgs.TryGetValue("h", out _)) time = span.TotalHours.ToString(CultureInfo.InvariantCulture) + " hours";
+        if (usedArgs.TryGetValue("min", out _)) time = span.TotalMinutes.ToString(CultureInfo.InvariantCulture) + " minutes";
+        if (usedArgs.TryGetValue("s", out _)) time = span.TotalSeconds.ToString(CultureInfo.InvariantCulture) + " seconds";
+        if (usedArgs.TryGetValue("ms", out _)) time = span.TotalMilliseconds.ToString(CultureInfo.InvariantCulture) + " milliseconds";
+        if (usedArgs.TryGetValue("mic", out _)) time = span.TotalMicroseconds.ToString(CultureInfo.InvariantCulture) + " microseconds";
+        if (usedArgs.TryGetValue("ns", out _)) time = span.TotalNanoseconds.ToString(CultureInfo.InvariantCulture) + " nanoseconds";
 
         return Task.FromResult(new CommandResult($"Next stream is in {time} : {next.StreamTitle}"));
     }
