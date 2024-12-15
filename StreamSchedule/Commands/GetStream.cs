@@ -29,7 +29,7 @@ internal class GetStream : Command
         DateTime fullDate = new DateTime(next.StreamDate, next.StreamTime).ToLocalTime();
         TimeSpan span = fullDate - DateTime.Now;
         string time = $"{(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}";
-        
+
         if (usedArgs.TryGetValue("h", out _)) time = span.TotalHours.ToString(CultureInfo.InvariantCulture) + " hours";
         if (usedArgs.TryGetValue("min", out _)) time = span.TotalMinutes.ToString(CultureInfo.InvariantCulture) + " minutes";
         if (usedArgs.TryGetValue("s", out _)) time = span.TotalSeconds.ToString(CultureInfo.InvariantCulture) + " seconds";

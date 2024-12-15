@@ -27,21 +27,21 @@ public static class Program
             return;
         }
 
-        string[] channelNames = ["vedal987", "w1n7er", "streamschedule"];
+        int[] channelIDs = [85498365, 78135490, 871501999];
 
         DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
         dbContext.Database.EnsureCreated();
-        
-        List<User> channels = [];
 
-        foreach (string name in channelNames)
+        List<string> channelNames = [];
+
+        foreach (int id in channelIDs)
         {
-            User u = dbContext.Users.First(x => x.Username!.Equals(name));
-            channels.Add(u);
+            User u = dbContext.Users.Find(id)!;
+            channelNames.Add(u.Username!);
         }
 
         BotCore.Init(channelNames, dbContext);
-        Scheduling.Init([dbContext.Users.First(x => x.Username!.Equals("vedal987"))]);
+        Scheduling.Init([dbContext.Users.Find(85498365)!]);
         Console.ReadLine();
     }
 }
@@ -71,9 +71,9 @@ internal static class BotCore
 
     public static GlobalEmote[]? GlobalEmotes { get; set; }
 
-    private static async Task ConfigLiveMonitorAsync(string[] channelNames)
+    private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
     {
-        Monitor.SetChannelsByName([.. channelNames]);
+        Monitor.SetChannelsByName(channelNames);
 
         Monitor.OnStreamOnline += Monitor_OnLive;
         Monitor.OnStreamOffline += Monitor_OnOffline;
@@ -84,7 +84,7 @@ internal static class BotCore
         await Task.Delay(-1);
     }
 
-    public static void Init(string[] channelNames, DatabaseContext dbContext)
+    public static void Init(List<string> channelNames, DatabaseContext dbContext)
     {
         DBContext = dbContext;
 

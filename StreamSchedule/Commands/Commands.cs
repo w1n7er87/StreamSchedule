@@ -30,7 +30,7 @@ internal static class Commands
         return input.TrimStart();
     }
 
-    internal static void InitializeCommands(string[] channels, DatabaseContext context)
+    internal static void InitializeCommands(List<string> channels, DatabaseContext context)
     {
         List<CommandAlias> aliases = [.. context.CommandAliases];
         List<TextCommand> textCommands = [.. context.TextCommands];
