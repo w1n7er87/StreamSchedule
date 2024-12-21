@@ -4,6 +4,7 @@ using NeoSmart.Unicode;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using System.Diagnostics;
+using NLog;
 using StreamSchedule.Commands;
 using StreamSchedule.Extensions;
 using TwitchLib.Api;
@@ -19,30 +20,52 @@ namespace StreamSchedule;
 
 public static class Program
 {
+    
+    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    
     private static void Main(string[] args)
     {
+        
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+        {
+            logger.Fatal(e.ExceptionObject.ToString());
+        };
+        
         if (EF.IsDesignTime)
         {
             new HostBuilder().Build().Run();
             return;
         }
 
-        int[] channelIDs = [85498365, 78135490, 871501999];
-
-        DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
-        dbContext.Database.EnsureCreated();
-
-        List<string> channelNames = [];
-
-        foreach (int id in channelIDs)
+        try
         {
-            User u = dbContext.Users.Find(id)!;
-            channelNames.Add(u.Username!);
-        }
 
-        BotCore.Init(channelNames, dbContext);
-        Scheduling.Init([dbContext.Users.Find(85498365)!]);
-        Console.ReadLine();
+            int[] channelIDs = [85498365, 78135490, 871501999];
+
+            DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>()
+                .UseSqlite("Data Source=StreamSchedule.data").Options);
+            dbContext.Database.EnsureCreated();
+
+            List<string> channelNames = [];
+
+            foreach (int id in channelIDs)
+            {
+                User u = dbContext.Users.Find(id)!;
+                channelNames.Add(u.Username!);
+            }
+
+            BotCore.Init(channelNames, dbContext);
+            Scheduling.Init([dbContext.Users.Find(85498365)!]);
+            Console.ReadLine();
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "uuh");
+        }
+        finally
+        {
+            LogManager.Shutdown();
+        }
     }
 }
 
