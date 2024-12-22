@@ -48,7 +48,7 @@ internal class GlobalEmoteMonitor : IJob
             context.JobDetail.JobDataMap.Put("Emotes", emotes);
             if (hadChanges)
             {
-                Console.WriteLine($"{response} changes to global emotes ");
+                BotCore.Nlog.Info($"{response} changes to global emotes ");
                 BotCore.Client.SendMessage("vedal987", response);
                 BotCore.Client.SendMessage("w1n7er", response);
                 BotCore.GlobalEmotes = ee;
@@ -56,7 +56,7 @@ internal class GlobalEmoteMonitor : IJob
         }
         catch
         {
-            Console.WriteLine("failed to get global emotes");
+            BotCore.Nlog.Debug("failed to get global emotes");
         }
     }
 }

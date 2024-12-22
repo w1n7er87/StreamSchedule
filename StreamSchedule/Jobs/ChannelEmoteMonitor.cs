@@ -51,12 +51,12 @@ internal class ChannelEmoteMonitor : IJob
             if (hadChanges) 
             {
                 BotCore.Client.SendMessage(Username, response);
-                Console.WriteLine($"{response} changes to {Username} emotes ");
+                BotCore.Nlog.Info($"{response} changes to {Username} emotes ");
             }
         }
         catch
         {
-            Console.WriteLine($"Failed to get emotes for {Username}");
+            BotCore.Nlog.Debug($"Failed to get emotes for {Username}");
         }
     }
 }

@@ -39,7 +39,6 @@ public static class Program
 
         try
         {
-
             int[] channelIDs = [85498365, 78135490, 871501999];
 
             DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>()
@@ -54,13 +53,13 @@ public static class Program
                 channelNames.Add(u.Username!);
             }
 
-            BotCore.Init(channelNames, dbContext);
+            BotCore.Init(channelNames, dbContext, logger);
             Scheduling.Init([dbContext.Users.Find(85498365)!]);
             Console.ReadLine();
         }
         catch (Exception e)
         {
-            logger.Error(e, "uuh");
+            logger.Error(e, e.ToString());
         }
         finally
         {
@@ -73,8 +72,8 @@ internal static class BotCore
 {
     public static DatabaseContext DBContext { get; private set; }
     public static TwitchAPI API { get; private set; }
-    public static TwitchClient Client { get; private set; }
-
+    public static TwitchClient Client { get; private set; }     
+    public static Logger Nlog { get; private set; }
     public static bool Silent { get; set; }
 
     private static LiveStreamMonitorService Monitor { get; set; }
@@ -107,10 +106,11 @@ internal static class BotCore
         await Task.Delay(-1);
     }
 
-    public static void Init(List<string> channelNames, DatabaseContext dbContext)
+    public static void Init(List<string> channelNames, DatabaseContext dbContext, Logger logger)
     {
         DBContext = dbContext;
-
+        Nlog = logger;
+        
         API = new()
         {
             Settings =
@@ -170,7 +170,7 @@ internal static class BotCore
         if (e.ChatMessage.ChatReply != null)
         {
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
-            messageAsCodepoints = messageAsCodepoints[(e.ChatMessage.ChatReply.ParentUserLogin.Length + 2)..];
+            messageAsCodepoints = messageAsCodepoints[(e.ChatMessage.Message.Split(" ")[0].Codepoints().Count() + 1) ..];
         }
 
         if (!ContainsPrefix(messageAsCodepoints, out messageAsCodepoints)) return;
@@ -194,7 +194,7 @@ internal static class BotCore
 
                 if (userSent.Privileges < command.Privileges) return;
 
-                Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now):HH:mm:ss} ({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
+                Nlog.Info($"({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
                 Client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
                 _sameMessage = !_sameMessage;
                 _textCommandLastUsed = DateTime.Now;
@@ -222,7 +222,7 @@ internal static class BotCore
             trimmedMessage = trimmedMessage[usedCall.Length..].Replace("\U000e0000", "").TrimStart();
             CommandResult response = await c.Handle(new(userSent, trimmedMessage, replyID, e.ChatMessage.RoomId));
 
-            Console.WriteLine($"{TimeOnly.FromDateTime(DateTime.Now):HH:mm:ss} {(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
+            Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 
             if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
             
@@ -243,24 +243,24 @@ internal static class BotCore
     {
         string r = "";
         foreach (string? c in e.Channels) r += c + ", ";
-        Console.WriteLine($"channels set {r}");
+        Nlog.Info($"channels set {r}");
     }
 
     private static void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
     {
-        Console.WriteLine("monitoring service stated");
+        Nlog.Info("monitoring service stated");
     }
 
     private static void Monitor_OnLive(object? sender, OnStreamOnlineArgs args)
     {
         ChannelLiveState[args.Channel] = true;
-        Console.WriteLine($"{args.Channel} went live");
+        Nlog.Info($"{args.Channel} went live");
     }
 
     private static void Monitor_OnOffline(object? sender, OnStreamOfflineArgs args)
     {
         ChannelLiveState[args.Channel] = false;
-        Console.WriteLine($"{args.Channel} went offline");
+        Nlog.Info($"{args.Channel} went offline");
     }
 
     private static async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
@@ -268,23 +268,23 @@ internal static class BotCore
         if (e.RawIRC.Contains("automod", StringComparison.InvariantCultureIgnoreCase) || e.RawIRC.Contains("moderation", StringComparison.InvariantCultureIgnoreCase))
         {
             TwitchClient? twitchClient = sender as TwitchClient;
-            Console.WriteLine($"{e.RawIRC} {e.Channel} {e.Location}");
+            Nlog.Info($"{e.RawIRC} {e.Channel} {e.Location}");
             await Task.Delay(2000);
             twitchClient?.SendMessage(e.Channel, "moderation 1984 ");
             return;
         }
-        Console.WriteLine($"[{e.Channel}] [{e.RawIRC}]");
+        Nlog.Info($"[{e.Channel}] [{e.RawIRC}]");
     }
 
     private static void Client_OnConnected(object? sender, OnConnectedArgs e)
     {
-        Console.WriteLine($"{e.BotUsername} Connected ");
+        Nlog.Info($"{e.BotUsername} Connected ");
         GlobalEmotes ??= API.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
     }
 
     private static void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
-        Console.WriteLine($"Joined {e.Channel}");
+        Nlog.Info($"Joined {e.Channel}");
     }
 
     #endregion EVENTS

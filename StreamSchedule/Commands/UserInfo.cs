@@ -89,7 +89,7 @@ internal class UserInfo : Command
                 return Utils.Responses.Fail + " no user with such name/id";
             }
 
-            Console.WriteLine(ex.ToString());
+            BotCore.Nlog.Error(ex.ToString());
             return Utils.Responses.Surprise;
         }
     }
@@ -150,7 +150,7 @@ internal class UserInfo : Command
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
+            BotCore.Nlog.Error(ex.ToString());
             return [Utils.Responses.Surprise.ToString(), Utils.Responses.Surprise.ToString()];
         }
     }
@@ -167,7 +167,7 @@ internal class UserInfo : Command
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
+            BotCore.Nlog.Error(ex.ToString());
             return Utils.Responses.Surprise.ToString();
         }
     }
@@ -196,7 +196,7 @@ internal class UserInfo : Command
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
+            BotCore.Nlog.Error(ex.ToString());
             return [Utils.Responses.Surprise.ToString(), Utils.Responses.Surprise.ToString()];
         }
     }
@@ -209,7 +209,7 @@ internal class UserInfo : Command
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
+            BotCore.Nlog.Error(ex.ToString());
             return Utils.Responses.Surprise.ToString();
         }
     }

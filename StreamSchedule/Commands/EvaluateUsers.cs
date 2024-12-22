@@ -40,7 +40,7 @@ internal class EvaluateUsers : Command
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex);
+            BotCore.Nlog.Error(ex.ToString());
             return Utils.Responses.Surprise;
         }
     }

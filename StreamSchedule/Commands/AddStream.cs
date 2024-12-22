@@ -46,9 +46,9 @@ internal class AddStream : Command
             }
             BotCore.DBContext.SaveChanges();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
+            BotCore.Nlog.Error(ex.ToString());
             return Task.FromResult(Utils.Responses.Fail);
         }
 

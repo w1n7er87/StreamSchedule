@@ -1,5 +1,6 @@
 ﻿using Quartz;
 using Quartz.Impl;
+using Quartz.Logging;
 using StreamSchedule.Data.Models;
 using StreamSchedule.Jobs;
 
@@ -12,6 +13,7 @@ internal static class Scheduling
 
     public static async void Init(List<User> channels)
     {
+        LogProvider.IsDisabled = true;
         Channels = channels;
         AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
         StdSchedulerFactory factory = new();
