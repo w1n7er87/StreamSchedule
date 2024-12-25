@@ -170,7 +170,15 @@ internal static class BotCore
         if (e.ChatMessage.ChatReply != null)
         {
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
-            messageAsCodepoints = messageAsCodepoints[(e.ChatMessage.Message.Split(" ")[0].Codepoints().Count() + 1) ..];
+            try
+            {
+                messageAsCodepoints = messageAsCodepoints[(e.ChatMessage.Message.Split(" ")[0].Codepoints().Count() + 1) ..];
+            }
+            catch (Exception ex)
+            {
+                Nlog.Error($"[{e.ChatMessage.ChatReply.ParentDisplayName}|{e.ChatMessage.ChatReply.ParentUserLogin}] {e.ChatMessage.Message} {ex}");
+                return;
+            }
         }
 
         if (!ContainsPrefix(messageAsCodepoints, out messageAsCodepoints)) return;
