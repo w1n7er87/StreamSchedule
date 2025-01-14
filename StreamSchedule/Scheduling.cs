@@ -31,7 +31,7 @@ internal static class Scheduling
         ITrigger globalEmoteMonitorTrigger = TriggerBuilder.Create()
             .WithIdentity("globalEmoteMonitor")
             .StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(10).RepeatForever())
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever())
             .Build();
         await _scheduler.ScheduleJob(globalEmoteMonitorJob, globalEmoteMonitorTrigger);
 
@@ -50,7 +50,7 @@ internal static class Scheduling
             var jobTrigger = TriggerBuilder.Create()
                 .WithIdentity(channel.Id.ToString(), "channelEmoteMonitor")
                 .StartNow()
-                .WithSimpleSchedule(x => x.WithIntervalInMinutes(10).RepeatForever())
+                .WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever())
                 .Build();
 
             triggers.Add(jobTrigger);
