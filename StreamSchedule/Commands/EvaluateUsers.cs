@@ -10,13 +10,13 @@ internal class EvaluateUsers : Command
     internal override string Help => "evaluate user's scores and assign privileges accordingly: [username](optional) ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => ["s"];
+    internal override string[] Arguments => ["s"];
 
     private static float DefaultCutoffScore => 3.5f;
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 
         string[] split = text.Split(' ');
 

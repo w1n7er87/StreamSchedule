@@ -10,13 +10,13 @@ internal class CommandManagement : Command
     internal override string Help => "manage simple text commands: -add/-rm (-p[priv] optional) [command name](required) [command content](required) ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => ["add", "rm", "p", "alias"];
+    internal override string[] Arguments => ["add", "rm", "p", "alias"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         List<TextCommand> commands = [.. BotCore.DBContext.TextCommands];
 
-        string text = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArguments);
+        string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArguments);
         string commandName = text.Split(' ')[0].ToLower();
         text = text[commandName.Length..].TrimStart();
 

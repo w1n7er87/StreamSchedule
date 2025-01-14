@@ -21,9 +21,9 @@ internal class Helps : Command
 
         foreach (Command c in Commands.CurrentCommands)
         {
-            if (!requestedCommand.Equals(c.Call)) continue;
-
             var cmdAliases = BotCore.DBContext.CommandAliases.Find(c.Call.ToLower());
+            
+            if ((cmdAliases is null || cmdAliases.Aliases is null || !cmdAliases.Aliases.Contains(requestedCommand)) && !requestedCommand.Equals(c.Call)) continue;
 
             string aliases = "";
             if (cmdAliases?.Aliases is not null && cmdAliases.Aliases.Count != 0)
@@ -43,17 +43,17 @@ internal class Helps : Command
         List<TextCommand> textCommands = Commands.CurrentTextCommands;
         foreach (TextCommand c in textCommands)
         {
-            if (!requestedCommand.Equals(c.Name)) continue;
-            if (!c.Aliases?.Contains(c.Name) ?? false) continue;
-
+            if ((c.Aliases is null || !c.Aliases.Contains(requestedCommand)) && !requestedCommand.Equals(c.Name)) continue;
+            
             string aliases = "";
-            if (c?.Aliases is not null && c.Aliases.Count != 0)
+            if (c.Aliases is not null && c.Aliases.Count != 0)
             {
                 aliases = $"({string.Join(",", c.Aliases)}) ";
             }
+            
             return Task.FromResult(new CommandResult($"{aliases}simple text command mhm . ", false));
         }
-
+        
         return Task.FromResult(new CommandResult(this.Help));
     }
 }

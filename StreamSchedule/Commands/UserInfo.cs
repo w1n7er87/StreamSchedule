@@ -10,11 +10,11 @@ internal class UserInfo : Command
     internal override string Help => "user info: [username]";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => ["f", "e", "s", "a", "g", "c", "n"];
+    internal override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n"];
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
         string[] split = text.Split(' ');
         CommandResult response = new();
 

@@ -9,7 +9,7 @@ internal class Kill : Command
     internal override string Help => "kill the bot: [time] (in seconds, optional)";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => ["frfr"];
+    internal override string[] Arguments => ["frfr"];
 
     private async Task KillTask(TimeSpan delay)
     {
@@ -20,7 +20,7 @@ internal class Kill : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 
         if (message.sender.Privileges == Privileges.Uuh && usedArgs.TryGetValue("frfr", out _))
         {

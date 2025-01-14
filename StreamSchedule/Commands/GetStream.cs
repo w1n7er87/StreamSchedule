@@ -14,7 +14,7 @@ internal class GetStream : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        Commands.RetrieveArguments( Arguments, message.content, out Dictionary<string, string> usedArgs);
+        Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
         
         var next = BotCore.DBContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.UtcNow))
             .AsEnumerable()

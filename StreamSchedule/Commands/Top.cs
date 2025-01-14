@@ -10,11 +10,11 @@ internal class Top : Command
     internal override string Help => "get top chatters by messages sent offline(default)/online or by score ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => ["online", "offline", "score", "p"];
+    internal override string[] Arguments => ["online", "offline", "score", "p"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        _ = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> args);
+        _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> args);
         CommandResult result = new();
 
         int page = 0;

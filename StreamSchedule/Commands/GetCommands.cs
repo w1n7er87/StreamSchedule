@@ -9,19 +9,29 @@ internal class GetCommands : Command
     internal override string Help => "show list of commands available to you. ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    internal override string[] Arguments => ["q"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
+        _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        
         string response = "";
-        foreach (var c in Commands.CurrentCommands)
+        if (usedArgs.TryGetValue("q", out _))
         {
-            if (c.MinPrivilege <= message.sender.Privileges) { response += c.Call + ", "; }
+            foreach (var c in BotCore.DBContext.TextCommands)
+            {
+                if (c.Privileges <= message.sender.Privileges)
+                {
+                    response += c.Name + ", ";
+                }
+            }
         }
-        response = response[..^2] + ". | ";
-        foreach (var c in BotCore.DBContext.TextCommands)
+        else
         {
-            if (c.Privileges <= message.sender.Privileges) { response += c.Name + ", "; }
+            foreach (var c in Commands.CurrentCommands)
+            {
+                if (c.MinPrivilege <= message.sender.Privileges) { response += c.Call + ", "; }
+            }
         }
         return Task.FromResult(new CommandResult(response[..^2] + ". "));
     }

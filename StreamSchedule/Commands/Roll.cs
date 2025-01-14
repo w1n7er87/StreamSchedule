@@ -9,7 +9,7 @@ internal class Roll : Command
     internal override string Help => "get random number [0 - 100], -max[n] for [0 - n], -flip for 50/50";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => ["flip", "max"];
+    internal override string[] Arguments => ["flip", "max"];
 
     private static readonly string[] neuros = ["nwero", "hiyori", "eliv", "nuero"];
 
@@ -18,7 +18,7 @@ internal class Roll : Command
         CommandResult result = new($"{neuros[Random.Shared.Next(neuros.Length)]} says: ");
         ;
 
-        string[] split = Commands.RetrieveArguments(Arguments!, message.content, out Dictionary<string, string> usedArgs).Split(' ');
+        string[] split = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs).Split(' ');
 
         int maxValue = int.TryParse(split[0], out int c) ? c > 0 ? c + 1 : 101 : 101;
 
