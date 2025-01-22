@@ -11,12 +11,11 @@ internal class Roll : Command
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["flip", "max"];
 
-    private static readonly string[] neuros = ["nwero", "hiyori", "eliv", "nuero"];
+    private static readonly string[] neuros = ["nwero", "hiyori", "eliv", "nuero", "newero", "wuero", "cleliv", "cluero"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         CommandResult result = new($"{neuros[Random.Shared.Next(neuros.Length)]} says: ");
-        ;
 
         string[] split = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs).Split(' ');
 
