@@ -9,12 +9,12 @@ namespace StreamSchedule;
 internal static class Scheduling
 {
     private static IScheduler _scheduler;
-    private static List<EmoteMonitorChannel>? Channels = [];
+    private static List<EmoteMonitorChannel> Channels = [];
 
     public static async void Init()
     {
         LogProvider.IsDisabled = true;
-        Channels = BotCore.DBContext.EmoteMonitorChannels.Any() ? [.. BotCore.DBContext.EmoteMonitorChannels] : [];
+        Channels = BotCore.DBContext.EmoteMonitorChannels.Any(x => x.Deleted == false) ? [.. BotCore.DBContext.EmoteMonitorChannels] : [];
         AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
         StdSchedulerFactory factory = new();
         _scheduler = await factory.GetScheduler();
@@ -22,13 +22,20 @@ internal static class Scheduling
         StartRecurringJobs();
     }
 
+    public static async void RemoveEmoteMonitor(EmoteMonitorChannel channel)
+    {
+        await _scheduler.UnscheduleJob(new TriggerKey(channel.ChannelID.ToString(), "channelEmoteMonitor"));
+    }
+
     public static async void StartNewChannelMonitorJob(EmoteMonitorChannel channel)
     {
         IJobDetail newEmoteMonitorJob = JobBuilder.Create<ChannelEmoteMonitor>()
             .WithIdentity(channel.ChannelID.ToString(), "channelEmoteMonitor")
             .UsingJobData("UserID", channel.ChannelID.ToString())
+            .UsingJobData("OutputChannelName", channel.OutputChannelName)
             .UsingJobData("Username", channel.ChannelName)
             .UsingJobData("FirstRun", true)
+            .UsingJobData("PingList", string.Join("@ ", channel.UpdateSubscribers.Select(x => '@' + x)))
             .Build();
 
         ITrigger newEmoteMonitorJobTrigger = TriggerBuilder.Create()
@@ -63,12 +70,13 @@ internal static class Scheduling
                 .UsingJobData("OutputChannelName", channel.OutputChannelName)
                 .UsingJobData("Username", channel.ChannelName)
                 .UsingJobData("FirstRun", true)
+                .UsingJobData("PingList", string.Join(" ", channel.UpdateSubscribers.Select(x => '@' + x)))
                 .Build();
 
             var jobTrigger = TriggerBuilder.Create()
                 .WithIdentity(channel.ChannelID.ToString(), "channelEmoteMonitor")
                 .StartNow()
-                .WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever())
+                .WithSimpleSchedule(x => x.WithIntervalInSeconds(60 + Random.Shared.Next(0, 30)).RepeatForever())
                 .Build();
 
             triggers.Add(jobTrigger);

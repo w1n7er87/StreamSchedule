@@ -10,7 +10,8 @@ internal class ChannelEmoteMonitor : IJob
     public string Username { private get; set; }
     public bool FirstRun { private get; set; }
     public string OutputChannelName { private get; set; }
-    
+    public string PingList { private get; set; }
+
     public List<string> Emotes { private get; set; }
 
     public async Task Execute(IJobExecutionContext context)
@@ -52,6 +53,7 @@ internal class ChannelEmoteMonitor : IJob
     
             if (hadChanges) 
             {
+                response += PingList;
                 BotCore.Client.SendMessage(OutputChannelName, response);
                 BotCore.Nlog.Info($"{response} changes to {Username} emotes ");
             }
