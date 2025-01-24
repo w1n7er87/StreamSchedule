@@ -9,6 +9,8 @@ internal class ChannelEmoteMonitor : IJob
     public string UserID { private get; set; }
     public string Username { private get; set; }
     public bool FirstRun { private get; set; }
+    public string OutputChannelName { private get; set; }
+    
     public List<string> Emotes { private get; set; }
 
     public async Task Execute(IJobExecutionContext context)
@@ -50,7 +52,7 @@ internal class ChannelEmoteMonitor : IJob
     
             if (hadChanges) 
             {
-                BotCore.Client.SendMessage(Username, response);
+                BotCore.Client.SendMessage(OutputChannelName, response);
                 BotCore.Nlog.Info($"{response} changes to {Username} emotes ");
             }
         }

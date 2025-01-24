@@ -54,7 +54,7 @@ public static class Program
             }
 
             BotCore.Init(channelNames, dbContext, logger);
-            Scheduling.Init([dbContext.Users.Find(85498365)!]);
+            Scheduling.Init();
             Console.ReadLine();
         }
         catch (Exception e)

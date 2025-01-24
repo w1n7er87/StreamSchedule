@@ -14,6 +14,7 @@ public class DatabaseContext : DbContext
     public DbSet<Models.Stream> Streams => Set<Models.Stream>();
     public DbSet<TextCommand> TextCommands => Set<TextCommand>();
     public DbSet<CommandAlias> CommandAliases => Set<CommandAlias>();
+    public DbSet<EmoteMonitorChannel> EmoteMonitorChannels => Set<EmoteMonitorChannel>();
 }
 
 public class DatabaseContextFactory : IDesignTimeDbContextFactory<DatabaseContext>
@@ -21,7 +22,7 @@ public class DatabaseContextFactory : IDesignTimeDbContextFactory<DatabaseContex
     public DatabaseContext CreateDbContext(string[] args)
     {
         DbContextOptionsBuilder dbContextOptionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
-        dbContextOptionsBuilder.UseSqlite("Data Source=StreamSchedule.data");
+        dbContextOptionsBuilder.UseSqlite("Data Source=bin/Release/net9.0/StreamSchedule.data");
         return new DatabaseContext((DbContextOptions<DatabaseContext>)dbContextOptionsBuilder.Options);
     }
 }

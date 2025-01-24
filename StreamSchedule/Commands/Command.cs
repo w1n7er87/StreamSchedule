@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-internal abstract class Command
+public abstract class Command
 {
     internal abstract string Call { get; }
     internal abstract Privileges MinPrivilege { get; }

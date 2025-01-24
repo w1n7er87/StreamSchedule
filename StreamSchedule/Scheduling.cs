@@ -9,17 +9,34 @@ namespace StreamSchedule;
 internal static class Scheduling
 {
     private static IScheduler _scheduler;
-    private static List<User> Channels = [];
+    private static List<EmoteMonitorChannel>? Channels = [];
 
-    public static async void Init(List<User> channels)
+    public static async void Init()
     {
         LogProvider.IsDisabled = true;
-        Channels = channels;
+        Channels = BotCore.DBContext.EmoteMonitorChannels.Any() ? [.. BotCore.DBContext.EmoteMonitorChannels] : [];
         AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
         StdSchedulerFactory factory = new();
         _scheduler = await factory.GetScheduler();
         await _scheduler.Start();
         StartRecurringJobs();
+    }
+
+    public static async void StartNewChannelMonitorJob(EmoteMonitorChannel channel)
+    {
+        IJobDetail newEmoteMonitorJob = JobBuilder.Create<ChannelEmoteMonitor>()
+            .WithIdentity(channel.ChannelID.ToString(), "channelEmoteMonitor")
+            .UsingJobData("UserID", channel.ChannelID.ToString())
+            .UsingJobData("Username", channel.ChannelName)
+            .UsingJobData("FirstRun", true)
+            .Build();
+
+        ITrigger newEmoteMonitorJobTrigger = TriggerBuilder.Create()
+            .WithIdentity(channel.ChannelID.ToString(), "channelEmoteMonitor")
+            .StartNow()
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever())
+            .Build();
+        await _scheduler.ScheduleJob(newEmoteMonitorJob, newEmoteMonitorJobTrigger);
     }
 
     private static async void StartRecurringJobs()
@@ -41,14 +58,15 @@ internal static class Scheduling
         {
             var triggers = new HashSet<ITrigger>();
             var jobInstance = JobBuilder.Create<ChannelEmoteMonitor>()
-                .WithIdentity(channel.Id.ToString(), "channelEmoteMonitor")
-                .UsingJobData("UserID", channel.Id.ToString())
-                .UsingJobData("Username", channel.Username)
+                .WithIdentity(channel.ChannelID.ToString(), "channelEmoteMonitor")
+                .UsingJobData("UserID", channel.ChannelID.ToString())
+                .UsingJobData("OutputChannelName", channel.OutputChannelName)
+                .UsingJobData("Username", channel.ChannelName)
                 .UsingJobData("FirstRun", true)
                 .Build();
 
             var jobTrigger = TriggerBuilder.Create()
-                .WithIdentity(channel.Id.ToString(), "channelEmoteMonitor")
+                .WithIdentity(channel.ChannelID.ToString(), "channelEmoteMonitor")
                 .StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever())
                 .Build();
