@@ -35,7 +35,7 @@ internal static class Scheduling
             .UsingJobData("OutputChannelName", channel.OutputChannelName)
             .UsingJobData("Username", channel.ChannelName)
             .UsingJobData("FirstRun", true)
-            .UsingJobData("PingList", string.Join("@ ", channel.UpdateSubscribers.Select(x => '@' + x)))
+            .UsingJobData("PingList", ' ' + string.Join(" ", channel.UpdateSubscribers.Select(x => '@' + x)))
             .Build();
 
         ITrigger newEmoteMonitorJobTrigger = TriggerBuilder.Create()
@@ -70,7 +70,7 @@ internal static class Scheduling
                 .UsingJobData("OutputChannelName", channel.OutputChannelName)
                 .UsingJobData("Username", channel.ChannelName)
                 .UsingJobData("FirstRun", true)
-                .UsingJobData("PingList", string.Join(" ", channel.UpdateSubscribers.Select(x => '@' + x)))
+                .UsingJobData("PingList", ' ' + string.Join(" ", channel.UpdateSubscribers.Select(x => '@' + x)))
                 .Build();
 
             var jobTrigger = TriggerBuilder.Create()
