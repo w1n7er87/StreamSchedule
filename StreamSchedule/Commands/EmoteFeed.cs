@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;

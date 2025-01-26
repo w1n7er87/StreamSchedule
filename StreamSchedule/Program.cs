@@ -15,6 +15,7 @@ using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
+using TwitchLib.PubSub;
 
 namespace StreamSchedule;
 
@@ -300,7 +301,7 @@ internal static class BotCore
 
     #endregion EVENTS
 
-    private static async void SendLongMessage(string channel, string? replyID, string message)
+    public static async void SendLongMessage(string channel, string? replyID, string message)
     {
         string[] parts = message.Split(' ');
         string result = "";

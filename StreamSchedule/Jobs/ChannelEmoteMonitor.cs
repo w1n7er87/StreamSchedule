@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Quartz;
+using System.Text;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
 
 namespace StreamSchedule.Jobs;
@@ -19,7 +20,7 @@ internal class ChannelEmoteMonitor : IJob
     {
         try
         {
-            string response = Username;
+            StringBuilder response = new(Username);
             ChannelEmote[] ee = (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(UserID)).ChannelEmotes;
             List<string> emotes = [];
             foreach (var emote in ee)
@@ -40,55 +41,45 @@ internal class ChannelEmoteMonitor : IJob
 
             if (removed.Any())
             {
-                removed = removed.Select(x => 
-                {
-                    ChannelEmote? e = JsonConvert.DeserializeObject<ChannelEmote>(x);
-                    return $"{e?.Name} ({e?.Tier switch {
-                        "1000" => "T1",
-                        "2000" => "T2",
-                        "3000" => "T3",
-                        "bitstier" => "B",
-                        "follower" => "F",
-                        _ => ""
-                    }}{((e?.Format.Contains("animated") ?? false)? "A" : "")})";
-                });
-
                 hadChanges = true;
-                response += " emotes removed: " + string.Join(" ", removed);
+                response.Append(" emotes removed: ").Append(string.Join(" ", DeserializeEmotes(removed)));
             }
 
             if (added.Any())
             {
-                added = added.Select(x =>
-                {
-                    ChannelEmote? e = JsonConvert.DeserializeObject<ChannelEmote>(x);
-                    return $"{e?.Name} ({e?.Tier switch
-                    {
-                        "1000" => "T1",
-                        "2000" => "T2",
-                        "3000" => "T3",
-                        "bitstier" => "B",
-                        "follower" => "F",
-                        _ => ""
-                    }}{((e?.Format.Contains("animated") ?? false) ? "A" : "")})";
-                });
-
                 hadChanges = true;
-                response += " emotes added: " + string.Join(" ", added);
+                response.Append(" emotes added: ").Append(string.Join(" ", DeserializeEmotes(added)));
             }
 
             context.JobDetail.JobDataMap.Put("Emotes", emotes);
     
             if (hadChanges) 
             {
-                response += PingList;
-                BotCore.Client.SendMessage(OutputChannelName, response);
-                BotCore.Nlog.Info($"{response} changes to {Username} emotes ");
+                response.Append(PingList);
+                BotCore.SendLongMessage(OutputChannelName, null, response.ToString());
+                BotCore.Nlog.Info(response);
             }
         }
         catch
         {
             BotCore.Nlog.Debug($"Failed to get emotes for {Username}");
         }
+    }
+
+    private static IEnumerable<string> DeserializeEmotes(IEnumerable<string> serializedEmotes)
+    {
+        return serializedEmotes.Select(x =>
+        {
+            ChannelEmote? e = JsonConvert.DeserializeObject<ChannelEmote>(x);
+            return $"{e?.Name} ({e?.Tier switch
+            {
+                "1000" => "T1",
+                "2000" => "T2",
+                "3000" => "T3",
+                "bitstier" => "B",
+                "follower" => "F",
+                _ => ""
+            }}{((e?.Format.Contains("animated") ?? false) ? "A" : "")})";
+        });
     }
 }

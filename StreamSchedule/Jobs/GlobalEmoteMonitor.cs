@@ -1,4 +1,5 @@
 ﻿using Quartz;
+using System.Text;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
 
 namespace StreamSchedule.Jobs;
@@ -13,7 +14,7 @@ internal class GlobalEmoteMonitor : IJob
     {
         try
         {
-            string response = "Twitch emotes - ";
+            StringBuilder response = new("Twitch emotes -");
             GlobalEmote[] ee = (await BotCore.API.Helix.Chat.GetGlobalEmotesAsync()).GlobalEmotes;
             List<string> emotes = [];
 
@@ -36,21 +37,23 @@ internal class GlobalEmoteMonitor : IJob
             if (removed.Any())
             {
                 hadChanges = true;
-                response += "emotes removed: " + string.Join(" ", removed);
+                response.Append(" emotes removed: ").Append(string.Join(" ", removed));
             }
 
             if (added.Any())
             {
                 hadChanges = true;
-                response += "emotes added: " + string.Join(" ", added);
+                response.Append(" emotes added: ").Append(string.Join(" ", added));
             }
 
             context.JobDetail.JobDataMap.Put("Emotes", emotes);
+
             if (hadChanges)
             {
-                BotCore.Nlog.Info($"{response} changes to global emotes ");
-                BotCore.Client.SendMessage("vedal987", response);
-                BotCore.Client.SendMessage("w1n7er", response);
+                string r = response.ToString();
+                BotCore.SendLongMessage("vedal987", null, r);
+                BotCore.SendLongMessage("w1n7er", null, r);
+                BotCore.Nlog.Info(r);
                 BotCore.GlobalEmotes = ee;
             }
         }
