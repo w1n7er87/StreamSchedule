@@ -1,4 +1,5 @@
-﻿using Quartz;
+﻿using Newtonsoft.Json;
+using Quartz;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
 
 namespace StreamSchedule.Jobs;
@@ -23,7 +24,7 @@ internal class ChannelEmoteMonitor : IJob
             List<string> emotes = [];
             foreach (var emote in ee)
             {
-                emotes.Add(emote.Name);
+                emotes.Add(JsonConvert.SerializeObject(emote));
             }
 
             if (FirstRun)
@@ -39,12 +40,39 @@ internal class ChannelEmoteMonitor : IJob
 
             if (removed.Any())
             {
+                removed = removed.Select(x => 
+                {
+                    ChannelEmote? e = JsonConvert.DeserializeObject<ChannelEmote>(x);
+                    return $"{e?.Name} ({e?.Tier switch {
+                        "1000" => "T1",
+                        "2000" => "T2",
+                        "3000" => "T3",
+                        "bitstier" => "B",
+                        "follower" => "F",
+                        _ => ""
+                    }}{((e?.Format.Contains("animated") ?? false)? "A" : "")})";
+                });
+
                 hadChanges = true;
                 response += " emotes removed: " + string.Join(" ", removed);
             }
 
             if (added.Any())
             {
+                added = added.Select(x =>
+                {
+                    ChannelEmote? e = JsonConvert.DeserializeObject<ChannelEmote>(x);
+                    return $"{e?.Name} ({e?.Tier switch
+                    {
+                        "1000" => "T1",
+                        "2000" => "T2",
+                        "3000" => "T3",
+                        "bitstier" => "B",
+                        "follower" => "F",
+                        _ => ""
+                    }}{((e?.Format.Contains("animated") ?? false) ? "A" : "")})";
+                });
+
                 hadChanges = true;
                 response += " emotes added: " + string.Join(" ", added);
             }

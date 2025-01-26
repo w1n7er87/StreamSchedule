@@ -59,6 +59,8 @@ internal static class Scheduling
             .Build();
         await _scheduler.ScheduleJob(globalEmoteMonitorJob, globalEmoteMonitorTrigger);
 
+        BotCore.Nlog.Info("started global emote monitor job");
+
         Dictionary<IJobDetail, IReadOnlyCollection<ITrigger>> jobs = [];
 
         foreach (var channel in Channels)
@@ -76,13 +78,15 @@ internal static class Scheduling
             var jobTrigger = TriggerBuilder.Create()
                 .WithIdentity(channel.ChannelID.ToString(), "channelEmoteMonitor")
                 .StartNow()
-                .WithSimpleSchedule(x => x.WithIntervalInSeconds(60 + Random.Shared.Next(0, 30)).RepeatForever())
+                .WithSimpleSchedule(x => x.WithIntervalInSeconds(90 + Random.Shared.Next(-30, 15)).RepeatForever())
                 .Build();
 
             triggers.Add(jobTrigger);
             jobs[jobInstance] = triggers;
+            BotCore.Nlog.Info($"created job for emote monitor @{channel.ChannelName}");
         }
         await _scheduler.ScheduleJobs(jobs, true);
+        BotCore.Nlog.Info("started emote monitor jobs");
     }
 
     private static async void OnProcessExit(object? sender, EventArgs? e)

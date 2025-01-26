@@ -130,6 +130,7 @@ internal static class BotCore
         Client.OnJoinedChannel += Client_OnJoinedChannel;
         Client.OnMessageReceived += Client_OnMessageReceived;
         Client.OnConnected += Client_OnConnected;
+        Client.OnRateLimit += Client_OnRateLimit;
         Client.Connect();
 
         ChannelLiveState = [];
@@ -203,7 +204,7 @@ internal static class BotCore
                 if (userSent.Privileges < command.Privileges) return;
 
                 Nlog.Info($"({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
-                Client.SendMessage(e.ChatMessage.Channel, command.Content + bypassSameMessage);
+                SendLongMessage(e.ChatMessage.Channel, null, command.Content + bypassSameMessage);
                 _sameMessage = !_sameMessage;
                 _textCommandLastUsed = DateTime.Now;
                 return;
@@ -233,11 +234,8 @@ internal static class BotCore
             Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 
             if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
-            
-            if (response.reply)
-                Client.SendReply(e.ChatMessage.Channel, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id, response.ToString() + bypassSameMessage);
-            else
-                Client.SendMessage(e.ChatMessage.Channel, response.ToString() + bypassSameMessage);
+ 
+            SendLongMessage(e.ChatMessage.Channel, response.reply ? e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id : null, response.ToString() + bypassSameMessage);
 
             _sameMessage = !_sameMessage;
             c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
@@ -294,8 +292,37 @@ internal static class BotCore
     {
         Nlog.Info($"Joined {e.Channel}");
     }
+    private static void Client_OnRateLimit(object? sender, OnRateLimitArgs e)
+    {
+        Nlog.Info($"rate limited {e.Message}");
+    }
+
 
     #endregion EVENTS
+
+    private static async void SendLongMessage(string channel, string? replyID, string message)
+    {
+        string[] parts = message.Split(' ');
+        string result = "";
+
+        for (int i = 0; i < parts.Length; i++)
+        {
+            string part = parts[i];
+            if (result.Length + part.Length <= 348)
+            {
+                result += part + ' ';
+            }
+            else
+            {
+                if (replyID is not null) Client.SendReply(channel, replyID, result);
+                else Client.SendMessage(channel, result);
+                result = part + ' ';
+                await Task.Delay(1100);
+            }
+        }
+        if (replyID is not null) Client.SendReply(channel, replyID, result);
+        else Client.SendMessage(channel, result);
+    }
 
     private static bool ContainsPrefix(ReadOnlySpan<Codepoint> input, out ReadOnlySpan<Codepoint> prefixTrimmedInput)
     {
