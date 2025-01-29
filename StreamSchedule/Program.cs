@@ -15,7 +15,6 @@ using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
-using TwitchLib.PubSub;
 
 namespace StreamSchedule;
 

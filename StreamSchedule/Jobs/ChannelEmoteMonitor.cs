@@ -22,11 +22,7 @@ internal class ChannelEmoteMonitor : IJob
         {
             StringBuilder response = new(Username);
             ChannelEmote[] ee = (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(UserID)).ChannelEmotes;
-            List<string> emotes = [];
-            foreach (var emote in ee)
-            {
-                emotes.Add(JsonConvert.SerializeObject(emote));
-            }
+            List<string> emotes = [.. ee.Select(x => JsonConvert.SerializeObject(x))];
 
             if (FirstRun)
             {
@@ -76,9 +72,12 @@ internal class ChannelEmoteMonitor : IJob
                 "1000" => "T1",
                 "2000" => "T2",
                 "3000" => "T3",
+                _ => ""
+            }}{e?.EmoteType switch
+            {
                 "bitstier" => "B",
                 "follower" => "F",
-                _ => ""
+                _ =>""
             }}{((e?.Format.Contains("animated") ?? false) ? "A" : "")})";
         });
     }
