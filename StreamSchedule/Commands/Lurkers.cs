@@ -10,7 +10,7 @@ class Lurkers : Command
 
     internal override string Help => "get channel lurkers";
 
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Short);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Minute);
 
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 
