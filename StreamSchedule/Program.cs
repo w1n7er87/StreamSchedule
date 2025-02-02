@@ -15,6 +15,7 @@ using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
+using StreamSchedule.GraphQL;
 
 namespace StreamSchedule;
 
@@ -74,6 +75,8 @@ internal static class BotCore
     public static TwitchAPI API { get; private set; }
     public static TwitchClient Client { get; private set; }     
     public static Logger Nlog { get; private set; }
+    public static GraphQLClient GQLClient { get; private set; }
+
     public static bool Silent { get; set; }
 
     private static LiveStreamMonitorService Monitor { get; set; }
@@ -137,6 +140,8 @@ internal static class BotCore
         foreach (string channel in channelNames) ChannelLiveState[channel] = false;
 
         Commands.Commands.InitializeCommands(channelNames, DBContext);
+
+        GQLClient = new GraphQLClient();
     }
 
     private static async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
@@ -165,7 +170,7 @@ internal static class BotCore
 
         string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 
-        ReadOnlySpan<Codepoint> messageAsCodepoints = e.ChatMessage.Message.Codepoints().ToArray().AsSpan();
+        ReadOnlySpan<Codepoint> messageAsCodepoints = [.. e.ChatMessage.Message.Codepoints()];
 
         string? replyID = null;
         if (e.ChatMessage.ChatReply != null)
@@ -292,11 +297,11 @@ internal static class BotCore
     {
         Nlog.Info($"Joined {e.Channel}");
     }
+
     private static void Client_OnRateLimit(object? sender, OnRateLimitArgs e)
     {
         Nlog.Info($"rate limited {e.Message}");
     }
-
 
     #endregion EVENTS
 
