@@ -4,7 +4,7 @@ using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
 namespace StreamSchedule.Commands;
 
-public class EmoteFeed : Command
+internal class EmoteFeed : Command
 {
     internal override string Call => "emon";
     internal override Privileges MinPrivilege => Privileges.Trusted;

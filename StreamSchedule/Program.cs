@@ -147,7 +147,7 @@ internal static class BotCore
     private static async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         long start = Stopwatch.GetTimestamp();
-
+        
         User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType, DBContext);
 
         if (e.ChatMessage.Channel.Equals("vedal987"))
@@ -234,7 +234,7 @@ internal static class BotCore
             if (userSent.Privileges < c.MinPrivilege) return;
 
             trimmedMessage = trimmedMessage[usedCall.Length..].Replace("\U000e0000", "").TrimStart();
-            CommandResult response = await c.Handle(new(userSent, trimmedMessage, replyID, e.ChatMessage.RoomId));
+            CommandResult response = await c.Handle(new(userSent, trimmedMessage, e.ChatMessage.Id, replyID, e.ChatMessage.RoomId));
 
             Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 

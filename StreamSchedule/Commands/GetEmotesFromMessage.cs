@@ -1,4 +1,6 @@
 ﻿using StreamSchedule.Data;
+using StreamSchedule.GraphQL;
+using StreamSchedule.GraphQL.Data;
 using TwitchLib.Client.Models;
 
 namespace StreamSchedule.Commands;
@@ -7,55 +9,64 @@ internal class GetEmotesFromMessage : Command
 {
     internal override string Call => "emot";
     internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get emote owners from a message";
+    internal override string Help => "get emote owners from a reply, your message, message by messageID, or by emote id";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    internal override string[] Arguments => ["messageid", "emoteid"];
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         CommandResult response = new();
+        _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 
-        if (string.IsNullOrEmpty(message.replyID))
+        List<string> emoteIDs = [];
+        ChatMessage? reply = null;
+
+        if (usedArgs.TryGetValue("emoteid", out string? passedEmoteID))
         {
-            return response;
+            emoteIDs = [passedEmoteID];
         }
-
-        ChatMessage? reply = BotCore.MessageCache.Find(x => x.Id == message.replyID);
-
-        if (reply == null)
+        else
         {
-            return Utils.Responses.Fail + " the message is too old. ";
+            if (!string.IsNullOrEmpty(message.replyID))
+            {
+                reply = BotCore.MessageCache.Find(x => x.Id == message.replyID);
+            }
+
+            if (reply is null)
+            {
+                emoteIDs = await BotCore.GQLClient.GetEmoteIDsFromMessage(usedArgs.TryGetValue("messageid", out string? passedMessageID) ? passedMessageID : message.replyID ?? message.ID);
+            }
+            else
+            {
+                emoteIDs = [.. reply.EmoteSet.Emotes.Select(e => e.Id)];
+            }
+
+            if (emoteIDs.Count == 0) { return response + "no emotes found"; }
         }
-
-        var emotes = reply.EmoteSet.Emotes;
-
-        if (emotes.Count == 0) { return response; }
 
         HashSet<string> channels = [];
 
-        List<Task<string>> tasks = [];
+        List<Task<GraphQL.Data.Emote?>> tasks = [];
 
-        foreach (Emote? emote in emotes)
+        foreach (string emoteID in emoteIDs)
         {
-            if ((BotCore.GlobalEmotes ?? []).Any(x => x.Id == emote.Id))
-            {
-                channels.Add("twitch");
-                continue;
-            }
-            tasks.Add(GetEmoteChannel.GetEmoteChannelByEmoteID(emote.Id));
+            tasks.Add(BotCore.GQLClient.GetEmote(emoteID));
         }
 
         await Task.WhenAll(tasks);
         foreach (var task in tasks)
         {
-            channels.Add(task.Result);
+            if (task.Result is null) {channels.Add("Erm"); continue; }
+
+            if (task.Result.Owner is null) { channels.Add(Helpers.EmoteTypeToString(task.Result.Type)); continue; };
+
+            string bitPrice = "";
+            if (task.Result.Type is EmoteType.BITS_BADGE_TIERS) bitPrice = task.Result.BitsBadgeTierSummary?.Threshold.ToString() ?? "";
+            channels.Add($"( @{task.Result.Owner.Login} {Helpers.EmoteTypeToString(task.Result.Type)} {bitPrice})");
         }
 
-        foreach (var channel in channels)
-        {
-            if (!string.IsNullOrWhiteSpace(channel)) response += "@" + channel + " ";
-        }
+        response += string.Join(" ", channels);
 
         return response;
     }

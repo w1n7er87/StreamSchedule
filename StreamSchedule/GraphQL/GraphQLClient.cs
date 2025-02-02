@@ -1,4 +1,5 @@
-﻿using GraphQL.Client.Http;
+﻿using GraphQL;
+using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
 using StreamSchedule.GraphQL.Data;
 
@@ -19,7 +20,20 @@ public class GraphQLClient
 
     public async Task<int> GetChattersCount(string userID)
     {
-        var result = await _client.SendQueryAsync<GetUserResponse>(Queries.ChattersCountQuery(userID));
+        GraphQLResponse<QueryResponse> result = await _client.SendQueryAsync<QueryResponse>(Queries.RequestChattersCount(userID));
         return result.Data.User?.Channel.Chatters.Count ?? 0;
+    }
+
+    public async Task<Emote?> GetEmote(string emoteID)
+    {
+        GraphQLResponse<QueryResponse> result = await _client.SendQueryAsync<QueryResponse>(Queries.RequestEmote(emoteID));
+        return result.Data.Emote;
+    }
+    
+    public async Task<List<string>> GetEmoteIDsFromMessage(string messageID)
+    {
+        GraphQLResponse<QueryResponse> result = await _client.SendQueryAsync<QueryResponse>(Queries.RequestEmotesInMessage(messageID));
+        if (result.Data.Message is null || result.Data.Message.Content is null || result.Data.Message.Content.Fragments is null) return [];
+        return [.. result.Data.Message.Content.Fragments.Where(x => x is not null && x.Content is not null).Select(e => e!.Content!.ID)];
     }
 }

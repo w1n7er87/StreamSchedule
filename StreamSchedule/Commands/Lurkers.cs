@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-class Lurkers : Command
+internal class Lurkers : Command
 {
     internal override string Call => "lurkers";
 

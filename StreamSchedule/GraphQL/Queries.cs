@@ -17,8 +17,51 @@ internal class Queries
         }
         """);
 
-    internal static GraphQLRequest ChattersCountQuery(string userID)
+    internal static GraphQLRequest RequestChattersCount(string userID)
     {
         return new GraphQLRequest(_chattersCountQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL)}, "GetChattersCount");
+    }
+
+    private static readonly GraphQLQuery _emoteQuery = new GraphQLQuery("""
+        query GetEmote($id: ID!) {
+        	emote(id: $id) {
+                owner{
+                    login
+                }
+        	    bitsBadgeTierSummary{
+                    threshold
+                }
+                suffix
+                token
+                text
+                type
+        	}
+        }
+        """);
+
+    internal static GraphQLRequest RequestEmote(string emoteID)
+    {
+        return new GraphQLRequest(_emoteQuery, new { id = emoteID }, "GetEmote");
+    }
+
+    private static readonly GraphQLQuery _emotesInMessageQuery = new GraphQLQuery("""
+        query GetEmotesInMessage($id: ID!) {
+            message(id: $id) {
+                content {
+                    fragments {
+                        content{
+                            ... on Emote{
+                                id
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        """);
+
+    internal static GraphQLRequest RequestEmotesInMessage(string messageID)
+    {
+        return new GraphQLRequest(_emotesInMessageQuery, new { id = messageID }, "GetEmotesInMessage");
     }
 }
