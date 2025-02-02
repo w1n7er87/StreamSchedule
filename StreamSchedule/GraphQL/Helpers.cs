@@ -4,7 +4,7 @@ namespace StreamSchedule.GraphQL;
 
 public static class Helpers
 {
-    public static string EmoteTypeToString(EmoteType emoteType)
+    public static string EmoteTypeToString(EmoteType? emoteType)
     {
         return emoteType switch
         {
@@ -20,7 +20,18 @@ public static class Helpers
             EmoteType.HYPE_TRAIN => "hype train",
             EmoteType.MEGA_COMMERCE => "mega commerce",
             EmoteType.ARCHIVE => "archived",
-            EmoteType.UNKNOWN or _ => "unknown",
+            EmoteType.UNKNOWN or null or _ => "unknown",
         };
-    } 
+    }
+
+    public static string SubscriptionSummaryTierToString(SubscriptionSummaryTier? subscriptionSummaryTier)
+    {
+        return subscriptionSummaryTier switch
+        {
+            SubscriptionSummaryTier.TIER_1 => "T1",
+            SubscriptionSummaryTier.TIER_2 => "T2",
+            SubscriptionSummaryTier.TIER_3 => "T3",
+            null or _ => "",
+        };
+    }
 }

@@ -61,9 +61,13 @@ internal class GetEmotesFromMessage : Command
 
             if (task.Result.Owner is null) { channels.Add(Helpers.EmoteTypeToString(task.Result.Type)); continue; };
 
-            string bitPrice = "";
-            if (task.Result.Type is EmoteType.BITS_BADGE_TIERS) bitPrice = task.Result.BitsBadgeTierSummary?.Threshold.ToString() ?? "";
-            channels.Add($"( @{task.Result.Owner.Login} {Helpers.EmoteTypeToString(task.Result.Type)} {bitPrice})");
+            string subTierOrBitPrice = task.Result.Type switch
+            {
+                EmoteType.BITS_BADGE_TIERS => task.Result.BitsBadgeTierSummary?.Threshold.ToString() ?? "",
+                EmoteType.SUBSCRIPTIONS => Helpers.SubscriptionSummaryTierToString(task.Result.Tier),
+                _ => ""
+            };
+            channels.Add($"( @{task.Result.Owner.Login} {Helpers.EmoteTypeToString(task.Result.Type)} {subTierOrBitPrice})");
         }
 
         response += string.Join(" ", channels);

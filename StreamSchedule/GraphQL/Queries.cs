@@ -31,6 +31,7 @@ internal class Queries
         	    bitsBadgeTierSummary{
                     threshold
                 }
+                subscriptionTier
                 suffix
                 token
                 text
