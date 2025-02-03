@@ -19,7 +19,7 @@ internal class GetEmotesFromMessage : Command
         CommandResult response = new();
         _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 
-        List<string> emoteIDs = [];
+        List<string> emoteIDs;
         ChatMessage? reply = null;
 
         if (usedArgs.TryGetValue("emoteid", out string? passedEmoteID))
@@ -67,7 +67,7 @@ internal class GetEmotesFromMessage : Command
                 EmoteType.SUBSCRIPTIONS => Helpers.SubscriptionSummaryTierToString(task.Result.Tier),
                 _ => ""
             };
-            channels.Add($"( @{task.Result.Owner.Login} {Helpers.EmoteTypeToString(task.Result.Type)} {subTierOrBitPrice})");
+            channels.Add($"( @{task.Result.Owner.Login} {subTierOrBitPrice} {Helpers.EmoteTypeToString(task.Result.Type)} )");
         }
 
         response += string.Join(" ", channels);

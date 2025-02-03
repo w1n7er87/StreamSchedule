@@ -14,5 +14,6 @@ public enum EmoteType
     HYPE_TRAIN,
     MEGA_COMMERCE,
     ARCHIVE,
+    FOLLOWER,
     UNKNOWN,
 }

@@ -26,14 +26,14 @@ public class GraphQLClient
 
     public async Task<Emote?> GetEmote(string emoteID)
     {
-        GraphQLResponse<QueryResponse> result = await _client.SendQueryAsync<QueryResponse>(Queries.RequestEmote(emoteID));
-        return result.Data.Emote;
+        GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestEmote(emoteID));
+        return result.Data?.Emote ?? null;
     }
     
     public async Task<List<string>> GetEmoteIDsFromMessage(string messageID)
     {
-        GraphQLResponse<QueryResponse> result = await _client.SendQueryAsync<QueryResponse>(Queries.RequestEmotesInMessage(messageID));
-        if (result.Data.Message is null || result.Data.Message.Content is null || result.Data.Message.Content.Fragments is null) return [];
-        return [.. result.Data.Message.Content.Fragments.Where(x => x is not null && x.Content is not null).Select(e => e!.Content!.ID)];
+        GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestEmotesInMessage(messageID));
+        if (result.Data?.Message?.Content?.Fragments is null) return [];
+        return [.. result.Data.Message.Content.Fragments.Where(x => x?.Content is not null).Select(e => e!.Content!.ID)];
     }
 }

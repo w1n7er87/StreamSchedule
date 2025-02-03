@@ -9,7 +9,7 @@ public static class Helpers
         return emoteType switch
         {
             EmoteType.CHANNEL_POINTS => "channel points",
-            EmoteType.BITS_BADGE_TIERS => "bit reward",
+            EmoteType.BITS_BADGE_TIERS => "bits",
             EmoteType.SUBSCRIPTIONS => "sub",
             EmoteType.PRIME => "Twitch prime",
             EmoteType.TURBO => "Twitch turbo",
@@ -20,7 +20,8 @@ public static class Helpers
             EmoteType.HYPE_TRAIN => "hype train",
             EmoteType.MEGA_COMMERCE => "mega commerce",
             EmoteType.ARCHIVE => "archived",
-            EmoteType.UNKNOWN or null or _ => "unknown",
+            EmoteType.FOLLOWER => "follow",
+            EmoteType.UNKNOWN or _ => "unknown",
         };
     }
 
@@ -30,8 +31,8 @@ public static class Helpers
         {
             SubscriptionSummaryTier.TIER_1 => "T1",
             SubscriptionSummaryTier.TIER_2 => "T2",
-            SubscriptionSummaryTier.TIER_3 => "T3",
-            null or _ => "",
+            SubscriptionSummaryTier.TIER_3 => "T3", 
+            _ => "",
         };
     }
 }
