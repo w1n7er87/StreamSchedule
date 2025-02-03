@@ -2,5 +2,5 @@
 
 public class Channel
 {
-    public ChattersInfo Chatters { get; set; }
+    public ChattersInfo? Chatters { get; set; }
 }

@@ -2,5 +2,5 @@
 
 public class ChattersInfo
 {
-    public int Count{ get; set; }
+    public int? Count{ get; set; }
 }
