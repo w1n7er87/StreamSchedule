@@ -20,8 +20,8 @@ public class GraphQLClient
 
     public async Task<int> GetChattersCount(string userID)
     {
-        GraphQLResponse<QueryResponse> result = await _client.SendQueryAsync<QueryResponse>(Queries.RequestChattersCount(userID));
-        return result.Data.User?.Channel.Chatters.Count ?? 0;
+        GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersCount(userID));
+        return result.Data?.User?.Channel?.Chatters?.Count ?? 0;
     }
 
     public async Task<Emote?> GetEmote(string emoteID)

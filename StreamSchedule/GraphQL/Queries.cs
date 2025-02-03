@@ -32,10 +32,9 @@ internal class Queries
                     threshold
                 }
                 subscriptionTier
+                type
                 suffix
                 token
-                text
-                type
         	}
         }
         """);

@@ -71,16 +71,16 @@ public static class Program
 
 internal static class BotCore
 {
-    public static DatabaseContext DBContext { get; private set; }
-    public static TwitchAPI API { get; private set; }
-    public static TwitchClient Client { get; private set; }     
-    public static Logger Nlog { get; private set; }
-    public static GraphQLClient GQLClient { get; private set; }
+    public static DatabaseContext DBContext { get; private set; } = null!;
+    public static TwitchAPI API { get; private set; } = null!;
+    public static TwitchClient Client { get; private set; } = null!;
+    public static Logger Nlog { get; private set; } = null!;
+    public static GraphQLClient GQLClient { get; private set; } = null!;
 
     public static bool Silent { get; set; }
 
-    private static LiveStreamMonitorService Monitor { get; set; }
-    private static Dictionary<string, bool> ChannelLiveState { get; set; }
+    private static LiveStreamMonitorService Monitor { get; set; } = null!;
+    private static Dictionary<string, bool> ChannelLiveState { get; set; } = null!;
 
     private static DateTime _textCommandLastUsed = DateTime.MinValue;
     private static bool _sameMessage;
