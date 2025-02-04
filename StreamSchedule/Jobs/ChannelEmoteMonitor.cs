@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Quartz;
+using StreamSchedule.Extensions;
 using System.Text;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
 
@@ -35,6 +36,16 @@ internal class ChannelEmoteMonitor : IJob
             IEnumerable<string> removed = Emotes.Except(emotes);
             IEnumerable<string> added = emotes.Except(Emotes);
 
+            if (removed.Any() && added.Any())
+            {
+                response.Append(DiffChanges(removed.Select(x => JsonConvert.DeserializeObject<ChannelEmote>(x)).ToList()!, added.Select(x => JsonConvert.DeserializeObject<ChannelEmote>(x)).ToList()!));
+                response.Append(PingList);
+                BotCore.SendLongMessage(OutputChannelName, null, response.ToString());
+                BotCore.Nlog.Info(response);
+                context.JobDetail.JobDataMap.Put("Emotes", emotes);
+                return;
+            }
+
             if (removed.Any())
             {
                 hadChanges = true;
@@ -49,7 +60,7 @@ internal class ChannelEmoteMonitor : IJob
 
             context.JobDetail.JobDataMap.Put("Emotes", emotes);
     
-            if (hadChanges) 
+            if (hadChanges)
             {
                 response.Append(PingList);
                 BotCore.SendLongMessage(OutputChannelName, null, response.ToString());
@@ -62,23 +73,50 @@ internal class ChannelEmoteMonitor : IJob
         }
     }
 
+    private static string DiffChanges(List<ChannelEmote> added, List<ChannelEmote> removed)
+    {
+        List<string> changed = [];
+        List<string> addedNew = [];
+        List<string> removedForever = [];
+
+        foreach(ChannelEmote addedEmote in added)
+        {
+            bool didChange = false;
+            foreach(ChannelEmote removedEmote in removed)
+            {
+                if(addedEmote.DeserializeChangedEmote(removedEmote, out string result))
+                {
+                    didChange = true;
+                    removed.Remove(removedEmote);
+                    changed.Add(result);
+                    continue;
+                }
+            }
+            if (didChange) continue;
+            addedNew.Add(EmoteToString(addedEmote));
+        }
+        removedForever = [.. removed.Select(e => EmoteToString(e))];
+        return $" emotes removed: {string.Join(" ", removedForever)} added: {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $"changed: {string.Join(" ", changed)}" : "");
+    }
+
     private static IEnumerable<string> DeserializeEmotes(IEnumerable<string> serializedEmotes)
     {
-        return serializedEmotes.Select(x =>
+        return serializedEmotes.Select(x => EmoteToString(JsonConvert.DeserializeObject<ChannelEmote>(x)));
+    }
+
+    private static string EmoteToString(ChannelEmote? e)
+    {
+        return $"{e?.Name} ({e?.Tier switch
         {
-            ChannelEmote? e = JsonConvert.DeserializeObject<ChannelEmote>(x);
-            return $"{e?.Name} ({e?.Tier switch
-            {
-                "1000" => "T1",
-                "2000" => "T2",
-                "3000" => "T3",
-                _ => ""
-            }}{e?.EmoteType switch
-            {
-                "bitstier" => "B",
-                "follower" => "F",
-                _ =>""
-            }}{((e?.Format.Contains("animated") ?? false) ? "A" : "")})";
-        });
+            "1000" => "T1",
+            "2000" => "T2",
+            "3000" => "T3",
+            _ => ""
+        }}{e?.EmoteType switch
+        {
+            "bitstier" => "B",
+            "follower" => "F",
+            _ =>""
+        }}{((e?.Format.Contains("animated") ?? false) ? "A" : "")})";
     }
 }
