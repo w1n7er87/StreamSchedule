@@ -36,8 +36,9 @@ internal class Helps : Command
             {
                 args = $" args: {string.Join(", ", c.Arguments)}";
             }
+            string cd = $" cd {c.Cooldown.TotalSeconds}s";
 
-            return Task.FromResult(new CommandResult(aliases + c.Help + args));
+            return Task.FromResult(new CommandResult(aliases + c.Help + args + cd));
         }
 
         List<TextCommand> textCommands = Commands.CurrentTextCommands;
@@ -50,7 +51,7 @@ internal class Helps : Command
             {
                 aliases = $"({string.Join(",", c.Aliases)}) ";
             }
-            
+
             return Task.FromResult(new CommandResult($"{aliases}simple text command mhm . ", false));
         }
         

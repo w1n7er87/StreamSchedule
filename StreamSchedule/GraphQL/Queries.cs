@@ -11,6 +11,9 @@ internal class Queries
         		channel {
         			chatters {
         				count
+                        viewers{
+                        login
+                        }
         			}
         		}
         	}
