@@ -1,5 +1,5 @@
-using System.Text;
 using NeoSmart.Unicode;
+using System.Text;
 
 namespace StreamSchedule.Extensions;
 

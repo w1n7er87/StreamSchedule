@@ -14,7 +14,7 @@ internal class GetCommands : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
-        
+
         string response = "";
         if (usedArgs.TryGetValue("q", out _))
         {

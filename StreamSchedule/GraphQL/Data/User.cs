@@ -9,7 +9,7 @@ public class User
     public FollowerConnection? Followers { get; set; }
     public UserRoles? Roles { get; set; }
     public Channel? Channel { get; set; }
-    public Broadcast? LastBroadcast { get;set; }
+    public Broadcast? LastBroadcast { get; set; }
     public BroadcastSettings? BroadcastSettings { get; set; }
     public Stream? Stream { get; set; }
     public ChatSettings? ChatSettings { get; set; }

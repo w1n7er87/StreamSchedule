@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using NeoSmart.Unicode;
-using StreamSchedule.Data;
-using StreamSchedule.Data.Models;
-using System.Diagnostics;
 using NLog;
 using StreamSchedule.Commands;
+using StreamSchedule.Data;
+using StreamSchedule.Data.Models;
 using StreamSchedule.Extensions;
+using StreamSchedule.GraphQL;
+using System.Diagnostics;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
 using TwitchLib.Api.Services;
@@ -15,23 +16,20 @@ using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
-using StreamSchedule.GraphQL;
 
 namespace StreamSchedule;
 
 public static class Program
 {
-    
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-    
+
     private static void Main(string[] args)
     {
-        
         AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
         {
             logger.Fatal(e.ExceptionObject.ToString());
         };
-        
+
         if (EF.IsDesignTime)
         {
             new HostBuilder().Build().Run();
@@ -113,7 +111,7 @@ internal static class BotCore
     {
         DBContext = dbContext;
         Nlog = logger;
-        
+
         API = new()
         {
             Settings =
@@ -147,7 +145,7 @@ internal static class BotCore
     private static async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         long start = Stopwatch.GetTimestamp();
-        
+
         User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType, DBContext);
 
         if (e.ChatMessage.Channel.Equals("vedal987"))
@@ -178,7 +176,7 @@ internal static class BotCore
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
             try
             {
-                messageAsCodepoints = messageAsCodepoints[(e.ChatMessage.Message.Split(" ")[0].Codepoints().Count() + 1) ..];
+                messageAsCodepoints = messageAsCodepoints[(e.ChatMessage.Message.Split(" ")[0].Codepoints().Count() + 1)..];
             }
             catch (Exception ex)
             {
@@ -239,7 +237,7 @@ internal static class BotCore
             Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 
             if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
- 
+
             SendLongMessage(e.ChatMessage.Channel, response.reply ? e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id : null, response.ToString() + bypassSameMessage);
 
             _sameMessage = !_sameMessage;

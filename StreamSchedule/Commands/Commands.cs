@@ -74,8 +74,10 @@ internal static class Commands
     }
 
     internal static void AddNewTextCommand(TextCommand textCommand) => CurrentTextCommands.Add(textCommand);
+
     internal static void RemoveTextCommand(TextCommand textCommand) => CurrentTextCommands.Remove(textCommand);
 
     internal static void AddAlias(string alias) => _allCurrentAliasStrings.Add(alias);
+
     internal static void RemoveAlias(string alias) => _allCurrentAliasStrings.Remove(alias);
 }

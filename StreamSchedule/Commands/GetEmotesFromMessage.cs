@@ -57,9 +57,10 @@ internal class GetEmotesFromMessage : Command
         await Task.WhenAll(tasks);
         foreach (var task in tasks)
         {
-            if (task.Result is null) {channels.Add("Erm"); continue; }
+            if (task.Result is null) { channels.Add("Erm"); continue; }
 
-            if (task.Result.Owner is null) { channels.Add(Helpers.EmoteTypeToString(task.Result.Type)); continue; };
+            if (task.Result.Owner is null) { channels.Add(Helpers.EmoteTypeToString(task.Result.Type)); continue; }
+            ;
 
             string subTierOrBitPrice = task.Result.Type switch
             {

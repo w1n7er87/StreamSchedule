@@ -31,7 +31,7 @@ public static class Helpers
         {
             SubscriptionSummaryTier.TIER_1 => "T1",
             SubscriptionSummaryTier.TIER_2 => "T2",
-            SubscriptionSummaryTier.TIER_3 => "T3", 
+            SubscriptionSummaryTier.TIER_3 => "T3",
             _ => "",
         };
     }

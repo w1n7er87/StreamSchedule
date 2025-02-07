@@ -10,6 +10,7 @@ internal class SetSilent : Command
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
+
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         BotCore.Silent = !BotCore.Silent;

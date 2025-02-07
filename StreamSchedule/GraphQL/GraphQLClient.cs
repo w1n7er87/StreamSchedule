@@ -29,7 +29,7 @@ public class GraphQLClient
         GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestEmote(emoteID));
         return result.Data?.Emote ?? null;
     }
-    
+
     public async Task<List<string>> GetEmoteIDsFromMessage(string messageID)
     {
         GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestEmotesInMessage(messageID));

@@ -59,7 +59,7 @@ internal class ChannelEmoteMonitor : IJob
             }
 
             context.JobDetail.JobDataMap.Put("Emotes", emotes);
-    
+
             if (hadChanges)
             {
                 response.Append(PingList);
@@ -79,12 +79,12 @@ internal class ChannelEmoteMonitor : IJob
         List<string> addedNew = [];
         List<string> removedForever = [];
 
-        foreach(ChannelEmote addedEmote in added)
+        foreach (ChannelEmote addedEmote in added)
         {
             bool didChange = false;
-            foreach(ChannelEmote removedEmote in removed)
+            foreach (ChannelEmote removedEmote in removed)
             {
-                if(addedEmote.DeserializeChangedEmote(removedEmote, out string result))
+                if (addedEmote.DeserializeChangedEmote(removedEmote, out string result))
                 {
                     didChange = true;
                     removed.Remove(removedEmote);
@@ -116,7 +116,7 @@ internal class ChannelEmoteMonitor : IJob
         {
             "bitstier" => "B",
             "follower" => "F",
-            _ =>""
+            _ => ""
         }}{((e?.Format.Contains("animated") ?? false) ? "A" : "")})";
     }
 }

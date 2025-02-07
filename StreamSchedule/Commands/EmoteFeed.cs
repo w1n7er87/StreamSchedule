@@ -9,10 +9,10 @@ internal class EmoteFeed : Command
     internal override string Call => "emon";
     internal override Privileges MinPrivilege => Privileges.Trusted;
     internal override string Help => "add channel to monitor emote changes in my chat.";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Medium);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["rm", "channel"];
-    
+
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         CommandResult response = new();
@@ -24,10 +24,9 @@ internal class EmoteFeed : Command
         string targetUsername = message.sender.Username!;
 
         string targetOutputChannelName = message.sender.Privileges == Privileges.Uuh ? usedArs.TryGetValue("channel", out string? channelName) ? channelName.ToLower() : "w1n7er" : "w1n7er";
-        
+
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
-
             if (split[0].StartsWith('#'))
             {
                 idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
@@ -112,7 +111,7 @@ internal class EmoteFeed : Command
         {
             Scheduling.RemoveEmoteMonitor(emc);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             BotCore.Nlog.Warn("error while trying to remove emote monitor:", ex);
         }

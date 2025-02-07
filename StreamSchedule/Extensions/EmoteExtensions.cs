@@ -1,5 +1,4 @@
-﻿using System.Text;
-using TwitchLib.Api.Helix.Models.Chat.Emotes;
+﻿using TwitchLib.Api.Helix.Models.Chat.Emotes;
 
 namespace StreamSchedule.Extensions;
 

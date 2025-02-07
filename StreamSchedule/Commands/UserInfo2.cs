@@ -72,7 +72,6 @@ internal class UserInfo2 : Command
         }
 
         return all ? new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}") : response;
-
     }
 
     private static async Task<string[]> GetEmotes(string userID)
@@ -83,7 +82,7 @@ internal class UserInfo2 : Command
         if (emotes.Length <= 0) return result;
 
         var firstEmote = await BotCore.GQLClient.GetEmote(emotes[0].Id);
-        string prefix = firstEmote?.Token?[..(firstEmote.Token.Length - (firstEmote.Suffix?.Length ?? 0))] ?? "";
+        string prefix = firstEmote?.Token?[..^(firstEmote.Suffix?.Length ?? 0)] ?? "";
 
         result[1] = $"\"{prefix}\" {emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated)";
         result[0] = result[1];
@@ -107,10 +106,7 @@ internal class UserInfo2 : Command
         if (bits > 0)
         {
             List<Task<GraphQL.Data.Emote?>> tasks = [];
-            foreach (ChannelEmote e in bitEmotes)
-            {
-                tasks.Add(BotCore.GQLClient.GetEmote(e.Id));
-            }
+            tasks.AddRange(bitEmotes.Select(e => BotCore.GQLClient.GetEmote(e.Id)));
             await Task.WhenAll(tasks);
 
             List<string> bitemotes = [.. tasks.OrderBy(t => t.Result?.BitsBadgeTierSummary?.Threshold ?? 0).Select(emote => $"{emote.Result?.Token ?? ""}:{emote.Result?.BitsBadgeTierSummary?.Threshold ?? 0}")];
@@ -134,14 +130,14 @@ internal class UserInfo2 : Command
         string? creatorColor = user.PrimaryColorHex;
         if (color is not null)
         {
-            color = detailedInfo? $"{color} {await ColorInfo.GetColor(color)}" : color;
+            color = detailedInfo ? $"{color} {await ColorInfo.GetColor(color)}" : color;
         }
         else
         {
             color = "color not set";
         }
 
-        if(creatorColor is not null)
+        if (creatorColor is not null)
         {
             creatorColor = detailedInfo ? $"{creatorColor} {await ColorInfo.GetColor(creatorColor)}" : creatorColor;
         }
