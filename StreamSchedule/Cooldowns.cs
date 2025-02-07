@@ -6,6 +6,7 @@ internal enum Cooldowns
     Medium = 3,
     Long = 5,
     Minute = 60,
+    ThreeMinutes = 180,
     FiveMinutes = 300,
     TenMinutes = 600,
     Hour = 3600,
