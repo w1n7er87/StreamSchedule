@@ -36,4 +36,28 @@ public class GraphQLClient
         if (result.Data?.Message?.Content?.Fragments is null) return [];
         return [.. result.Data.Message.Content.Fragments.Where(x => x?.Content is not null).Select(e => e!.Content!.ID)];
     }
+
+    public async Task<Data.Stream?> GetStream(string userID)
+    {
+        GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestStream(userID));
+        return result.Data?.Stream;
+    }
+
+    public async Task<Broadcast?> GetPastBroadcast(string userID)
+    {
+        GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestPastBroadcast(userID));
+        return result.Data?.User?.LastBroadcast;
+    }
+
+    public async Task<User?> GetUserByID(string userID)
+    {
+        GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestUserByID(userID));
+        return result.Data?.User;
+    }
+
+    public async Task<(User?, bool)> GetUserByLoginAndUsernameAvailability(string userLogin)
+    {
+        GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestUserByLogin(userLogin));
+        return (result.Data?.User, result.Data?.IsUsernameAvailable ?? false);
+    }
 }

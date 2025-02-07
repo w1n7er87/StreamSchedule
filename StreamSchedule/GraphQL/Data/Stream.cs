@@ -2,6 +2,7 @@
 
 public class Stream
 {
+    public Game? Game { get; set; }
     public float? AverageFPS { get; set; }
     public float? Bitrate { get; set; }
     public int? ViewersCount { get; set; }

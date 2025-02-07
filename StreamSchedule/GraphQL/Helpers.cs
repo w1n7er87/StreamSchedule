@@ -35,4 +35,20 @@ public static class Helpers
             _ => "",
         };
     }
+
+    public static string UserRolesIsPartnerOrAffiliate(UserRoles? roles)
+    {
+        return (roles?.IsAffiliate ?? false, roles?.IsPartner ?? false) switch
+        {
+            (true, _) => "affiliate",
+            (_, true) => "partner",
+            _ => ""
+        };
+    }
+
+    public static string UserRolesIsStaff(UserRoles? roles)
+    {
+        if ((roles?.IsStaff ?? false) || (roles?.IsGlobalMod ?? false) || (roles?.IsSiteAdmin ?? false)) return "staff";
+        return "";
+    }
 }
