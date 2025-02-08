@@ -10,13 +10,14 @@ public static class ChannelEmoteExtensions
 
     public static bool DeserializeChangedEmote(this ChannelEmote emote, ChannelEmote other, out string deserializedAddedEmoteWithChangesWithRespectToTheOldOne)
     {
-        if (emote.Id.Equals(other.Id))
+        if (emote.Name.Equals(other.Id))
         {
+            string image = emote.Images.Url1X.Equals(other.Images.Url1X) ? "" : " 🖼️ => 🖼️ ";
             string name = emote.Name.Equals(other.Name) ? emote.Name : $" {other.Name} => {emote.Name}";
             string tier = emote.Tier.Equals(other.Tier) ? TierToString(emote.Tier) : $"{TierToString(other.Tier)} => {TierToString(emote.Tier)}";
             string type = emote.EmoteType.Equals(other.EmoteType) ? TypeToString(emote.EmoteType) : $"{TypeToString(other.EmoteType)} => {TypeToString(emote.EmoteType)}";
             string format = FormatToString(emote.Format, other.Format);
-            deserializedAddedEmoteWithChangesWithRespectToTheOldOne = $"{name} ({tier}{type}{format})";
+            deserializedAddedEmoteWithChangesWithRespectToTheOldOne = $"{emote.Name} ({image}{tier}{type}{format})";
             return true;
         }
         else

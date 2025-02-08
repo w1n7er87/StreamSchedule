@@ -10,7 +10,7 @@ internal class UserInfo2 : Command
     internal override string Call => "whois2";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "user info: [username]";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n"];
 
@@ -161,7 +161,7 @@ internal class UserInfo2 : Command
             else
             {
                 TimeSpan sincePastStream = DateTime.Now - (user.LastBroadcast.StartedAt ?? DateTime.Now);
-                a = $"offline, last stream: {user.LastBroadcast.Game?.DisplayName ?? ""} - \" {user.LastBroadcast.Title} \" ({(sincePastStream.Days != 0 ? sincePastStream.Days + "d " : "")}{(sincePastStream.Hours != 0 ? sincePastStream.Hours + "h " : "")}{sincePastStream:m'm 's's '} ago ).";
+                a = $"offline, last stream: {user.LastBroadcast.Game?.DisplayName ?? ""} - \" {user.LastBroadcast.Title} \" ({(sincePastStream.Days != 0 ? sincePastStream.Days + "d " : "")}{(sincePastStream.Hours != 0 ? sincePastStream.Hours + "h " : "")}{sincePastStream:m'm 's's '} ago).";
             }
             return ["offline", a];
         }

@@ -38,7 +38,7 @@ internal class ChannelEmoteMonitor : IJob
 
             if (removed.Any() && added.Any())
             {
-                response.Append(DiffChanges(removed.Select(x => JsonConvert.DeserializeObject<ChannelEmote>(x)).ToList()!, added.Select(x => JsonConvert.DeserializeObject<ChannelEmote>(x)).ToList()!));
+                response.Append(DiffChanges(added.Select(x => JsonConvert.DeserializeObject<ChannelEmote>(x)).ToList()!, removed.Select(x => JsonConvert.DeserializeObject<ChannelEmote>(x)).ToList()!));
                 response.Append(PingList);
                 BotCore.SendLongMessage(OutputChannelName, null, response.ToString());
                 BotCore.Nlog.Info(response);
@@ -49,13 +49,13 @@ internal class ChannelEmoteMonitor : IJob
             if (removed.Any())
             {
                 hadChanges = true;
-                response.Append(" emotes removed: ").Append(string.Join(" ", DeserializeEmotes(removed)));
+                response.Append(" emotes removed 📤 : ").Append(string.Join(" ", DeserializeEmotes(removed)));
             }
 
             if (added.Any())
             {
                 hadChanges = true;
-                response.Append(" emotes added: ").Append(string.Join(" ", DeserializeEmotes(added)));
+                response.Append(" emotes added 📥 : ").Append(string.Join(" ", DeserializeEmotes(added)));
             }
 
             context.JobDetail.JobDataMap.Put("Emotes", emotes);
@@ -96,7 +96,7 @@ internal class ChannelEmoteMonitor : IJob
             addedNew.Add(EmoteToString(addedEmote));
         }
         removedForever = [.. removed.Select(e => EmoteToString(e))];
-        return $" emotes removed: {string.Join(" ", removedForever)} added: {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $"changed: {string.Join(" ", changed)}" : "");
+        return $" emotes removed 📤 : {string.Join(" ", removedForever)} added 📥 : {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $"changed: {string.Join(" ", changed)}" : "");
     }
 
     private static IEnumerable<string> DeserializeEmotes(IEnumerable<string> serializedEmotes)
