@@ -4,14 +4,16 @@ namespace StreamSchedule;
 
 internal static class ColorInfo
 {
-    private class Name
+    internal class Name
     {
-        internal string Value { get; set; }
+        [JsonProperty("value")]
+        internal string? Value { get; set; }
     }
 
-    private class ColorsResponse
+    internal class ColorsResponse
     {
-        internal Name Name { get; set; }
+        [JsonProperty("name")]
+        internal Name? Name { get; set; }
     }
 
     public static async Task<string> GetColor(string colorHex)
@@ -30,7 +32,7 @@ internal static class ColorInfo
             var response = await client.GetStringAsync($"https://www.thecolorapi.com/id?hex={colorHex}&format=json");
             var cc = JsonConvert.DeserializeObject<ColorsResponse>(response);
 
-            return cc?.Name.Value + rgb;
+            return cc?.Name?.Value + rgb;
         }
         catch
         {
