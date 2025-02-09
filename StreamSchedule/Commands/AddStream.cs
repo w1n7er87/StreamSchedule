@@ -31,26 +31,18 @@ internal class AddStream : Command
             StreamTitle = message.content[(split[0].Length + 1)..]
         };
 
-        try
+        Data.Models.Stream? s = BotCore.DBContext.Streams.FirstOrDefault(x => x.StreamDate == stream.StreamDate);
+        if (s == null)
         {
-            Data.Models.Stream? s = BotCore.DBContext.Streams.FirstOrDefault(x => x.StreamDate == stream.StreamDate);
-            if (s == null)
-            {
-                BotCore.DBContext.Streams.Add(stream);
-            }
-            else
-            {
-                BotCore.DBContext.Streams.Update(s);
-                s.StreamTime = stream.StreamTime;
-                s.StreamTitle = stream.StreamTitle;
-            }
-            BotCore.DBContext.SaveChanges();
+            BotCore.DBContext.Streams.Add(stream);
         }
-        catch (Exception ex)
+        else
         {
-            BotCore.Nlog.Error(ex.ToString());
-            return Task.FromResult(Utils.Responses.Fail);
+            BotCore.DBContext.Streams.Update(s);
+            s.StreamTime = stream.StreamTime;
+            s.StreamTitle = stream.StreamTitle;
         }
+        BotCore.DBContext.SaveChanges();
 
         return Task.FromResult(Utils.Responses.Ok);
     }

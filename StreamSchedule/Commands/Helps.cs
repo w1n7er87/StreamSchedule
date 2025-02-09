@@ -36,7 +36,7 @@ internal class Helps : Command
             {
                 args = $" args: {string.Join(", ", c.Arguments)}";
             }
-            string cd = $" cd {c.Cooldown.TotalSeconds}s";
+            string cd = $" cooldown: {c.Cooldown.TotalSeconds}s";
 
             return Task.FromResult(new CommandResult(aliases + c.Help + args + cd));
         }

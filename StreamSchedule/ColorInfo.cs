@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.Text.Json.Serialization;
 
 namespace StreamSchedule;
 
@@ -7,14 +6,12 @@ internal static class ColorInfo
 {
     private class Name
     {
-        [JsonPropertyName("value")]
-        public string Value { get; set; }
+        internal string Value { get; set; }
     }
 
     private class ColorsResponse
     {
-        [JsonPropertyName("name")]
-        public Name Name { get; set; }
+        internal Name Name { get; set; }
     }
 
     public static async Task<string> GetColor(string colorHex)

@@ -13,7 +13,7 @@ internal class Buh : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        int a = new Random().Next(101);
+        int a = new Random().Next(100);
         return Task.FromResult(new CommandResult(a == 69 ? "buhblunt " : "buh ", false));
     }
 }

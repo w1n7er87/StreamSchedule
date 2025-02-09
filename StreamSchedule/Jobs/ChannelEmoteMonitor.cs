@@ -93,30 +93,14 @@ internal class ChannelEmoteMonitor : IJob
                 }
             }
             if (didChange) continue;
-            addedNew.Add(EmoteToString(addedEmote));
+            addedNew.Add(addedEmote.EmoteToString());
         }
-        removedForever = [.. removed.Select(e => EmoteToString(e))];
-        return $" emotes removed 📤 : {string.Join(" ", removedForever)} added 📥 : {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $"changed: {string.Join(" ", changed)}" : "");
+        removedForever = [.. removed.Select(e => e.EmoteToString())];
+        return $" emotes removed 📤 : {string.Join(" ", removedForever)} added 📥 : {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $"changed ♻️ : {string.Join(" ", changed)}" : "");
     }
 
     private static IEnumerable<string> DeserializeEmotes(IEnumerable<string> serializedEmotes)
     {
-        return serializedEmotes.Select(x => EmoteToString(JsonConvert.DeserializeObject<ChannelEmote>(x)));
-    }
-
-    private static string EmoteToString(ChannelEmote? e)
-    {
-        return $"{e?.Name} ({e?.Tier switch
-        {
-            "1000" => "T1",
-            "2000" => "T2",
-            "3000" => "T3",
-            _ => ""
-        }}{e?.EmoteType switch
-        {
-            "bitstier" => "B",
-            "follower" => "F",
-            _ => ""
-        }}{((e?.Format.Contains("animated") ?? false) ? "A" : "")})";
+        return serializedEmotes.Select(x => JsonConvert.DeserializeObject<ChannelEmote>(x).EmoteToString());
     }
 }

@@ -83,7 +83,7 @@ internal static class Scheduling
 
             triggers.Add(jobTrigger);
             jobs[jobInstance] = triggers;
-            BotCore.Nlog.Info($"created job for emote monitor @{channel.ChannelName}");
+            BotCore.Nlog.Info($"created job for emote monitor {channel.ChannelName}");
         }
         await _scheduler.ScheduleJobs(jobs, true);
         BotCore.Nlog.Info("started emote monitor jobs");

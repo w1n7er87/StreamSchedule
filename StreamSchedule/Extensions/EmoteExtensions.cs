@@ -10,10 +10,9 @@ public static class ChannelEmoteExtensions
 
     public static bool DeserializeChangedEmote(this ChannelEmote emote, ChannelEmote other, out string deserializedAddedEmoteWithChangesWithRespectToTheOldOne)
     {
-        if (emote.Name.Equals(other.Id))
+        if (emote.Name.Equals(other.Name))
         {
             string image = emote.Images.Url1X.Equals(other.Images.Url1X) ? "" : " 🖼️ => 🖼️ ";
-            string name = emote.Name.Equals(other.Name) ? emote.Name : $" {other.Name} => {emote.Name}";
             string tier = emote.Tier.Equals(other.Tier) ? TierToString(emote.Tier) : $"{TierToString(other.Tier)} => {TierToString(emote.Tier)}";
             string type = emote.EmoteType.Equals(other.EmoteType) ? TypeToString(emote.EmoteType) : $"{TypeToString(other.EmoteType)} => {TypeToString(emote.EmoteType)}";
             string format = FormatToString(emote.Format, other.Format);
@@ -54,5 +53,21 @@ public static class ChannelEmoteExtensions
             string uuh = (a == _a ^ b == _a) ? $"{a} => {b}" : b.ToString();
             return uuh;
         }
+    }
+
+    public static string EmoteToString(this ChannelEmote? e)
+    {
+        return $"{e?.Name} ({e?.Tier switch
+        {
+            "1000" => "T1",
+            "2000" => "T2",
+            "3000" => "T3",
+            _ => ""
+        }}{e?.EmoteType switch
+        {
+            "bitstier" => "B",
+            "follower" => "F",
+            _ => ""
+        }}{((e?.Format.Contains("animated") ?? false) ? "A" : "")})";
     }
 }

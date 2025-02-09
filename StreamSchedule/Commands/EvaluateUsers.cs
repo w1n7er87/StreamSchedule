@@ -24,30 +24,23 @@ internal class EvaluateUsers : Command
 
         CommandResult result = new();
 
-        try
+        if (string.IsNullOrWhiteSpace(split[0]))
         {
-            if (string.IsNullOrWhiteSpace(split[0])) // nothing provided - run on all with default cutoff
-            {
-                result += (await UpdateAll(scoreCutoff)) + $" user(s) updated ({scoreCutoff})";
-            }
-            else // had something? assume it's a username
-            {
-                string targetUsername = split[0];
-
-                result += await TryUpdateSingle(targetUsername, scoreCutoff) ? $"{targetUsername}'s privileges have been updated ({scoreCutoff})" : $"{targetUsername}'s privileges nave not been updated ({scoreCutoff})";
-            }
-            return result;
+            (int, int) promotedDemotedCounts = await UpdateAll(scoreCutoff);
+            result += $"{promotedDemotedCounts.Item1} users promoted, {promotedDemotedCounts.Item2} users demoted ({scoreCutoff})";
         }
-        catch (Exception ex)
+        else
         {
-            BotCore.Nlog.Error(ex.ToString());
-            return Utils.Responses.Surprise;
+            string targetUsername = split[0];
+            result += await TryUpdateSingle(targetUsername, scoreCutoff) ? $"{targetUsername}'s privileges have been updated ({scoreCutoff})" : $"{targetUsername}'s privileges nave not been updated ({scoreCutoff})";
         }
+        return result;
     }
 
-    private static async Task<int> UpdateAll(float cutoff)
+    private static async Task<(int, int)> UpdateAll(float cutoff)
     {
-        int count = 0;
+        int promoted = 0;
+        int demoted = 0;
         var users = BotCore.DBContext.Users.AsAsyncEnumerable();
         await foreach (var user in users)
         {
@@ -59,16 +52,16 @@ internal class EvaluateUsers : Command
             {
                 case < Privileges.Trusted when score >= cutoff:
                     user.Privileges = Privileges.Trusted;
-                    count++;
+                    promoted++;
                     continue;
                 case Privileges.Trusted when score < cutoff:
                     user.Privileges = Privileges.None;
-                    count++;
+                    demoted++;
                     break;
             }
         }
         await BotCore.DBContext.SaveChangesAsync();
-        return count;
+        return (promoted, demoted);
     }
 
     private static async Task<bool> TryUpdateSingle(string username, float cutoff)

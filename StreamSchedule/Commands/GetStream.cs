@@ -10,7 +10,7 @@ internal class GetStream : Command
     internal override string Help => "time until next stream on the schedule.";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["h", "min", "s", "mic", "ms", "ns"];
+    internal override string[] Arguments => ["h", "min", "s", "mic", "ms", "ns", "d", "y"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -21,15 +21,14 @@ internal class GetStream : Command
             .OrderBy(x => new DateTime(x.StreamDate, x.StreamTime))
             .FirstOrDefault(x => new DateTime(x.StreamDate, x.StreamTime) >= DateTime.UtcNow);
 
-        if (next is null)
-        {
-            return Task.FromResult(new CommandResult("There are no more streams scheduled DinkDonk "));
-        }
+        if (next is null) return Task.FromResult(new CommandResult("There are no more streams scheduled DinkDonk "));
 
         DateTime fullDate = new DateTime(next.StreamDate, next.StreamTime).ToLocalTime();
         TimeSpan span = fullDate - DateTime.Now;
         string time = $"{(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}";
 
+        if (usedArgs.TryGetValue("y", out _)) time = (span.TotalDays / 365.0).ToString(CultureInfo.InvariantCulture) + " years";
+        if (usedArgs.TryGetValue("d", out _)) time = span.TotalDays.ToString(CultureInfo.InvariantCulture) + " days";
         if (usedArgs.TryGetValue("h", out _)) time = span.TotalHours.ToString(CultureInfo.InvariantCulture) + " hours";
         if (usedArgs.TryGetValue("min", out _)) time = span.TotalMinutes.ToString(CultureInfo.InvariantCulture) + " minutes";
         if (usedArgs.TryGetValue("s", out _)) time = span.TotalSeconds.ToString(CultureInfo.InvariantCulture) + " seconds";

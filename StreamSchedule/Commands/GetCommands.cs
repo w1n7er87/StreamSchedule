@@ -1,4 +1,5 @@
 ﻿using StreamSchedule.Data;
+using System.Text;
 
 namespace StreamSchedule.Commands;
 
@@ -15,24 +16,15 @@ internal class GetCommands : Command
     {
         _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 
-        string response = "";
+        StringBuilder response = new();
         if (usedArgs.TryGetValue("q", out _))
         {
-            foreach (var c in BotCore.DBContext.TextCommands)
-            {
-                if (c.Privileges <= message.sender.Privileges)
-                {
-                    response += c.Name + ", ";
-                }
-            }
+            response.Append(string.Join(", ", BotCore.DBContext.TextCommands.Where(c => c.Privileges <= message.sender.Privileges).Select(c => c.Name)));
         }
         else
         {
-            foreach (var c in Commands.CurrentCommands)
-            {
-                if (c.MinPrivilege <= message.sender.Privileges) { response += c.Call + ", "; }
-            }
+            response.Append(string.Join(", ", Commands.CurrentCommands.Where(c => c.MinPrivilege <= message.sender.Privileges).Select(c => c.Call)));
         }
-        return Task.FromResult(new CommandResult(response[..^2] + ". "));
+        return Task.FromResult(new CommandResult(response + ". "));
     }
 }

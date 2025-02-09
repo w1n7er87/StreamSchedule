@@ -128,24 +128,17 @@ internal class UserInfo2 : Command
     {
         string? color = user.ChatColor;
         string? creatorColor = user.PrimaryColorHex;
+
         if (color is not null)
-        {
             color = detailedInfo ? $"{color} {await ColorInfo.GetColor(color)}" : color;
-        }
         else
-        {
             color = "color not set";
-        }
-
+        
         if (creatorColor is not null)
-        {
-            creatorColor = detailedInfo ? $"{creatorColor} {await ColorInfo.GetColor(creatorColor)}" : creatorColor;
-        }
+            creatorColor = detailedInfo ? $"#{creatorColor} {await ColorInfo.GetColor(creatorColor)}" : $"#{creatorColor}";
         else
-        {
             creatorColor = "accent color not set";
-        }
-
+        
         return $"chat color: {color} accent color: {creatorColor}";
     }
 

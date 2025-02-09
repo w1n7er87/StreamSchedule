@@ -22,76 +22,65 @@ internal class UserInfo : Command
         bool idProvided = false;
         string targetUsername = message.sender.Username!;
 
-        if (!string.IsNullOrWhiteSpace(split[0])) // do i have anything provided
+        if (!string.IsNullOrWhiteSpace(split[0]))
         {
-            if (split[0].StartsWith('#'))
-            {
-                idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber); // if i have numbers with prefix - treat them as userid
-            }
+            if (split[0].StartsWith('#')) idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
 
-            if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); } // if there was no prefix or conversion failed, treat it as a username
+            if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
         }
 
-        try
+        var a = idProvided ? 
+            await BotCore.API.Helix.Users.GetUsersAsync(ids: [userIDNumber.ToString()]) :
+            await BotCore.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
+
+        TwitchLib.Api.Helix.Models.Users.GetUsers.User? u = a.Users.FirstOrDefault();
+
+        if (u is null ) return Utils.Responses.Fail + " no user with such name/id";
+
+        string generalInfo = GetGeneralInfo(u);
+
+        if (usedArgs.Count == 0) { return generalInfo; }
+
+        string color = "";
+        string followers = "";
+        string[] emotes = [];
+        string[] liveInfo = [];
+
+        bool all = usedArgs.TryGetValue("a", out _);
+
+        if (usedArgs.TryGetValue("g", out _) || all)
+        { response += generalInfo + " "; }
+
+        if (usedArgs.TryGetValue("n", out _))
         {
-            var a = idProvided ? await BotCore.API.Helix.Users.GetUsersAsync(ids: [userIDNumber.ToString()]) : await BotCore.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
-            TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users.First();
-
-            string generalInfo = GetGeneralInfo(u);
-
-            if (usedArgs.Count == 0) { return generalInfo; }
-
-            string color = "";
-            string followers = "";
-            string[] emotes = [];
-            string[] liveInfo = [];
-
-            bool all = usedArgs.TryGetValue("a", out _);
-
-            if (usedArgs.TryGetValue("g", out _) || all)
-            { response += generalInfo + " "; }
-
-            if (usedArgs.TryGetValue("n", out _))
-            {
-                response += PreviousUsernames(u.Login) + " ";
-            }
-
-            if (usedArgs.TryGetValue("c", out _) || all)
-            {
-                color = await GetColor(u.Id, detailedInfo: !all);
-                response += color + " ";
-            }
-
-            if (usedArgs.TryGetValue("f", out _) || all)
-            {
-                followers = await GetFollowers(u.Id) + " followers";
-                response += followers + " ";
-            }
-
-            if (usedArgs.TryGetValue("e", out _) || all)
-            {
-                emotes = await GetEmotes(u.Id);
-                response += emotes[1] + " ";
-            }
-
-            if (usedArgs.TryGetValue("s", out _) || all)
-            {
-                liveInfo = await GetLiveStatus(u.Id);
-                response += (message.sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
-            }
-
-            return all ? new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}") : response;
+            response += PreviousUsernames(u.Login) + " ";
         }
-        catch (Exception ex)
+
+        if (usedArgs.TryGetValue("c", out _) || all)
         {
-            if (ex is InvalidOperationException)
-            {
-                return Utils.Responses.Fail + " no user with such name/id";
-            }
-
-            BotCore.Nlog.Error(ex.ToString());
-            return Utils.Responses.Surprise;
+            color = await GetColor(u.Id, detailedInfo: !all);
+            response += color + " ";
         }
+
+        if (usedArgs.TryGetValue("f", out _) || all)
+        {
+            followers = await GetFollowers(u.Id) + " followers";
+            response += followers + " ";
+        }
+
+        if (usedArgs.TryGetValue("e", out _) || all)
+        {
+            emotes = await GetEmotes(u.Id);
+            response += emotes[1] + " ";
+        }
+
+        if (usedArgs.TryGetValue("s", out _) || all)
+        {
+            liveInfo = await GetLiveStatus(u.Id);
+            response += (message.sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
+        }
+
+        return all ? new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}") : response;
     }
 
     private static async Task<string[]> GetEmotes(string userID)
@@ -139,8 +128,7 @@ internal class UserInfo : Command
             string T3 = $"{(t3 == 0 ? "" : $"T3: {t3}")}{(t3a == 0 ? "" : $"({t3a})")}";
 
             int bits = emotes.Count(e => e.EmoteType == "bitstier");
-            int bitsa = emotes.Count(e => e.EmoteType == "bitstier" && e.Format.Contains("animated"));
-            string B = $"{(bits == 0 ? "" : $"Bits: {bits}")}{(bitsa == 0 ? "" : $"({bitsa})")}";
+            string B = $"{(bits == 0 ? "" : $"Bits: {bits}")}";
 
             int follow = emotes.Count(e => e.EmoteType == "follower");
             string F = $"{(follow == 0 ? "" : $"Follow: {follow}")}";

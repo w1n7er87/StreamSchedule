@@ -43,6 +43,6 @@ internal class Schedule : Command
         }
 
         sb.Append($"(UTC{currentOrLatestTZ})");
-        return Task.FromResult(new CommandResult(sb.ToString()));
+        return Task.FromResult(new CommandResult(sb));
     }
 }

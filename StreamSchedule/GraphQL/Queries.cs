@@ -59,38 +59,6 @@ internal class Queries
         }
         """);
 
-    internal static GraphQLRequest RequestStream(string userID) => new GraphQLRequest(_streamQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetStream");
-
-    private static readonly GraphQLQuery _streamQuery = new GraphQLQuery("""
-        query GetStream($id: ID!, $type: UserLookupType) {
-            user(id: $id, lookupType: $type) {
-                stream {
-                    averageFPS
-                    bitrate
-                    viewersCount
-                    clipCount
-                    createdAt
-                }
-            }
-        }
-        """);
-
-    internal static GraphQLRequest RequestPastBroadcast(string userID) => new GraphQLRequest(_pastBroadcastQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetPastBroadcast");
-
-    private static readonly GraphQLQuery _pastBroadcastQuery = new GraphQLQuery("""
-        query GetPastBroadcast($id: ID!, $type: UserLookupType) {
-            user(id: $id, lookupType: $type) {
-                lastBroadcast {
-                    game {
-                        displayName
-                    }
-                    title
-                    startedAt
-                }
-            }
-        }
-        """);
-
     internal static GraphQLRequest RequestUserByID(string userID) => new GraphQLRequest(_userByIDQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetUser");
 
     private static readonly GraphQLQuery _userByIDQuery = new GraphQLQuery("""
