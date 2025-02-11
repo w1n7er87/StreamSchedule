@@ -14,12 +14,20 @@ internal class Lurkers : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        string? target = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs).Split(' ')[0];
+
+        if (!string.IsNullOrWhiteSpace(target) && target.StartsWith('@') && message.sender.Privileges >= Privileges.Trusted)
+        {
+            target = target.Replace("@", "");
+            (int, Chatter?[]?) c = await BotCore.GQLClient.GetChattersCount(message.roomID, target);
+            return new($"{c.Item1} lurkers in {target}'s chat uuh ");
+        }
+
         (int, Chatter?[]?) count = await BotCore.GQLClient.GetChattersCount(message.roomID);
         string chatter = "";
         if (usedArgs.TryGetValue("p", out _))
         {
-            if (count.Item2 is not null && count.Item2.Length != 0) chatter = $", and @{count.Item2[Random.Shared.Next(count.Item2.Length)]?.Login ?? "StreamSchedule"} is one of them";
+            if (count.Item2 is not null && count.Item2.Length != 0) chatter = $", and @{count.Item2[Random.Shared.Next(count.Item2.Length)]?.Login ?? BotCore.Client.TwitchUsername} is one of them";
         }
         return new($"{count.Item1} lurkers{chatter} uuh");
     }

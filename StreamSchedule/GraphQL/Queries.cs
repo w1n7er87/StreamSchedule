@@ -5,11 +5,28 @@ namespace StreamSchedule.GraphQL;
 
 internal class Queries
 {
-    internal static GraphQLRequest RequestChattersCount(string userID) => new GraphQLRequest(_chattersCountQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetChattersCount");
+    internal static GraphQLRequest RequestChattersByID(string userID) => new GraphQLRequest(_chattersByIDQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetChatters");
 
-    private static readonly GraphQLQuery _chattersCountQuery = new GraphQLQuery("""
-        query GetChattersCount($id: ID, $login: String, $type: UserLookupType) {
-        	user(id: $id, login: $login, lookupType: $type) {
+    private static readonly GraphQLQuery _chattersByIDQuery = new GraphQLQuery("""
+        query GetChatters($id: ID, $type: UserLookupType) {
+        	user(id: $id, lookupType: $type) {
+        		channel {
+        			chatters {
+        				count
+                        viewers {
+                            login
+                        }
+        			}
+        		}
+        	}
+        }
+        """);
+
+    internal static GraphQLRequest RequestChattersByLogin(string userLogin) => new GraphQLRequest(_chattersByLoginQuery, new { login = userLogin, type = Enum.GetName(UserLookupType.ALL) }, "GetChatters");
+
+    private static readonly GraphQLQuery _chattersByLoginQuery = new GraphQLQuery("""
+        query GetChatters($login: String, $type: UserLookupType) {
+        	user(login: $login, lookupType: $type) {
         		channel {
         			chatters {
         				count

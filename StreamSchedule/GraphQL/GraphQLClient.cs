@@ -18,9 +18,11 @@ public class GraphQLClient
         _client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer(), _httpClient);
     }
 
-    public async Task<(int, Chatter?[]?)> GetChattersCount(string userID)
+    public async Task<(int, Chatter?[]?)> GetChattersCount(string userID, string? userLogin = null)
     {
-        GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersCount(userID));
+        GraphQLResponse<QueryResponse?> result = (userLogin is null) ?
+            await _client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersByID(userID)) :
+            await _client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersByLogin(userLogin));
         return (result.Data?.User?.Channel?.Chatters?.Count ?? 0, result.Data?.User?.Channel?.Chatters?.Viewers ?? []);
     }
 
