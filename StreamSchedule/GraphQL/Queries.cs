@@ -39,6 +39,19 @@ internal class Queries
         }
         """);
 
+    internal static GraphQLRequest RequestChatSettings(string userID) => new GraphQLRequest(_userRulesQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetRules");
+
+    private static readonly GraphQLQuery _userRulesQuery = new GraphQLQuery("""
+        query GetRules($id: ID, $type: UserLookupType) {
+            user(id:$id, lookupType: $type) {
+                chatSettings{
+                    rules
+                    blockLinks
+                }
+            }
+        }
+        """);
+
     internal static GraphQLRequest RequestEmote(string emoteID) => new GraphQLRequest(_emoteQuery, new { id = emoteID }, "GetEmote");
 
     private static readonly GraphQLQuery _emoteQuery = new GraphQLQuery("""
