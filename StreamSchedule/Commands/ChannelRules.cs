@@ -22,10 +22,10 @@ class ChannelRules : Command
         ChatSettings? settings = await BotCore.GQLClient.GetChatSettings(message.roomID);
         string links = settings?.BlockLinks switch
         {
-            true => "no links ",
+            true => "links are not allowed, ",
             _ => ""
         };
 
-        return new($"{links}{string.Join(", ", settings?.Rules ?? ["no channel rules (or failed to fetch idk."])}");
+        return new($"{links}chat rules: {string.Join(", ", settings?.Rules ?? ["no channel rules set (or failed to fetch idk."])}");
     }
 }
