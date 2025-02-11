@@ -144,17 +144,24 @@ internal class UserInfo2 : Command
 
     private static string[] GetLiveStatus(User user)
     {
+        string hypeTrain = "";
+        if(user.Channel?.HypeTrain?.Execution?.IsActive ?? false)
+        {
+            float progress = MathF.Round(((float)(user.Channel.HypeTrain.Execution.Progress?.Progression ?? 1.0f) / (user.Channel.HypeTrain.Execution.Progress?.Goal ?? 1.0f)) * 100.0f, 4);
+            hypeTrain = $"lvl {user.Channel.HypeTrain.Execution.Progress?.Level?.Value ?? 0} {Helpers.HypeTrainDifficultyToString(user.Channel.HypeTrain.Execution.Config?.Difficulty)} hype train - {progress}%";
+        }
+
         if (user.Stream is null)
         {
             string a;
             if (user.LastBroadcast?.ID is null)
             {
-                a = "Never streamed before";
+                a = "Never streamed before" + hypeTrain;
             }
             else
             {
                 TimeSpan sincePastStream = DateTime.Now - (user.LastBroadcast.StartedAt ?? DateTime.Now);
-                a = $"offline, last stream: {user.LastBroadcast.Game?.DisplayName ?? ""} - \" {user.LastBroadcast.Title} \" ({(sincePastStream.Days != 0 ? sincePastStream.Days + "d " : "")}{(sincePastStream.Hours != 0 ? sincePastStream.Hours + "h " : "")}{sincePastStream:m'm 's's '} ago).";
+                a = $"offline, last stream: {user.LastBroadcast.Game?.DisplayName ?? ""} - \" {user.LastBroadcast.Title} \" ({(sincePastStream.Days != 0 ? sincePastStream.Days + "d " : "")}{(sincePastStream.Hours != 0 ? sincePastStream.Hours + "h " : "")}{sincePastStream:m'm 's's '} ago). {hypeTrain}";
             }
             return ["offline", a];
         }
@@ -165,9 +172,9 @@ internal class UserInfo2 : Command
         string viewcount = user.Stream.ViewersCount?.ToString() ?? "";
         string game = user.Stream.Game?.DisplayName ?? "";
         string title = user.BroadcastSettings?.Title ?? "";
-        string clips = user.Stream.ClipCount > 0 ? $"has {user.Stream.ClipCount} clips so far" : "";
+        string clips = user.Stream.ClipCount > 0 ? $"{user.Stream.ClipCount} clips" : "";
         string streamStatus = $"({user.Stream.AverageFPS}/{user.Stream.Bitrate}Kbps)";
-        return [$"live{mature} {game}", $"Now live{mature} ({duration}) : {game} - \" {title} \" for {viewcount} viewers.{mature} {clips} {streamStatus}"];
+        return [$"live{mature} {game}", $"live{mature} ({duration}) : {game} - \" {title} \" for {viewcount} viewers.{mature} {streamStatus} {clips} {hypeTrain}"];
     }
 
     private static string GetGeneralInfo(User user)

@@ -98,10 +98,10 @@ internal class Queries
                 id
                 chatColor
                 primaryColorHex
-                followers{
+                followers {
                     totalCount
                 }
-                roles{
+                roles {
                     isAffiliate
                     isPartner
                     isSiteAdmin
@@ -110,6 +110,21 @@ internal class Queries
                 }
                 channel {
                     founderBadgeAvailability
+                    hypeTrain {
+                        execution {
+                            isActive
+                            config {
+                                difficulty
+                            }
+                            progress {
+                                level {
+                                    value
+                                }
+                                goal
+                                progression
+                            }
+                        }
+                    }
                 }
                 lastBroadcast {
                     id
@@ -148,10 +163,10 @@ internal class Queries
                 id
                 chatColor
                 primaryColorHex
-                followers{
+                followers {
                     totalCount
                 }
-                roles{
+                roles {
                     isAffiliate
                     isPartner
                     isSiteAdmin
@@ -160,6 +175,21 @@ internal class Queries
                 }
                 channel {
                     founderBadgeAvailability
+                    hypeTrain {
+                        execution {
+                            isActive
+                            config {
+                                difficulty
+                            }
+                            progress {
+                                level {
+                                    value
+                                }
+                                goal
+                                progression
+                            }
+                        }
+                    }
                 }
                 lastBroadcast {
                     id
