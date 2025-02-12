@@ -91,6 +91,7 @@ internal static class BotCore
 
     private static int _dbSaveCounter = 0;
     private const int _dbUpdateCountInterval = 10;
+    public static int MessageLengthLimit = 348;
 
     public static GlobalEmote[]? GlobalEmotes { get; set; }
 
@@ -311,7 +312,7 @@ internal static class BotCore
         for (int i = 0; i < parts.Length; i++)
         {
             string part = parts[i];
-            if (result.Length + part.Length <= 348)
+            if (result.Length + part.Length <= MessageLengthLimit)
             {
                 result += part + ' ';
             }

@@ -33,10 +33,10 @@ internal class ChannelEmoteMonitor : IJob
             }
 
             bool hadChanges = false;
-            IEnumerable<string> removed = Emotes.Except(emotes);
-            IEnumerable<string> added = emotes.Except(Emotes);
+            List<string> removed = [.. Emotes.Except(emotes)];
+            List<string> added = [.. emotes.Except(Emotes)];
 
-            if (removed.Any() && added.Any())
+            if (removed.Count != 0 && added.Count != 0)
             {
                 response.Append(DiffChanges(added.Select(x => JsonConvert.DeserializeObject<ChannelEmote>(x)).ToList()!, removed.Select(x => JsonConvert.DeserializeObject<ChannelEmote>(x)).ToList()!));
                 response.Append(PingList);
@@ -46,16 +46,16 @@ internal class ChannelEmoteMonitor : IJob
                 return;
             }
 
-            if (removed.Any())
+            if (removed.Count != 0)
             {
                 hadChanges = true;
-                response.Append(" emotes removed 📤 : ").Append(string.Join(" ", DeserializeEmotes(removed)));
+                response.Append($"{removed.Count} emotes removed 📤 : ").Append(string.Join(" ", DeserializeEmotes(removed)));
             }
 
-            if (added.Any())
+            if (added.Count != 0)
             {
                 hadChanges = true;
-                response.Append(" emotes added 📥 : ").Append(string.Join(" ", DeserializeEmotes(added)));
+                response.Append($"{added.Count} emotes added 📥 : ").Append(string.Join(" ", DeserializeEmotes(added)));
             }
 
             context.JobDetail.JobDataMap.Put("Emotes", emotes);
@@ -96,7 +96,7 @@ internal class ChannelEmoteMonitor : IJob
             addedNew.Add(addedEmote.EmoteToString());
         }
         removedForever = [.. removed.Select(e => e.EmoteToString())];
-        return $" emotes removed 📤 : {string.Join(" ", removedForever)} added 📥 : {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $"changed ♻️ : {string.Join(" ", changed)}" : "");
+        return $"{removedForever.Count} emotes removed 📤 : {string.Join(" ", removedForever)} , {addedNew.Count} added 📥 : {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $" { changed.Count} changed ♻️ : {string.Join(" ", changed)}" : "");
     }
 
     private static IEnumerable<string> DeserializeEmotes(IEnumerable<string> serializedEmotes)
