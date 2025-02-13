@@ -11,7 +11,6 @@ using System.Diagnostics;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
 using TwitchLib.Api.Services;
-using TwitchLib.Api.Services.Events;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
@@ -101,8 +100,6 @@ internal static class BotCore
 
         Monitor.OnStreamOnline += Monitor_OnLive;
         Monitor.OnStreamOffline += Monitor_OnOffline;
-        Monitor.OnChannelsSet += Monitor_OnChannelsSet;
-        Monitor.OnServiceStarted += Monitor_OnServiceStarted;
         Monitor.Start();
 
         await Task.Delay(-1);
@@ -133,6 +130,7 @@ internal static class BotCore
         Client.OnMessageReceived += Client_OnMessageReceived;
         Client.OnConnected += Client_OnConnected;
         Client.OnRateLimit += Client_OnRateLimit;
+        Client.OnGiftedSubscription += Client_OnGifted;
         Client.Connect();
 
         ChannelLiveState = [];
@@ -249,18 +247,6 @@ internal static class BotCore
 
     #region EVENTS
 
-    private static void Monitor_OnChannelsSet(object? sender, OnChannelsSetArgs e)
-    {
-        string r = "";
-        foreach (string? c in e.Channels) r += c + ", ";
-        Nlog.Info($"channels set {r}");
-    }
-
-    private static void Monitor_OnServiceStarted(object? sender, OnServiceStartedArgs e)
-    {
-        Nlog.Info("monitoring service stated");
-    }
-
     private static void Monitor_OnLive(object? sender, OnStreamOnlineArgs args)
     {
         ChannelLiveState[args.Channel] = true;
@@ -271,6 +257,30 @@ internal static class BotCore
     {
         ChannelLiveState[args.Channel] = false;
         Nlog.Info($"{args.Channel} went offline");
+    }
+
+    private static void Client_OnConnected(object? sender, OnConnectedArgs e)
+    {
+        Nlog.Info($"{e.BotUsername} Connected ");
+        GlobalEmotes ??= API.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
+    }
+
+    private static void Client_OnGifted(object? sender, OnGiftedSubscriptionArgs e)
+    {
+        if (e.GiftedSubscription.MsgParamRecipientUserName.Equals(Client.TwitchUsername.ToLower()))
+        {
+            SendLongMessage(e.Channel, null, $"Thanks for the sub, {e.GiftedSubscription.Login} PogChamp");
+        }
+    }
+
+    private static void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
+    {
+        Nlog.Info($"Joined {e.Channel}");
+    }
+
+    private static void Client_OnRateLimit(object? sender, OnRateLimitArgs e)
+    {
+        Nlog.Info($"rate limited {e.Message}");
     }
 
     private static async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
@@ -284,22 +294,6 @@ internal static class BotCore
             return;
         }
         Nlog.Info($"[{e.Channel}] [{e.RawIRC}]");
-    }
-
-    private static void Client_OnConnected(object? sender, OnConnectedArgs e)
-    {
-        Nlog.Info($"{e.BotUsername} Connected ");
-        GlobalEmotes ??= API.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
-    }
-
-    private static void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
-    {
-        Nlog.Info($"Joined {e.Channel}");
-    }
-
-    private static void Client_OnRateLimit(object? sender, OnRateLimitArgs e)
-    {
-        Nlog.Info($"rate limited {e.Message}");
     }
 
     #endregion EVENTS

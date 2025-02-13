@@ -49,13 +49,13 @@ internal class ChannelEmoteMonitor : IJob
             if (removed.Count != 0)
             {
                 hadChanges = true;
-                response.Append($"{removed.Count} emotes removed 📤 : ").Append(string.Join(" ", DeserializeEmotes(removed)));
+                response.Append($" {removed.Count} emotes removed 📤 : ").Append(string.Join(" ", DeserializeEmotes(removed)));
             }
 
             if (added.Count != 0)
             {
                 hadChanges = true;
-                response.Append($"{added.Count} emotes added 📥 : ").Append(string.Join(" ", DeserializeEmotes(added)));
+                response.Append($" {added.Count} emotes added 📥 : ").Append(string.Join(" ", DeserializeEmotes(added)));
             }
 
             context.JobDetail.JobDataMap.Put("Emotes", emotes);
@@ -96,7 +96,7 @@ internal class ChannelEmoteMonitor : IJob
             addedNew.Add(addedEmote.EmoteToString());
         }
         removedForever = [.. removed.Select(e => e.EmoteToString())];
-        return $"{removedForever.Count} emotes removed 📤 : {string.Join(" ", removedForever)} , {addedNew.Count} added 📥 : {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $" { changed.Count} changed ♻️ : {string.Join(" ", changed)}" : "");
+        return $" {removedForever.Count} emotes removed 📤 : {string.Join(" ", removedForever)} , {addedNew.Count} added 📥 : {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $" { changed.Count} changed ♻️ : {string.Join(" ", changed)}" : "");
     }
 
     private static IEnumerable<string> DeserializeEmotes(IEnumerable<string> serializedEmotes)

@@ -13,7 +13,7 @@ class SetMessageLengthLimit : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        int limit = int.TryParse(message.content.Split(' ')[0], out int r) ? int.Clamp(r, 50, 500) : 350;
+        int limit = int.TryParse(message.content.Split(' ')[0], out int r) ? int.Clamp(r, 10, 500) : 350;
         BotCore.MessageLengthLimit = limit;
         return Task.FromResult(Utils.Responses.Ok + $" {limit} it is.");
     }
