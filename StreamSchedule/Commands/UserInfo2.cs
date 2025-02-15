@@ -25,7 +25,7 @@ internal class UserInfo2 : Command
         if (!string.IsNullOrWhiteSpace(split[0])) targetUsername = split[0].Replace("@", "");
 
         (User?, bool) userAndNameAvailability = await BotCore.GQLClient.GetUserByLoginAndUsernameAvailability(targetUsername);
-        if (userAndNameAvailability.Item1 is null) return new CommandResult(userAndNameAvailability.Item2 ? "user does not exist." : "user does not exist and username is not available.");
+        if (userAndNameAvailability.Item1 is null) return new CommandResult(userAndNameAvailability.Item2 ? "username is available." : "user does not exist and username is not available.");
         User uu = userAndNameAvailability.Item1;
 
         string generalInfo = GetGeneralInfo(uu);
@@ -132,12 +132,12 @@ internal class UserInfo2 : Command
         if (color is not null)
             color = detailedInfo ? $"{color} {await ColorInfo.GetColor(color)}" : color;
         else
-            color = "color not set";
+            color = "not set";
         
         if (creatorColor is not null)
             creatorColor = detailedInfo ? $"#{creatorColor} {await ColorInfo.GetColor(creatorColor)}" : $"#{creatorColor}";
         else
-            creatorColor = "accent color not set";
+            creatorColor = "not set";
         
         return $"chat color: {color} accent color: {creatorColor}";
     }
