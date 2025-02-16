@@ -109,7 +109,7 @@ internal class UserInfo2 : Command
             tasks.AddRange(bitEmotes.Select(e => BotCore.GQLClient.GetEmote(e.Id)));
             await Task.WhenAll(tasks);
 
-            List<string> bitemotes = [.. tasks.OrderBy(t => t.Result?.BitsBadgeTierSummary?.Threshold ?? 0).Select(emote => $"{emote.Result?.Token ?? ""}:{emote.Result?.BitsBadgeTierSummary?.Threshold ?? 0}")];
+            List<string> bitemotes = [.. tasks.OrderBy(t => t.Result?.BitsBadgeTierSummary?.Threshold ?? 0).Select(emote => $"{emote.Result?.Token ?? ""} - {emote.Result?.BitsBadgeTierSummary?.Threshold ?? 0}")];
             B = $"Bit reward emotes - {bits}: {string.Join(" ", bitemotes)}";
         }
         else
@@ -179,7 +179,7 @@ internal class UserInfo2 : Command
 
     private static string GetGeneralInfo(User user)
     {
-        return $"{Helpers.UserRolesIsStaff(user.Roles)} {Helpers.UserRolesIsPartnerOrAffiliate(user.Roles)} {user.Login} (id:{user.Id}) created: {user.CreatedAt:dd/MMM/yyyy} {(user.DeletedAt is null ? "" : $"deleted: {user.DeletedAt:dd/MMM/yyyy} {user.Channel?.FounderBadgeAvailability switch { (> 0) => $"{user.Channel.FounderBadgeAvailability} founder slots available", _ => "" }}")}";
+        return $"{Helpers.UserRolesIsStaff(user.Roles)} {Helpers.UserRolesIsPartnerOrAffiliate(user.Roles)} {user.Login} (id:{user.Id}) created: {user.CreatedAt:dd/MMM/yyyy} {(user.DeletedAt is null ? "" : $"deleted: {user.DeletedAt:dd/MMM/yyyy} {user.Channel?.FounderBadgeAvailability switch { (> 0) => $" {user.Channel.FounderBadgeAvailability} founder slots available", _ => "" }}")}";
     }
 
     private static string PreviousUsernames(string username)

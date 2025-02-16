@@ -92,8 +92,6 @@ internal static class BotCore
     private const int _dbUpdateCountInterval = 10;
     public static int MessageLengthLimit = 348;
 
-    public static GlobalEmote[]? GlobalEmotes { get; set; }
-
     private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
     {
         Monitor.SetChannelsByName(channelNames);
@@ -262,7 +260,6 @@ internal static class BotCore
     private static void Client_OnConnected(object? sender, OnConnectedArgs e)
     {
         Nlog.Info($"{e.BotUsername} Connected ");
-        GlobalEmotes ??= API.Helix.Chat.GetGlobalEmotesAsync().Result.GlobalEmotes;
     }
 
     private static void Client_OnGifted(object? sender, OnGiftedSubscriptionArgs e)

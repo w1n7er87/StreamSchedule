@@ -54,7 +54,6 @@ internal class GlobalEmoteMonitor : IJob
                 BotCore.SendLongMessage("vedal987", null, r);
                 BotCore.SendLongMessage("w1n7er", null, r);
                 BotCore.Nlog.Info(r);
-                BotCore.GlobalEmotes = ee;
             }
         }
         catch
