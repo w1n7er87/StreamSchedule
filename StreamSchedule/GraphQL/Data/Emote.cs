@@ -4,6 +4,7 @@ public class Emote
 {
     public string? ID { get; set; }
     public User? Owner { get; set; }
+    public User? Artist { get; set; }
     public EmoteBitsBadgeTierSummary? BitsBadgeTierSummary { get; set; }
     public SubscriptionSummaryTier? SubscriptionTier { get; set; }
     public EmoteType? Type { get; set; }

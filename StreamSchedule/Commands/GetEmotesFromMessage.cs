@@ -44,12 +44,12 @@ internal class GetEmotesFromMessage : Command
 
             if (emoteIDs.Count == 0) { return response + "no emotes found"; }
         }
-
-        HashSet<string> channels = [];
+        
+        List<string> channels = [];
 
         List<Task<GraphQL.Data.Emote?>> tasks = [];
 
-        foreach (string emoteID in emoteIDs)
+        foreach (string emoteID in emoteIDs.Distinct())
         {
             tasks.Add(BotCore.GQLClient.GetEmote(emoteID));
         }
@@ -60,7 +60,6 @@ internal class GetEmotesFromMessage : Command
             if (task.Result is null) { channels.Add("Erm"); continue; }
 
             if (task.Result.Owner is null) { channels.Add(Helpers.EmoteTypeToString(task.Result.Type)); continue; }
-            ;
 
             string subTierOrBitPrice = task.Result.Type switch
             {
@@ -68,7 +67,10 @@ internal class GetEmotesFromMessage : Command
                 EmoteType.SUBSCRIPTIONS => Helpers.SubscriptionSummaryTierToString(task.Result.SubscriptionTier),
                 _ => ""
             };
-            channels.Add($"( @{task.Result.Owner.Login} {subTierOrBitPrice} {Helpers.EmoteTypeToString(task.Result.Type)} )");
+
+            string artist = (task.Result.Artist?.Login is null)? "" : $"By: {task.Result.Artist.Login}";
+
+            channels.Add($"( {task.Result.Token} @{task.Result.Owner.Login} {subTierOrBitPrice} {Helpers.EmoteTypeToString(task.Result.Type)} {artist} )");
         }
 
         response += string.Join(" ", channels);

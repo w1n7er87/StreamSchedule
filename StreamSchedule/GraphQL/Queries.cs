@@ -60,6 +60,9 @@ internal class Queries
                 owner {
                     login
                 }
+                artist{
+                    login
+                }
         	    bitsBadgeTierSummary {
                     threshold
                 }
