@@ -19,7 +19,7 @@ class ChannelRules : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        ChatSettings? settings = await BotCore.GQLClient.GetChatSettings(message.roomID);
+        ChatSettings? settings = await BotCore.GQLClient.GetChatSettings(message.channelID);
         string links = settings?.BlockLinks switch
         {
             true => "links are not allowed, ",

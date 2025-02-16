@@ -19,11 +19,11 @@ internal class Lurkers : Command
         if (!string.IsNullOrWhiteSpace(target) && target.StartsWith('@') && message.sender.Privileges >= Privileges.Trusted)
         {
             target = target.Replace("@", "");
-            (int, Chatter?[]?) c = await BotCore.GQLClient.GetChattersCount(message.roomID, target);
+            (int, Chatter?[]?) c = await BotCore.GQLClient.GetChattersCount(message.channelID, target);
             return new($"{c.Item1} lurkers in {target}'s chat uuh ");
         }
 
-        (int, Chatter?[]?) count = await BotCore.GQLClient.GetChattersCount(message.roomID);
+        (int, Chatter?[]?) count = await BotCore.GQLClient.GetChattersCount(message.channelID);
         string chatter = "";
         if (usedArgs.TryGetValue("p", out _))
         {
