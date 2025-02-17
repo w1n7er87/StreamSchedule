@@ -5,8 +5,8 @@ namespace StreamSchedule.Commands;
 
 internal class UserInfo : Command
 {
-    internal override string Call => "whois";
-    internal override Privileges MinPrivilege => Privileges.None;
+    internal override string Call => "whois_";
+    internal override Privileges MinPrivilege => Privileges.Uuh;
     internal override string Help => "user info: [username] / [#id]";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
