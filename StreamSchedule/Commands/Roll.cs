@@ -1,33 +1,68 @@
-using StreamSchedule.Data;
+﻿using StreamSchedule.Data;
 
-namespace StreamSchedule.Commands;
-
-internal class Roll : Command
+namespace StreamSchedule.Commands
 {
-    internal override string Call => "roll";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get random number [0 - n( = 100)], -flip for 50/50";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["flip"];
-
-    private static readonly string[] neuros = ["nwero", "hiyori", "eliv", "nuero", "newero", "wuero", "cleliv", "cluero", "weliv"];
-
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    internal class Roll : Command
     {
-        CommandResult result = new($"{
-            (Random.Shared.Next(100) < 50 ? neuros[Random.Shared.Next(neuros.Length)] : BotCore.MessageCache[Random.Shared.Next(BotCore.MessageCache.Count)].Username)
-            } says: ");
-        
-        string[] split = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs).Split(' ');
-
-        if (usedArgs.TryGetValue("flip", out _))
+        internal override string Call => "roll";
+        internal override Privileges MinPrivilege => Privileges.None;
+        internal override string Help => "roll a die [amount(max 100_000)]d[sides(max 100_000)], -v for details (up to 50 results)";
+        internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Medium);
+        internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
+        internal override string[] Arguments => ["v"];
+        internal override Task<CommandResult> Handle(UniversalMessageInfo message)
         {
-            return Task.FromResult(result + (Random.Shared.Next(100) < 50 ? "YES " : "NO "));
+            string content = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+
+            CommandResult result = "";
+
+            bool verbose = usedArgs.TryGetValue("v", out _);
+
+            List<long> results = [];
+            List<string> rolled = [];
+
+            foreach (string s in content.Split(' ').Where(x => x.Contains('d', StringComparison.InvariantCultureIgnoreCase)))
+            {
+                string[] split = s.Split(['d', 'D'], StringSplitOptions.TrimEntries);
+
+                if (split.Length < 2) continue;
+
+                int sides = 0;
+
+                if (split.Length < 3)
+                {
+                    if (!int.TryParse(split[1], out sides)) continue;
+                }
+                else
+                {
+                    if (!int.TryParse(split[2], out sides)) continue;
+                }
+
+                sides = int.Clamp(sides + 1, 1, 100_000);
+                int amount = int.TryParse(split[0], out int n) ? int.Clamp(n, 1, 100_000) : 1;
+
+                results.AddRange(RollInternal(amount, sides));
+                rolled.Add($"{amount}d{sides - 1}");
+
+            }
+
+            if (results.Count < 1) return Task.FromResult(new CommandResult($"rolled {RollInternal(1, 7)[0]} (1d6) "));
+
+            if (results.Count > 50) verbose = false;
+
+            if (!verbose) return Task.FromResult(new CommandResult(results.Sum().ToString()));
+
+            return Task.FromResult(new CommandResult($"rolled: {string.Join(", ", results)} ({string.Join(", ", rolled)})"));
         }
 
-        int maxValue = int.TryParse(split[0], out int c) ? int.Clamp(c + 1, 0, int.MaxValue) : 101;
-
-        return Task.FromResult(result + Random.Shared.Next(maxValue).ToString());
+        private static long[] RollInternal(int amount, int sides)
+        {
+            long[] results = new long[amount];
+            for (int i = 0; i < amount; i++)
+            {
+                results[i] = Random.Shared.Next(1, sides);
+            }
+            return results;
+        }
     }
 }
