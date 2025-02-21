@@ -6,8 +6,8 @@ internal class Randoms : Command
 {
     internal override string Call => "random";
     internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get random number [0 - n( = 100)], -flip for 50/50";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
+    internal override string Help => "get random number [0 - n( = 100)]; -flip for 50/50; -w(x = 5) for words from recent messages (50 max)";
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["flip", "w"];
 
@@ -28,16 +28,16 @@ internal class Randoms : Command
 
         int maxValue = int.TryParse(split[0], out int c) ? int.Clamp(c + 1, 1, int.MaxValue) : 101;
 
-        if(usedArgs.TryGetValue("w", out _))
+        if (usedArgs.TryGetValue("w", out string? wordCount))
         {
-            maxValue = int.Clamp(maxValue, 1, 50);
+            int max = int.TryParse(wordCount, out int cc) ? int.Clamp(cc, 1, 50) : 5;
             List<string> results = [];
             int count = 0;
 
-            while(count < maxValue)
+            while(count < max)
             {
-                string[] splitMessage = BotCore.MessageCache[Random.Shared.Next(BotCore.MessageCache.Count)].Message.Split(' ');
-                results.Add(splitMessage[Random.Shared.Next(splitMessage.Count())]);
+                string[] splitMessage = [.. BotCore.MessageCache[Random.Shared.Next(BotCore.MessageCache.Count)].Message.Split(' ').Where(x => !x.StartsWith('@'))];
+                results.Add(splitMessage[Random.Shared.Next(splitMessage.Length)]);
                 count++;
             }
             return Task.FromResult(result + string.Join(" ", results));
