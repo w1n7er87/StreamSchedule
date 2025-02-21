@@ -7,7 +7,7 @@ internal class ClearDay : Command
     internal override string Call => "clearday";
     internal override Privileges MinPrivilege => Privileges.Mod;
     internal override string Help => "clear schedule for the given day: [date] (d-M-yy or dd-MM-yy)";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
 

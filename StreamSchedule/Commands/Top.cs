@@ -8,7 +8,7 @@ internal class Top : Command
     internal override string Call => "top";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "get top chatters by messages sent offline(default)/online or by score/ratio";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["online", "offline", "score", "ratio", "p", "d"];
 

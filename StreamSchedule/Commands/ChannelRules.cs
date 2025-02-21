@@ -11,7 +11,7 @@ class ChannelRules : Command
 
     internal override string Help => "channel rules";
 
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Medium);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Short);
 
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 

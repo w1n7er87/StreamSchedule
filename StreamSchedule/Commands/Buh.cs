@@ -7,7 +7,7 @@ internal class Buh : Command
     internal override string Call => "buh";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "buh or buhblunt with 1% chance.";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
 

@@ -9,7 +9,7 @@ internal class EmoteFeed : Command
     internal override string Call => "emon";
     internal override Privileges MinPrivilege => Privileges.Trusted;
     internal override string Help => "add channel to monitor emote changes in my chat.";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["rm", "channel"];
 
