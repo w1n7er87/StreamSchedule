@@ -18,7 +18,7 @@ namespace StreamSchedule.Commands
         {
 
             Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
-            if(usedArgs.TryGetValue("muted",out _))
+            if(usedArgs.TryGetValue("muted",out _) && message.sender.Privileges >= Privileges.Mod)
             {
                 isMuted = !isMuted;
                 return Task.FromResult(new CommandResult(isMuted ? "ok i shut up" : "ok unmuted"));

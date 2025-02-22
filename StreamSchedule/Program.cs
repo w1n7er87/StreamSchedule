@@ -94,7 +94,7 @@ internal static class BotCore
 
     private static int _dbSaveCounter = 0;
     private const int _dbUpdateCountInterval = 10;
-    public static int MessageLengthLimit = 348;
+    public static int MessageLengthLimit = 260;
 
     private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
     {
