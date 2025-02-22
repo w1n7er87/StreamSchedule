@@ -10,10 +10,20 @@ namespace StreamSchedule.Commands
         internal override string Help => "uuh trying some stuff";
         internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Short);
         internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-        internal override string[]? Arguments => null;
+        internal override string[] Arguments => ["muted"];
+
+        private static bool isMuted = true;
 
         internal override Task<CommandResult> Handle(UniversalMessageInfo message)
         {
+
+            Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+            if(usedArgs.TryGetValue("muted",out _))
+            {
+                isMuted = !isMuted;
+                return Task.FromResult(new CommandResult(isMuted ? "ok i shut up" : "ok unmuted"));
+            }
+
             return Task.FromResult(new CommandResult(Markov.Markov.Generate(message.content)));
         }
     }
