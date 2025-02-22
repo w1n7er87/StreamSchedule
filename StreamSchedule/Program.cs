@@ -54,6 +54,9 @@ public static class Program
 
             BotCore.Init(channelNames, dbContext, logger);
             Scheduling.Init();
+
+            Markov.Markov.AddMessage(MarkovSampleText.Text);
+
             Console.ReadLine();
         }
         catch (Exception e)
@@ -161,8 +164,6 @@ internal static class BotCore
             }
         }
 
-        Markov.Markov.AddMessage(e.ChatMessage.Message.Replace("\U000e0000",""));
-
         MessageCache.Add(e.ChatMessage);
         if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
 
@@ -185,7 +186,11 @@ internal static class BotCore
             }
         }
 
-        if (!ContainsPrefix(messageAsCodepoints, out messageAsCodepoints)) return;
+        if (!ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
+        {
+            if (userSent.MessagesOnline > 100 ||  userSent.MessagesOffline > 100) Markov.Markov.AddMessage(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", ""));
+            return;
+        }
 
         if (messageAsCodepoints.Length < 2) return;
 
@@ -343,7 +348,7 @@ internal static class BotCore
 
         if (count == 0)
         {
-            prefixTrimmedInput = [];
+            prefixTrimmedInput = input;
             return false;
         }
 

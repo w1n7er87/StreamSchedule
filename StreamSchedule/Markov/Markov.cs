@@ -18,9 +18,11 @@ namespace StreamSchedule.Markov
         public static string Generate(string? input)
         {
             List<Link> chain = [];
-            Link first = links.TryGetValue(input?.Split(" ")[^1] ?? "", out Link? result) ?
-                result :
-                links.ToList()[Random.Shared.Next(links.Count)].Value;
+            string? lastWord = input?.Split(" ")[^1];
+            Link first;
+
+            if(string.IsNullOrEmpty(lastWord)) first = links.ToList()[Random.Shared.Next(links.Count)].Value;
+            else first = links.TryGetValue(lastWord, out Link? exists)? exists! : links.ToList()[Random.Shared.Next(links.Count)].Value;
 
             chain.Add(first);
 

@@ -8,7 +8,7 @@ namespace StreamSchedule.Commands
         internal override string Call => "markov";
         internal override Privileges MinPrivilege => Privileges.Trusted;
         internal override string Help => "uuh trying some stuff";
-        internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Medium);
+        internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Short);
         internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
         internal override string[]? Arguments => null;
 
