@@ -24,7 +24,7 @@ namespace StreamSchedule.Commands
                 return Task.FromResult(new CommandResult(isMuted ? "ok i shut up" : "ok unmuted"));
             }
 
-            return Task.FromResult(new CommandResult(Markov.Markov.Generate(message.content)));
+            return Task.FromResult(new CommandResult(isMuted ? "" : Markov.Markov.Generate(message.content)));
         }
     }
 }
