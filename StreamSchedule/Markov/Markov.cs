@@ -15,11 +15,14 @@ namespace StreamSchedule.Markov
             }
         }
 
-        public static string Generate()
+        public static string Generate(string? input)
         {
             List<Link> chain = [];
+            Link first = links.TryGetValue(input?.Split(" ")[^1] ?? "", out Link? result) ?
+                result :
+                links.ToList()[Random.Shared.Next(links.Count)].Value;
 
-            chain.Add(links.ToList()[Random.Shared.Next(links.Count)].Value);
+            chain.Add(first);
 
             int count = 0;
             while (count < MaxLinks)
@@ -41,7 +44,7 @@ namespace StreamSchedule.Markov
             links[current].Add(next);
         }
 
-        internal static Link GetByKey(string key)
+        internal static Link GetByKeyOrDefault(string key)
         {
             return links.TryGetValue(key, out Link? result) ? result : Link.EOL;
         }
@@ -66,7 +69,7 @@ namespace StreamSchedule.Markov
             int maxCount = next.Max(x => x.Value);
 
             List<string> a = [.. next.Where(x => x.Value >= Random.Shared.Next(maxCount)).Select(x => x.Key)];
-            return Markov.GetByKey(a[Random.Shared.Next(a.Count)]);
+            return Markov.GetByKeyOrDefault(a[Random.Shared.Next(a.Count)]);
         }
 
         public override string ToString()

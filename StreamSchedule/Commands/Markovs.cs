@@ -14,7 +14,7 @@ namespace StreamSchedule.Commands
 
         internal override Task<CommandResult> Handle(UniversalMessageInfo message)
         {
-            return Task.FromResult(new CommandResult(Markov.Markov.Generate()));
+            return Task.FromResult(new CommandResult(Markov.Markov.Generate(message.content)));
         }
     }
 }
