@@ -7,6 +7,7 @@ using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using StreamSchedule.Extensions;
 using StreamSchedule.GraphQL;
+using StreamSchedule.Markov;
 using System.Diagnostics;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
@@ -159,6 +160,8 @@ internal static class BotCore
                 _dbSaveCounter = 0;
             }
         }
+
+        Markov.Markov.AddMessage(e.ChatMessage.Message.Replace("\U000e0000",""));
 
         MessageCache.Add(e.ChatMessage);
         if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
