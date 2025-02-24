@@ -306,7 +306,7 @@ internal static class BotCore
 
     public static async void SendLongMessage(string channel, string? replyID, string message)
     {
-        string[] parts = Filter(message).Split(' ');
+        string[] parts = Utils.Filter(message).Split(' ');
         string result = "";
 
         for (int i = 0; i < parts.Length; i++)
@@ -326,17 +326,5 @@ internal static class BotCore
         }
         if (replyID is not null) Client.SendReply(channel, replyID, result);
         else Client.SendMessage(channel, result);
-    }
-
-    private static string Filter(string input)
-    {
-        string result = input;
-        foreach(PermittedTerm term in PermittedTerms)
-        {
-            string tt = term.Term;
-            if (!term.Noreplace) tt = tt.Replace("_", " ");
-            result = result.Replace(tt, term.Alternative, (term.Anycase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture));
-        }
-        return result;
     }
 }

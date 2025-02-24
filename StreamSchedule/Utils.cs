@@ -1,5 +1,7 @@
-﻿using NeoSmart.Unicode;
+﻿using Microsoft.EntityFrameworkCore;
+using NeoSmart.Unicode;
 using StreamSchedule.Data;
+using StreamSchedule.Data.Models;
 
 namespace StreamSchedule;
 
@@ -37,6 +39,18 @@ internal static class Utils
 
         prefixTrimmedInput = input[count..];
         return true;
+    }
+
+    internal static string Filter(string input)
+    {
+        string result = input;
+        foreach(PermittedTerm term in BotCore.DBContext.PermittedTerms.AsNoTracking().ToList())
+        {
+            string tt = term.Term;
+            if (!term.Noreplace) tt = tt.Replace("_", " ");
+            result = result.Replace(tt, term.Alternative, term.Anycase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+        }
+        return result;
     }
 
     internal static class Responses

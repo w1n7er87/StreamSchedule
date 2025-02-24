@@ -23,7 +23,7 @@ internal static class Commands
             foreach (var arg in args)
             {
                 if (!ss.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase)) continue;
-                usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "").ToLower();
+                usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "");
                 input = input.Replace(ss, "", StringComparison.InvariantCultureIgnoreCase);
             }
         }

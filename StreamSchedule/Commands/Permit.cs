@@ -37,8 +37,6 @@ internal class Permit : Command
 
         if (usedArgs.TryGetValue("anycase", out _)) term.Anycase = true;
 
-
-        BotCore.PermittedTerms = [.. BotCore.DBContext.PermittedTerms.AsNoTracking()];
         BotCore.DBContext.SaveChangesAsync();
         return Task.FromResult(Utils.Responses.Ok);
 
