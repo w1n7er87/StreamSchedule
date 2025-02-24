@@ -13,8 +13,10 @@ internal class Kill : Command
 
     private async Task KillTask(TimeSpan delay)
     {
-        await Task.Delay(delay);
         await BotCore.DBContext.SaveChangesAsync();
+        await Markov.Markov.SaveAsync();
+        await Task.Delay(delay);
+
         Environment.Exit(0);
     }
 

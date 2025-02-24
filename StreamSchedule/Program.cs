@@ -92,13 +92,11 @@ internal static class BotCore
 
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
-
-    private static readonly List<Codepoint> _emojiSpecialCharacters = [Emoji.ZeroWidthJoiner, Emoji.ObjectReplacementCharacter, Emoji.Keycap, Emoji.VariationSelector];
-    private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
-
     private static int _dbSaveCounter = 0;
     private const int _dbUpdateCountInterval = 10;
     public static int MessageLengthLimit = 260;
+
+    public static List<PermittedTerm> PermittedTerms { get; set; } = [];
 
     private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
     {
@@ -190,9 +188,9 @@ internal static class BotCore
             }
         }
 
-        if (!ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
+        if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
-            if (userSent.MessagesOnline > 100 ||  userSent.MessagesOffline > 100) Markov.Markov.AddMessage(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
+            if ((userSent.MessagesOnline > 100 ||  userSent.MessagesOffline > 100) && userSent.Privileges >= Privileges.None) Markov.Markov.AddMessage(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
             return;
         }
 
@@ -308,7 +306,7 @@ internal static class BotCore
 
     public static async void SendLongMessage(string channel, string? replyID, string message)
     {
-        string[] parts = message.Split(' ');
+        string[] parts = Filter(message).Split(' ');
         string result = "";
 
         for (int i = 0; i < parts.Length; i++)
@@ -330,32 +328,15 @@ internal static class BotCore
         else Client.SendMessage(channel, result);
     }
 
-    private static bool ContainsPrefix(ReadOnlySpan<Codepoint> input, out ReadOnlySpan<Codepoint> prefixTrimmedInput)
+    private static string Filter(string input)
     {
-        int count = 0;
-        foreach (Codepoint codepoint in input)
+        string result = input;
+        foreach(PermittedTerm term in PermittedTerms)
         {
-            if (Emoji.IsEmoji(codepoint.AsString()) ||
-                Emoji.SkinTones.All.Any(x => x == codepoint) ||
-                _emojiSpecialCharacters.Any(x => x == codepoint) ||
-                _commandPrefixes.Any(x => x == codepoint)
-               )
-            {
-                count++;
-                continue;
-            }
-
-            if (codepoint.Equals(' ')) count++;
-            break;
+            string tt = term.Term;
+            if (!term.Noreplace) tt = tt.Replace("_", " ");
+            result = result.Replace(tt, term.Alternative, (term.Anycase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture));
         }
-
-        if (count == 0)
-        {
-            prefixTrimmedInput = input;
-            return false;
-        }
-
-        prefixTrimmedInput = input[count..];
-        return true;
+        return result;
     }
 }

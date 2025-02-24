@@ -1,5 +1,4 @@
-﻿
-using StreamSchedule.Data;
+﻿using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
@@ -22,8 +21,6 @@ internal class Markovs : Command
             isMuted = !isMuted;
             return new CommandResult(isMuted ? "ok i shut up" : "ok unmuted");
         }
-
-        await Markov.Markov.SaveAsync();
 
         return new CommandResult(isMuted ? "" : Markov.Markov.Generate(message.content));
     }
