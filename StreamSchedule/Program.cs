@@ -44,6 +44,10 @@ public static class Program
                 .UseSqlite("Data Source=StreamSchedule.data").Options);
             dbContext.Database.EnsureCreated();
 
+            MarkovContext markovContext = new(new DbContextOptionsBuilder<MarkovContext>()
+                .UseSqlite("Data Source=Markov.data").Options);
+            markovContext.Database.EnsureCreated();
+
             List<string> channelNames = [];
 
             foreach (int id in channelIDs)
@@ -55,7 +59,7 @@ public static class Program
             BotCore.Init(channelNames, dbContext, logger);
             Scheduling.Init();
 
-            Markov.Markov.AddMessage(MarkovSampleText.Text);
+            Markov.Markov.Load(markovContext);
 
             Console.ReadLine();
         }
@@ -153,7 +157,7 @@ internal static class BotCore
         {
             _dbSaveCounter++;
             if (ChannelLiveState[e.ChatMessage.Channel])
-                User.AddMessagesCounter(userSent, 1);
+                User.AddMessagesCounter(userSent, online: 1);
             else
                 User.AddMessagesCounter(userSent, offline: 1);
 
@@ -188,7 +192,7 @@ internal static class BotCore
 
         if (!ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
-            if (userSent.MessagesOnline > 100 ||  userSent.MessagesOffline > 100) Markov.Markov.AddMessage(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", ""));
+            if (userSent.MessagesOnline > 100 ||  userSent.MessagesOffline > 100) Markov.Markov.AddMessage(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
             return;
         }
 
@@ -235,8 +239,7 @@ internal static class BotCore
             if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) return;
 
             if (userSent.Privileges < c.MinPrivilege) return;
-
-            trimmedMessage = trimmedMessage[usedCall.Length..].Replace("\U000e0000", "").TrimStart();
+            trimmedMessage = trimmedMessage[usedCall.Length..].Replace("\U000e0000", "").Trim();
             CommandResult response = await c.Handle(new(userSent, trimmedMessage, e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
 
             Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");

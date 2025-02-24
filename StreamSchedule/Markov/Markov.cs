@@ -1,84 +1,111 @@
-﻿
-namespace StreamSchedule.Markov
+﻿using Microsoft.EntityFrameworkCore;
+using StreamSchedule.Markov.Data;
+
+namespace StreamSchedule.Markov;
+
+internal static class Markov
 {
-    internal static class Markov
+    private static MarkovContext context;
+    private static IEnumerable<LinkStored> StoredLinks;
+
+    private static readonly Dictionary<string, Link> links = [];
+    private const int MaxLinks = 75;
+
+    public static void AddMessage(string message)
     {
-        private static readonly Dictionary<string, Link> links = [];
-        private const int MaxLinks = 50;
-
-        public static void AddMessage(string message)
+        string[] split = message.Split(' ', StringSplitOptions.TrimEntries);
+        for(int i = 0; i < split.Length; i++)
         {
-            string[] split = message.Split(' ', StringSplitOptions.TrimEntries);
-            for(int i = 0; i < split.Length; i++)
-            {
-                Add(split[i], (i + 1 >= split.Length) ? null : split[i + 1]);
-            }
-        }
-
-        public static string Generate(string? input)
-        {
-            List<Link> chain = [];
-            string? lastWord = input?.Split(" ")[^1];
-            Link first;
-
-            if(string.IsNullOrEmpty(lastWord)) first = links.ToList()[Random.Shared.Next(links.Count)].Value;
-            else first = links.TryGetValue(lastWord, out Link? exists)? exists! : links.ToList()[Random.Shared.Next(links.Count)].Value;
-
-            chain.Add(first);
-
-            int count = 0;
-            while (count < MaxLinks)
-            {
-                Link toAdd = chain[^1].GetNext();
-                if (toAdd.Key.Equals("\n")) break;
-                chain.Add(toAdd);
-                count++;
-            }
-
-            return string.Join(" ", chain);
-        }
-
-        private static void Add(string current, string? next)
-        {
-            if (string.IsNullOrEmpty(next)) next = "\n";
-            if (links.ContainsKey(current)) {links[current].Add(next); return; }
-            links.Add(current, new Link(current));
-            links[current].Add(next);
-        }
-
-        internal static Link GetByKeyOrDefault(string key)
-        {
-            return links.TryGetValue(key, out Link? result) ? result : Link.EOL;
+            AddLink(split[i], (i + 1 >= split.Length) ? null : split[i + 1]);
         }
     }
 
-    internal class Link(string key) 
+    public static string Generate(string? input)
     {
-        internal string Key { get => key; set => key = value; }
-        private string key = key;
+        List<Link> chain = [];
+        string? lastWord = input?.Split(" ",StringSplitOptions.TrimEntries)[^1];
+        Link first;
 
-        internal Dictionary<string, int> next = [];
+        if(string.IsNullOrEmpty(lastWord)) first = links.ToList()[Random.Shared.Next(links.Count)].Value;
+        else first = links.TryGetValue(lastWord, out Link? exists)? exists : links.ToList()[Random.Shared.Next(links.Count)].Value;
 
-        internal void Add(string value)
+        chain.Add(first);
+
+        int count = 0;
+        while (count < MaxLinks)
         {
-            if (next.ContainsKey(value)) next[value]++;
-            else next.Add(value, 1);
+            Link toAdd = chain[^1].GetNext();
+            if (toAdd.Key.Equals("\n")) break;
+            chain.Add(toAdd);
+            count++;
         }
 
-        internal Link GetNext()
+        return string.Join(" ", chain);
+    }
+
+    private static void AddLink(string current, string? next)
+    {
+        if (string.IsNullOrEmpty(next)) next = "\n";
+        if (links.ContainsKey(current)) {links[current].Add(next); return; }
+        links.Add(current, new Link(current));
+        links[current].Add(next);
+    }
+
+    internal static Link GetByKeyOrDefault(string key)
+    {
+        return links.TryGetValue(key, out Link? result) ? result : Link.EOL;
+    }
+
+    public static void Load(MarkovContext contextInjected)
+    {
+        context = contextInjected;
+        StoredLinks = context.Links.Include(x => x.NextWords);
+        
+        foreach (var b in StoredLinks)
         {
-            if (next.Count < 1) return EOL;
-            int maxCount = next.Max(x => x.Value);
-
-            List<string> a = [.. next.Where(x => x.Value >= Random.Shared.Next(maxCount)).Select(x => x.Key)];
-            return Markov.GetByKeyOrDefault(a[Random.Shared.Next(a.Count)]);
+            links.Add(b.Key, new Link(b.Key, b.NextWords));
         }
+    }
 
-        public override string ToString()
+    public static async Task SaveAsync()
+    {
+        foreach(var linkInMemory in links.Values)
         {
-            return key;
-        }
+            var storedLink = StoredLinks.FirstOrDefault(sl => sl.Key == linkInMemory.Key);
+            if (storedLink is not null)
+            {
+                foreach(var nextWord in linkInMemory.next)
+                {
+                    var storedWord = storedLink.NextWords.FirstOrDefault(x => x.Word == nextWord.Key);
+                    if (storedWord is not null)
+                    {
+                        storedWord.Count = nextWord.Value;
+                    }
+                    else
+                    {
+                        storedLink.NextWords.Add(new WordCountPair() {
+                            Link = storedLink,
+                            LinkID = storedLink.ID,
+                            Word = nextWord.Key,
+                            Count = nextWord.Value 
+                        });
+                    }
+                }
+            }
+            else
+            {
+                LinkStored toAdd = new()
+                {
+                    Key = linkInMemory.Key,
+                    NextWords = linkInMemory.next.Select(x =>  new WordCountPair() {
+                        Word = x.Key,
+                        Count = x.Value 
+                    }).ToList()
+                };
 
-        internal static Link EOL => new("\n");
+                context.Add(toAdd);
+            }
+        }
+        await context.SaveChangesAsync();
     }
 }
