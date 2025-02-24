@@ -1,34 +1,34 @@
 ﻿using StreamSchedule.Data;
+using StreamSchedule.Markov;
 using System.Diagnostics;
 
-namespace StreamSchedule.Commands
+namespace StreamSchedule.Commands;
+
+internal class Update : Command
 {
-    internal class Update : Command
+    internal override string Call => "updates";
+    internal override Privileges MinPrivilege => Privileges.Uuh;
+    internal override string Help => "update the bot and restart";
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
+    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
+    internal override string[]? Arguments => null;
+
+    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        internal override string Call => "updates";
-        internal override Privileges MinPrivilege => Privileges.Uuh;
-        internal override string Help => "update the bot and restart";
-        internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
-        internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-        internal override string[]? Arguments => null;
+        BotCore.SendLongMessage(message.channelName, null, "📆 🛠️ ");
 
-        internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+        BotCore.DBContext.SaveChanges();
+        await Markov.Markov.SaveAsync();
+
+        Process.Start(new ProcessStartInfo
         {
+            FileName = "cmd.exe",
+            Arguments = "/c start \"\" \"update.bat\"",
+            UseShellExecute = true
+        });
 
-            BotCore.SendLongMessage(message.channelName, null, "📆 🛠️ ");
+        Environment.Exit(0);
 
-            BotCore.DBContext.SaveChanges();
-
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = "/c start \"\" \"update.bat\"",
-                UseShellExecute = true
-            });
-
-            Environment.Exit(0);
-
-            return Task.FromResult(new CommandResult("you are not supposed to read this MyHonestReaction "));
-        }
+        return new CommandResult("you are not supposed to read this MyHonestReaction ");
     }
 }

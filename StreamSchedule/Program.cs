@@ -236,7 +236,7 @@ internal static class BotCore
                 usedCall = requestedCommand;
             }
 
-            if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now) return;
+            if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now && userSent.Privileges < Privileges.Mod) return;
 
             if (userSent.Privileges < c.MinPrivilege) return;
             trimmedMessage = trimmedMessage[usedCall.Length..].Replace("\U000e0000", "").Trim();
