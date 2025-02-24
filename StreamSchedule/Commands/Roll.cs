@@ -52,7 +52,7 @@ namespace StreamSchedule.Commands
 
             if (!verbose) return Task.FromResult(new CommandResult(results.Sum().ToString()));
 
-            return Task.FromResult(new CommandResult($"rolled: {string.Join(", ", results)} ({string.Join(", ", rolled)})"));
+            return Task.FromResult(new CommandResult($"rolled: {string.Join(", ", results)} ({results.Sum()} total; {string.Join(", ", rolled)})"));
         }
 
         private static long[] RollInternal(int amount, int sides)
