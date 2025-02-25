@@ -247,7 +247,7 @@ internal static class BotCore
             SendLongMessage(e.ChatMessage.Channel, response.reply ? e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id : null, response.ToString() + bypassSameMessage);
 
             _sameMessage = !_sameMessage;
-            c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
+            if (userSent.Privileges < Privileges.Mod) c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
             return;
         }
     }
