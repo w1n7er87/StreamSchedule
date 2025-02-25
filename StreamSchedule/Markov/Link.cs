@@ -32,9 +32,9 @@ internal class Link
     {
         if (next.Count < 1) return EOL;
         int maxCount = next.Max(x => x.Value);
-
-        List<string> a = [.. next.Where(x => x.Value >= Random.Shared.Next(maxCount)).Select(x => x.Key)];
-        return Markov.GetByKeyOrDefault(a[Random.Shared.Next(a.Count)]);
+        int randomCutoff = Random.Shared.Next(next.Values.Count);
+        KeyValuePair<string, int>[] a = [.. next.OrderBy(x => x.Value).TakeLast(randomCutoff)];
+        return Markov.GetByKeyOrDefault(a[Random.Shared.Next(a.Length)].Key);
     }
 
     internal static Link EOL => new("\n");
