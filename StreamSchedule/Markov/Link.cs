@@ -31,8 +31,7 @@ internal class Link
     internal Link GetNext()
     {
         if (next.Count < 1) return EOL;
-        int maxCount = next.Max(x => x.Value);
-        int randomCutoff = Random.Shared.Next(next.Values.Count);
+        int randomCutoff = Random.Shared.Next(1, next.Count + 1);
         KeyValuePair<string, int>[] a = [.. next.OrderBy(x => x.Value).TakeLast(randomCutoff)];
         return Markov.GetByKeyOrDefault(a[Random.Shared.Next(a.Length)].Key);
     }

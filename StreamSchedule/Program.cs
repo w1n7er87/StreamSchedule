@@ -190,7 +190,7 @@ internal static class BotCore
 
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
-            if ((userSent.MessagesOnline > 100 ||  userSent.MessagesOffline > 100) && userSent.Privileges >= Privileges.None) Markov.Markov.AddMessage(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
+            if ((userSent.MessagesOnline > 100 ||  userSent.MessagesOffline > 100) && userSent.Privileges >= Privileges.None) await Markov.Markov.AddMessageAsync(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
             return;
         }
 
@@ -213,7 +213,7 @@ internal static class BotCore
 
                 if (userSent.Privileges < command.Privileges) return;
 
-                Nlog.Info($"({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
+                Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds}ms) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
                 SendLongMessage(e.ChatMessage.Channel, null, command.Content + bypassSameMessage);
                 _sameMessage = !_sameMessage;
                 _textCommandLastUsed = DateTime.Now;
@@ -240,7 +240,7 @@ internal static class BotCore
             trimmedMessage = trimmedMessage[usedCall.Length..].Replace("\U000e0000", "").Trim();
             CommandResult response = await c.Handle(new(userSent, trimmedMessage, e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
 
-            Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start):s\\.fffffff}) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
+            Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalMilliseconds}ms) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}] - [{response}] ");
 
             if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
 
