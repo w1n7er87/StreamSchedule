@@ -30,7 +30,7 @@ internal static class PrivilegeUtils
         {
             Privileges.Banned => "banned",
             Privileges.None => "a regular",
-            Privileges.Trusted => "a VIP",
+            Privileges.Trusted => "a trusted user ok ",
             Privileges.Mod => "a mod MONKA ",
             Privileges.Uuh => "a uuh ",
             _ => "an alien "

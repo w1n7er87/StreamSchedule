@@ -91,9 +91,9 @@ internal static class BotCore
 
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
-    private static int _dbSaveCounter = 0;
-    private const int _dbUpdateCountInterval = 10;
     public static int MessageLengthLimit = 260;
+
+    private static long _lastSave;
 
     public static List<PermittedTerm> PermittedTerms { get; set; } = [];
 
@@ -148,21 +148,21 @@ internal static class BotCore
     {
         long start = Stopwatch.GetTimestamp();
 
-        User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType, DBContext);
+        if(Stopwatch.GetElapsedTime(_lastSave) > TimeSpan.FromSeconds(10))
+        {
+            Nlog.Info("erm");
+            _lastSave = start;
+            DBContext.SaveChanges();
+        }
 
+        User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType >= TwitchLib.Client.Enums.UserType.Moderator, e.ChatMessage.IsVip, DBContext);
+        
         if (e.ChatMessage.Channel.Equals("vedal987"))
         {
-            _dbSaveCounter++;
             if (ChannelLiveState[e.ChatMessage.Channel])
                 User.AddMessagesCounter(userSent, online: 1);
             else
                 User.AddMessagesCounter(userSent, offline: 1);
-
-            if (_dbSaveCounter >= _dbUpdateCountInterval)
-            {
-                await DBContext.SaveChangesAsync();
-                _dbSaveCounter = 0;
-            }
         }
 
         MessageCache.Add(e.ChatMessage);
