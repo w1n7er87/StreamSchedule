@@ -6,6 +6,7 @@ internal enum LinkGenerationMethod
 {
     Weighted,
     Ordered,
+    Random,
 }
 
 internal class Link
@@ -44,6 +45,10 @@ internal class Link
             int randomCutoff = Random.Shared.Next(1, next.Count + 1);
             KeyValuePair<string, int>[] upperHalf = [.. next.OrderBy(x => x.Value).TakeLast(randomCutoff)];
             return Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
+        }
+        if (method is LinkGenerationMethod.Random)
+        {
+            return Markov.GetByKeyOrDefault(next.Keys.ToArray()[Random.Shared.Next(next.Keys.Count)]);
         }
         else
         {

@@ -150,7 +150,6 @@ internal static class BotCore
 
         if(Stopwatch.GetElapsedTime(_lastSave) > TimeSpan.FromSeconds(10))
         {
-            Nlog.Info("erm");
             _lastSave = start;
             DBContext.SaveChanges();
         }
