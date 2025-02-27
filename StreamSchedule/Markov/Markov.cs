@@ -11,6 +11,8 @@ internal static class Markov
     private static readonly Dictionary<string, Link> links = [];
     private const int MaxLinks = 75;
 
+    private static bool hasLoaded = false;
+
     public static async Task AddMessageAsync(string message)
     {
         string[] split = message.Split(' ', StringSplitOptions.TrimEntries);
@@ -45,6 +47,8 @@ internal static class Markov
 
     private static async Task AddLinkAsync(string current, string? next)
     {
+        if (!hasLoaded) return;
+
         if (string.IsNullOrEmpty(next)) next = "\n";
         if (links.ContainsKey(current))
         {
@@ -93,6 +97,7 @@ internal static class Markov
             links.Add(b.Key, new Link(b.Key, b.NextWords));
         }
         BotCore.Nlog.Info($"finished loading markov ({Stopwatch.GetElapsedTime(start).TotalSeconds}s )");
+        hasLoaded = true;
     }
 
     public static async Task SaveAsync()
