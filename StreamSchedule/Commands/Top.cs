@@ -29,7 +29,7 @@ internal class Top : Command
 
         if (args.TryGetValue("ratio", out _))
         {
-            var topTen = BotCore.DBContext.Users.AsNoTracking().AsEnumerable().OrderByDescending(x => descending? -Userscore.GetRatioAndScore(x).ratio : Userscore.GetRatioAndScore(x).ratio).ToList();
+            var topTen = BotCore.DBContext.Users.AsNoTracking().AsEnumerable().OrderByDescending(x => descending ? -Userscore.GetRatioAndScore(x).ratio : Userscore.GetRatioAndScore(x).ratio).ToList();
             int start = Math.Min(page * 10, topTen.Count - 10);
             topTen = topTen.GetRange(start, 10);
             for (int i = 0; i < topTen.Count; i++)
@@ -40,7 +40,7 @@ internal class Top : Command
         }
         else if (args.TryGetValue("score", out _))
         {
-            var topTen = BotCore.DBContext.Users.AsNoTracking().AsEnumerable().OrderByDescending(x => descending? -Userscore.GetRatioAndScore(x).score : Userscore.GetRatioAndScore(x).score).ToList();
+            var topTen = BotCore.DBContext.Users.AsNoTracking().AsEnumerable().OrderByDescending(x => descending ? -Userscore.GetRatioAndScore(x).score : Userscore.GetRatioAndScore(x).score).ToList();
             int start = Math.Min(page * 10, topTen.Count - 10);
             topTen = topTen.GetRange(start, 10);
             for (int i = 0; i < topTen.Count; i++)

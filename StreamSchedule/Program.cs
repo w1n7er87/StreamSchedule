@@ -10,7 +10,6 @@ using StreamSchedule.GraphQL;
 using StreamSchedule.Markov;
 using System.Diagnostics;
 using TwitchLib.Api;
-using TwitchLib.Api.Helix.Models.Chat.Emotes;
 using TwitchLib.Api.Services;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
@@ -190,7 +189,7 @@ internal static class BotCore
 
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
-            if ((userSent.MessagesOnline > 100 ||  userSent.MessagesOffline > 100) && userSent.Privileges >= Privileges.None) await Markov.Markov.AddMessageAsync(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
+            if ((userSent.MessagesOnline > 100 || userSent.MessagesOffline > 100) && userSent.Privileges >= Privileges.None) await Markov.Markov.AddMessageAsync(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
             return;
         }
 

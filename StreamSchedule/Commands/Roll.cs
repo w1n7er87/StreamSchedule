@@ -7,9 +7,10 @@ namespace StreamSchedule.Commands
         internal override string Call => "roll";
         internal override Privileges MinPrivilege => Privileges.None;
         internal override string Help => "roll a die [amount(max 100_000)]d[sides(max 100_000)], -v for details (up to 50 results)";
-        internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Short);
+        internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
         internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
         internal override string[] Arguments => ["v"];
+
         internal override Task<CommandResult> Handle(UniversalMessageInfo message)
         {
             string content = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
@@ -43,7 +44,6 @@ namespace StreamSchedule.Commands
 
                 results.AddRange(RollInternal(amount, sides));
                 rolled.Add($"{amount}d{sides - 1}");
-
             }
 
             if (results.Count < 1) return Task.FromResult(new CommandResult($"rolled {RollInternal(1, 7)[0]} (1d6) "));

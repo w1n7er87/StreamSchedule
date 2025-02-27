@@ -133,19 +133,19 @@ internal class UserInfo2 : Command
             color = detailedInfo ? $"{color} {await ColorInfo.GetColor(color)}" : color;
         else
             color = "not set";
-        
+
         if (creatorColor is not null)
             creatorColor = detailedInfo ? $"#{creatorColor} {await ColorInfo.GetColor(creatorColor)}" : $"#{creatorColor}";
         else
             creatorColor = "not set";
-        
+
         return $"chat color: {color} accent color: {creatorColor}";
     }
 
     private static string[] GetLiveStatus(User user)
     {
         string hypeTrain = "";
-        if(user.Channel?.HypeTrain?.Execution?.IsActive ?? false)
+        if (user.Channel?.HypeTrain?.Execution?.IsActive ?? false)
         {
             float progress = MathF.Round(((float)(user.Channel.HypeTrain.Execution.Progress?.Progression ?? 1.0f) / (user.Channel.HypeTrain.Execution.Progress?.Goal ?? 1.0f)) * 100.0f, 4);
             hypeTrain = $"lvl {user.Channel.HypeTrain.Execution.Progress?.Level?.Value ?? 0} {Helpers.HypeTrainDifficultyToString(user.Channel.HypeTrain.Execution.Config?.Difficulty)} hype train - {progress}%";

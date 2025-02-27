@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using StreamSchedule.Data;
+﻿using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 
 namespace StreamSchedule.Commands;
@@ -39,6 +38,5 @@ internal class Permit : Command
 
         BotCore.DBContext.SaveChangesAsync();
         return Task.FromResult(Utils.Responses.Ok);
-
     }
 }

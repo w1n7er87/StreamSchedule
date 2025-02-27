@@ -96,7 +96,7 @@ internal class ChannelEmoteMonitor : IJob
             addedNew.Add(addedEmote.EmoteToString());
         }
         removedForever = [.. removed.Select(e => e.EmoteToString())];
-        return $" {removedForever.Count} emotes removed 📤 : {string.Join(" ", removedForever)} , {addedNew.Count} added 📥 : {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $" { changed.Count} changed ♻️ : {string.Join(" ", changed)}" : "");
+        return $" {removedForever.Count} emotes removed 📤 : {string.Join(" ", removedForever)} , {addedNew.Count} added 📥 : {string.Join(" ", addedNew)}" + (changed.Count != 0 ? $" {changed.Count} changed ♻️ : {string.Join(" ", changed)}" : "");
     }
 
     private static IEnumerable<string> DeserializeEmotes(IEnumerable<string> serializedEmotes)

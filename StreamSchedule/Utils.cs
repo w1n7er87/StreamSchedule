@@ -7,7 +7,6 @@ namespace StreamSchedule;
 
 internal static class Utils
 {
-
     private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
 
     private static readonly List<Codepoint> _emojiSpecialCharacters = [Emoji.ZeroWidthJoiner, Emoji.ObjectReplacementCharacter, Emoji.Keycap, Emoji.VariationSelector];
@@ -44,7 +43,7 @@ internal static class Utils
     internal static string Filter(string input)
     {
         string result = input;
-        foreach(PermittedTerm term in BotCore.DBContext.PermittedTerms.AsNoTracking().ToList())
+        foreach (PermittedTerm term in BotCore.DBContext.PermittedTerms.AsNoTracking().ToList())
         {
             string tt = term.Term;
             if (!term.Noreplace) tt = tt.Replace("_", " ");

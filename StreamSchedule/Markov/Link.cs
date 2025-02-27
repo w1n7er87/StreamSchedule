@@ -7,7 +7,8 @@ internal class Link
     internal string Key { get; private set; }
     internal Dictionary<string, int> next = [];
 
-    private Link() { Key = ""; }
+    private Link()
+    { Key = ""; }
 
     internal Link(string key)
     {
@@ -16,7 +17,7 @@ internal class Link
 
     internal Link(string key, IEnumerable<WordCountPair> words) : this(key)
     {
-        foreach(WordCountPair wcp in words)
+        foreach (WordCountPair wcp in words)
         {
             next.Add(wcp.Word, wcp.Count);
         }

@@ -29,13 +29,13 @@ internal class UserInfo : Command
             if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
         }
 
-        var a = idProvided ? 
+        var a = idProvided ?
             await BotCore.API.Helix.Users.GetUsersAsync(ids: [userIDNumber.ToString()]) :
             await BotCore.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
 
         TwitchLib.Api.Helix.Models.Users.GetUsers.User? u = a.Users.FirstOrDefault();
 
-        if (u is null ) return Utils.Responses.Fail + " no user with such name/id";
+        if (u is null) return Utils.Responses.Fail + " no user with such name/id";
 
         string generalInfo = GetGeneralInfo(u);
 

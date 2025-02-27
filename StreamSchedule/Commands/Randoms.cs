@@ -15,10 +15,8 @@ internal class Randoms : Command
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        CommandResult result = new($"{
-            (Random.Shared.Next(100) < 50 ? neuros[Random.Shared.Next(neuros.Length)] : BotCore.MessageCache[Random.Shared.Next(BotCore.MessageCache.Count)].Username)
-            } says: ");
-        
+        CommandResult result = new($"{(Random.Shared.Next(100) < 50 ? neuros[Random.Shared.Next(neuros.Length)] : BotCore.MessageCache[Random.Shared.Next(BotCore.MessageCache.Count)].Username)} says: ");
+
         string[] split = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs).Split(' ');
 
         if (usedArgs.TryGetValue("flip", out _))

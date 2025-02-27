@@ -44,7 +44,7 @@ internal class GetEmotesFromMessage : Command
 
             if (emoteIDs.Count == 0) { return response + "no emotes found"; }
         }
-        
+
         List<string> channels = [];
 
         List<Task<GraphQL.Data.Emote?>> tasks = [];
@@ -68,7 +68,7 @@ internal class GetEmotesFromMessage : Command
                 _ => ""
             };
 
-            string artist = (task.Result.Artist?.Login is null)? "" : $"By: {task.Result.Artist.Login}";
+            string artist = (task.Result.Artist?.Login is null) ? "" : $"By: {task.Result.Artist.Login}";
 
             channels.Add($"( {task.Result.Token} @{task.Result.Owner.Login} {subTierOrBitPrice} {Helpers.EmoteTypeToString(task.Result.Type)} {artist} )");
         }

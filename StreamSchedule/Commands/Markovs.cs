@@ -7,7 +7,7 @@ internal class Markovs : Command
     internal override string Call => "markov";
     internal override Privileges MinPrivilege => Privileges.Trusted;
     internal override string Help => "Markov chain or Markov process is a stochastic process describing a sequence of possible events in which the probability of each event depends only on the state attained in the previous event. Informally, this may be thought of as, \"What happens next depends only on the state of affairs now.\"";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.HalfAMinute);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.HalfAMinute);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["muted"];
 
@@ -16,7 +16,7 @@ internal class Markovs : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
-        if(usedArgs.TryGetValue("muted",out _) && message.sender.Privileges >= Privileges.Mod)
+        if (usedArgs.TryGetValue("muted", out _) && message.sender.Privileges >= Privileges.Mod)
         {
             isMuted = !isMuted;
             return Task.FromResult(new CommandResult(isMuted ? "ok i shut up" : "ok unmuted"));

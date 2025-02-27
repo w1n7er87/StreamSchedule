@@ -3,7 +3,7 @@ using StreamSchedule.GraphQL.Data;
 
 namespace StreamSchedule.Commands;
 
-class ChannelRules : Command
+internal class ChannelRules : Command
 {
     internal override string Call => "rules";
 
@@ -11,7 +11,7 @@ class ChannelRules : Command
 
     internal override string Help => "channel rules";
 
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Short);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
 
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
 

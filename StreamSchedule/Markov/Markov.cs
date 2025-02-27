@@ -14,7 +14,7 @@ internal static class Markov
     public static async Task AddMessageAsync(string message)
     {
         string[] split = message.Split(' ', StringSplitOptions.TrimEntries);
-        for(int i = 0; i < split.Length; i++)
+        for (int i = 0; i < split.Length; i++)
         {
             await AddLinkAsync(split[i], (i + 1 >= split.Length) ? null : split[i + 1]);
         }
@@ -26,8 +26,8 @@ internal static class Markov
         string? lastWord = input?.Split(" ", StringSplitOptions.TrimEntries)[^1];
 
         Link first;
-        if(string.IsNullOrEmpty(lastWord)) first = links.ToList()[Random.Shared.Next(links.Count)].Value;
-        else first = links.TryGetValue(lastWord, out Link? exists)? exists : links.ToList()[Random.Shared.Next(links.Count)].Value;
+        if (string.IsNullOrEmpty(lastWord)) first = links.ToList()[Random.Shared.Next(links.Count)].Value;
+        else first = links.TryGetValue(lastWord, out Link? exists) ? exists : links.ToList()[Random.Shared.Next(links.Count)].Value;
 
         chain.Add(first);
 
@@ -46,12 +46,12 @@ internal static class Markov
     private static async Task AddLinkAsync(string current, string? next)
     {
         if (string.IsNullOrEmpty(next)) next = "\n";
-        if (links.ContainsKey(current)) 
+        if (links.ContainsKey(current))
         {
             links[current].Add(next);
             LinkStored ls = context.Links.FirstOrDefault(x => x.Key == current)!;
-            WordCountPair? wc =  ls.NextWords.FirstOrDefault(x => x.Word == next);
-            if(wc is not null)
+            WordCountPair? wc = ls.NextWords.FirstOrDefault(x => x.Word == next);
+            if (wc is not null)
             {
                 wc.Count++;
             }
@@ -98,7 +98,7 @@ internal static class Markov
     public static async Task SaveAsync()
     {
         long start = Stopwatch.GetTimestamp();
-        BotCore.Nlog.Info("started saving markov" );
+        BotCore.Nlog.Info("started saving markov");
         await context.SaveChangesAsync();
         BotCore.Nlog.Info($"finished saving markov ({Stopwatch.GetElapsedTime(start).TotalSeconds}s )");
     }
