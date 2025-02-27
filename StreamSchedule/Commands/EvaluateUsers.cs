@@ -12,7 +12,7 @@ internal class EvaluateUsers : Command
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["s"];
 
-    private static float DefaultCutoffScore => 3.5f;
+    private static float DefaultCutoffScore => 2.0f;
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
