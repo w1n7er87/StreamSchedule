@@ -20,7 +20,7 @@ internal static class Markov
         }
     }
 
-    public static string Generate(string? input)
+    public static string Generate(string? input , LinkGenerationMethod method)
     {
         List<Link> chain = [];
         string? lastWord = input?.Split(" ", StringSplitOptions.TrimEntries)[^1];
@@ -34,7 +34,7 @@ internal static class Markov
         int count = 0;
         while (count < MaxLinks)
         {
-            Link toAdd = chain[^1].GetNext();
+            Link toAdd = chain[^1].GetNext(method);
             if (toAdd.Key.Equals("\n")) break;
             chain.Add(toAdd);
             count++;

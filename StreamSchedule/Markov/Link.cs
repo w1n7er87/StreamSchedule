@@ -2,6 +2,12 @@
 
 namespace StreamSchedule.Markov;
 
+internal enum LinkGenerationMethod
+{
+    Weighted,
+    Ordered,
+}
+
 internal class Link
 {
     internal string Key { get; private set; }
@@ -29,12 +35,22 @@ internal class Link
         else next.Add(value, 1);
     }
 
-    internal Link GetNext()
+    internal Link GetNext(LinkGenerationMethod method)
     {
         if (next.Count < 1) return EOL;
-        int randomCutoff = Random.Shared.Next(1, next.Count + 1);
-        KeyValuePair<string, int>[] a = [.. next.OrderBy(x => x.Value).TakeLast(randomCutoff)];
-        return Markov.GetByKeyOrDefault(a[Random.Shared.Next(a.Length)].Key);
+
+        if (method is LinkGenerationMethod.Ordered)
+        {
+            int randomCutoff = Random.Shared.Next(1, next.Count + 1);
+            KeyValuePair<string, int>[] upperHalf = [.. next.OrderBy(x => x.Value).TakeLast(randomCutoff)];
+            return Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
+        }
+        else
+        {
+            int randomCutoff = Random.Shared.Next(next.Max(x => x.Value));
+            KeyValuePair<string, int>[] upperHalf = [.. next.Where(x => x.Value >= randomCutoff)];
+            return Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
+        }
     }
 
     internal static Link EOL => new("\n");
