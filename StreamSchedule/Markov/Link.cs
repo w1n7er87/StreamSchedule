@@ -43,8 +43,8 @@ internal class Link
         if (method is LinkGenerationMethod.Ordered)
         {
             int randomCutoff = Random.Shared.Next(1, next.Count + 1);
-            KeyValuePair<string, int>[] upperHalf = [.. next.OrderBy(x => x.Value).TakeLast(randomCutoff)];
-            return Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
+            KeyValuePair<string, int>[] upperHalf = [.. next.Where(x => !x.Key.Equals("\n")).OrderBy(x => x.Value).TakeLast(randomCutoff)];
+            return (upperHalf.Length < 1) ? EOL : Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
         }
         if (method is LinkGenerationMethod.Random)
         {
@@ -54,7 +54,7 @@ internal class Link
         {
             int randomCutoff = Random.Shared.Next(next.Max(x => x.Value));
             KeyValuePair<string, int>[] upperHalf = [.. next.Where(x => x.Value >= randomCutoff)];
-            return Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
+            return (upperHalf.Length < 1) ? EOL : Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
         }
     }
 
