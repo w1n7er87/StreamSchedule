@@ -53,16 +53,14 @@ internal static class Markov
         if (links.ContainsKey(current))
         {
             links[current].Add(next);
+
             LinkStored ls = context.Links.FirstOrDefault(x => x.Key == current)!;
             WordCountPair? wc = ls.NextWords.FirstOrDefault(x => x.Word == next);
-            if (wc is not null)
-            {
-                wc.Count++;
-            }
-            else
-            {
-                ls.NextWords.Add(new WordCountPair() { Word = next, Count = 1, });
-            }
+
+            if (wc is not null) wc.Count++;
+            else ls.NextWords.Add(new WordCountPair() { Word = next, Count = 1, });
+
+            await context.SaveChangesAsync();
             return;
         }
 
@@ -77,12 +75,43 @@ internal static class Markov
                 Count = 1,
             }]
         });
+
         await context.SaveChangesAsync();
     }
 
-    internal static Link GetByKeyOrDefault(string key)
+    internal static Link GetByKeyOrDefault(string key) => links.TryGetValue(key, out Link? result) ? result : Link.EOL;
+
+    internal static int Count() => links.Count;
+
+    public static async Task<string> Prune()
     {
-        return links.TryGetValue(key, out Link? result) ? result : Link.EOL;
+        int startingCount = links.Count;
+        int prunedCount = 0;
+
+        List<Link> noChildren = [];
+        foreach(Link l in links.Values)
+        {
+            if(l.next.Count == 1 && l.next.Keys.First().Equals("\n") ) noChildren.Add(l);
+        }
+
+        foreach(Link noChildrenCandidate in noChildren)
+        {
+            bool isPresentAsNext = false;
+            foreach(Link linkInMemory in links.Values)
+            {
+                if (linkInMemory.next.ContainsKey(noChildrenCandidate.Key)) isPresentAsNext = true;
+            }
+
+            if (isPresentAsNext) continue;
+            
+            links.Remove(noChildrenCandidate.Key);
+            context.Links.Remove(context.Links.First(x => x.Key == noChildrenCandidate.Key));
+            prunedCount++;
+        }
+
+        await context.SaveChangesAsync();
+
+        return $"Pruned {prunedCount} links ( {float.Round((prunedCount / (float)startingCount) * 100, 3)}% )";
     }
 
     public static void Load(MarkovContext contextInjected)
