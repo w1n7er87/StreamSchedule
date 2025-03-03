@@ -51,30 +51,24 @@ internal static class Markov
         if (!hasLoaded) return;
 
         if (string.IsNullOrEmpty(next)) next = "\n";
-        if (links.ContainsKey(current))
-        {
-            links[current].Add(next);
 
-            LinkStored ls = context.Links.FirstOrDefault(x => x.Key == current)!;
-            WordCountPair? wc = ls.NextWords.FirstOrDefault(x => x.Word == next);
+        if (links.TryGetValue(current, out Link? value)) value.Add(next);
+        else links.Add(current, new Link(current));
 
-            if (wc is not null) wc.Count++;
-            else ls.NextWords.Add(new WordCountPair() { Word = next, Count = 1, });
-
-            return;
-        }
-
-        links.Add(current, new Link(current));
-        links[current].Add(next);
-        context.Links.Add(new LinkStored()
-        {
-            Key = current,
-            NextWords = [new WordCountPair()
+        LinkStored ls = context.Links.FirstOrDefault(x => x.Key == current) ?? context.Links.Add(new LinkStored()
             {
-                Word = next,
-                Count = 1,
-            }]
-        });
+                Key = current,
+                NextWords = [new WordCountPair()
+                {
+                    Word = next,
+                    Count = 1,
+                }]
+            }).Entity;
+
+        WordCountPair? wc = ls.NextWords.FirstOrDefault(x => x.Word == next);
+
+        if (wc is not null) wc.Count++;
+        else ls.NextWords.Add(new WordCountPair() { Word = next, Count = 1, });
     }
 
     internal static Link GetByKeyOrDefault(string key) => links.TryGetValue(key, out Link? result) ? result : Link.EOL;
