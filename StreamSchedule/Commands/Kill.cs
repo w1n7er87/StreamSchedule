@@ -11,16 +11,7 @@ internal class Kill : Command
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["fr"];
 
-    private async Task KillTask(TimeSpan delay)
-    {
-        await BotCore.DBContext.SaveChangesAsync();
-        await Markov.Markov.SaveAsync();
-        await Task.Delay(delay);
-
-        Environment.Exit(0);
-    }
-
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 
@@ -33,14 +24,19 @@ internal class Kill : Command
                 _ = int.TryParse(split[0], out duration);
             }
             TimeSpan delay = TimeSpan.FromSeconds(Math.Clamp(duration, 1, int.MaxValue));
-            Task.Run(() => KillTask(delay));
-            return Task.FromResult(new CommandResult("buhbye ", false));
+
+            await BotCore.DBContext.SaveChangesAsync();
+            await Markov.Markov.SaveAsync();
+
+            Environment.Exit(0);
+
+            return new CommandResult("buhbye ", false);
         }
 
         string target = message.content.Split(' ')[0];
 
-        if (Random.Shared.Next(100) > 25) return Task.FromResult(new CommandResult("✋ unauthorized action. ", false));
+        if (Random.Shared.Next(100) > 25) return new CommandResult("✋ unauthorized action. ", false);
 
-        return Task.FromResult(new CommandResult($"MEGALUL 🔪 {target}", false));
+        return new CommandResult($"MEGALUL 🔪 {target}", false);
     }
 }
