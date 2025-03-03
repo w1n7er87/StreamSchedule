@@ -9,7 +9,7 @@ internal static class Markov
     private static MarkovContext context;
 
     private static readonly Dictionary<string, Link> links = [];
-    private const int MaxLinks = 75;
+    private const int MaxLinks = 125;
 
     private static bool hasLoaded = false;
 
@@ -18,8 +18,9 @@ internal static class Markov
         string[] split = message.Split(' ', StringSplitOptions.TrimEntries);
         for (int i = 0; i < split.Length; i++)
         {
-            await AddLinkAsync(split[i], (i + 1 >= split.Length) ? null : split[i + 1]);
+            AddLink(split[i], (i + 1 >= split.Length) ? null : split[i + 1]);
         }
+        await context.SaveChangesAsync();
     }
 
     public static string Generate(string? input , LinkGenerationMethod method)
@@ -45,7 +46,7 @@ internal static class Markov
         return string.Join(" ", chain);
     }
 
-    private static async Task AddLinkAsync(string current, string? next)
+    private static void AddLink(string current, string? next)
     {
         if (!hasLoaded) return;
 
@@ -60,7 +61,6 @@ internal static class Markov
             if (wc is not null) wc.Count++;
             else ls.NextWords.Add(new WordCountPair() { Word = next, Count = 1, });
 
-            await context.SaveChangesAsync();
             return;
         }
 
@@ -75,8 +75,6 @@ internal static class Markov
                 Count = 1,
             }]
         });
-
-        await context.SaveChangesAsync();
     }
 
     internal static Link GetByKeyOrDefault(string key) => links.TryGetValue(key, out Link? result) ? result : Link.EOL;

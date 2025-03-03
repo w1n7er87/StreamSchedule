@@ -188,7 +188,7 @@ internal static class BotCore
 
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
-            if ((userSent.MessagesOnline > 100 || userSent.MessagesOffline > 100) && userSent.Privileges >= Privileges.None) await Markov.Markov.AddMessageAsync(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
+            if ((userSent.MessagesOnline > 100 || userSent.MessagesOffline > 100) && userSent.Privileges >= Privileges.None && e.ChatMessage.Channel.Equals("vedal987")) await Markov.Markov.AddMessageAsync(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
             return;
         }
 

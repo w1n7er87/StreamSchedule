@@ -53,7 +53,7 @@ internal class Link
         else
         {
             int randomCutoff = Random.Shared.Next(next.Max(x => x.Value));
-            KeyValuePair<string, int>[] upperHalf = [.. next.Where(x => x.Value >= randomCutoff)];
+            KeyValuePair<string, int>[] upperHalf = [.. next.Where(x => !x.Key.Equals("\n") && x.Value >= randomCutoff)];
             return (upperHalf.Length < 1) ? EOL : Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
         }
     }
