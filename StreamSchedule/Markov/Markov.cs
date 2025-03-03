@@ -103,7 +103,9 @@ internal static class Markov
             if (isPresentAsNext) continue;
             
             links.Remove(noChildrenCandidate.Key);
-            context.Links.Remove(context.Links.First(x => x.Key == noChildrenCandidate.Key));
+            var linkInDb = context.Links.First(x => x.Key == noChildrenCandidate.Key);
+            context.Links.Remove(linkInDb);
+            context.NextWords.Remove(linkInDb.NextWords.First());
             prunedCount++;
         }
 
