@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Markov.Data;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace StreamSchedule.Markov;
 
@@ -12,15 +13,24 @@ internal static class Markov
     private const int MaxLinks = 125;
 
     private static bool hasLoaded = false;
+    private static long lastSaveTimestamp;
+
 
     public static async Task AddMessageAsync(string message)
     {
+        if (!hasLoaded) return;
+
+        if(Stopwatch.GetElapsedTime(lastSaveTimestamp).TotalSeconds >= 10)
+        {
+            lastSaveTimestamp = Stopwatch.GetTimestamp();
+            await context.SaveChangesAsync();
+        }
+
         string[] split = message.Split(' ', StringSplitOptions.TrimEntries);
         for (int i = 0; i < split.Length; i++)
         {
-            AddLink(split[i], (i + 1 >= split.Length) ? null : split[i + 1]);
+            await AddLink(split[i], (i + 1 >= split.Length) ? null : split[i + 1]);
         }
-        await context.SaveChangesAsync();
     }
 
     public static string Generate(string? input , LinkGenerationMethod method)
@@ -46,16 +56,15 @@ internal static class Markov
         return string.Join(" ", chain);
     }
 
-    private static void AddLink(string current, string? next)
+    private static async Task AddLink(string current, string? next)
     {
-        if (!hasLoaded) return;
 
         if (string.IsNullOrEmpty(next)) next = "\n";
 
         if (links.TryGetValue(current, out Link? value)) value.Add(next);
         else links.Add(current, new Link(current));
 
-        LinkStored ls = context.Links.FirstOrDefault(x => x.Key == current) ?? context.Links.Add(new LinkStored()
+        LinkStored ls = (await context.Links.FirstOrDefaultAsync(x => x.Key == current)) ?? context.Links.Add(new LinkStored()
             {
                 Key = current,
                 NextWords = [new WordCountPair()
@@ -79,7 +88,7 @@ internal static class Markov
     {
         int startingCount = links.Count;
         int prunedCount = 0;
-
+        
         List<Link> noChildren = [];
         foreach(Link l in links.Values)
         {
@@ -103,6 +112,8 @@ internal static class Markov
             prunedCount++;
         }
 
+
+
         await context.SaveChangesAsync();
 
         return $"Pruned {prunedCount} links ( {float.Round((prunedCount / (float)startingCount) * 100, 3)}% )";
@@ -111,16 +122,23 @@ internal static class Markov
     public static void Load(MarkovContext contextInjected)
     {
         long start = Stopwatch.GetTimestamp();
-
+        int duplicates = 0;
         BotCore.Nlog.Info("started loading markov");
         context = contextInjected;
 
-        foreach (var b in context.Links.Include(x => x.NextWords))
+        foreach (var b in context.Links.Include(x => x.NextWords).AsNoTracking())
         {
+            if (links.ContainsKey(b.Key))
+            {
+                duplicates++;
+                continue;
+            }
             links.Add(b.Key, new Link(b.Key, b.NextWords));
         }
-        BotCore.Nlog.Info($"finished loading markov ({Stopwatch.GetElapsedTime(start).TotalSeconds}s )");
+        BotCore.Nlog.Info($"finished loading markov, has {duplicates} dupes ({Stopwatch.GetElapsedTime(start).TotalSeconds}s )");
+
         hasLoaded = true;
+        lastSaveTimestamp = Stopwatch.GetTimestamp();
     }
 
     public static async Task SaveAsync()

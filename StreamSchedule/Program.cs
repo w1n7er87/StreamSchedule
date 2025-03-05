@@ -148,7 +148,7 @@ internal static class BotCore
     {
         long start = Stopwatch.GetTimestamp();
 
-        if(Stopwatch.GetElapsedTime(_lastSave) > TimeSpan.FromSeconds(10))
+        if(Stopwatch.GetElapsedTime(_lastSave).TotalSeconds >= 10)
         {
             _lastSave = start;
             DBContext.SaveChanges();
