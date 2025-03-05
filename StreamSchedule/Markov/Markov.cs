@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Markov.Data;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace StreamSchedule.Markov;
 
@@ -14,7 +13,6 @@ internal static class Markov
 
     private static bool hasLoaded = false;
     private static long lastSaveTimestamp;
-
 
     public static async Task AddMessageAsync(string message)
     {
@@ -111,8 +109,6 @@ internal static class Markov
             context.NextWords.Remove(linkInDb.NextWords.First());
             prunedCount++;
         }
-
-
 
         await context.SaveChangesAsync();
 
