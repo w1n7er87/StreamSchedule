@@ -57,7 +57,6 @@ public static class Program
 
             BotCore.Init(channelNames, dbContext, logger);
             Scheduling.Init();
-
             Markov.Markov.Load(markovContext);
 
             Console.ReadLine();

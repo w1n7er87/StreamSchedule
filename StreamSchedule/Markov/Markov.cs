@@ -27,7 +27,7 @@ internal static class Markov
         string[] split = message.Split(' ', StringSplitOptions.TrimEntries);
         for (int i = 0; i < split.Length; i++)
         {
-            await AddLink(split[i], (i + 1 >= split.Length) ? null : split[i + 1]);
+            await AddLinkAsync(split[i], (i + 1 >= split.Length) ? null : split[i + 1]);
         }
     }
 
@@ -54,15 +54,24 @@ internal static class Markov
         return string.Join(" ", chain);
     }
 
-    private static async Task AddLink(string current, string? next)
+    private static async Task AddLinkAsync(string current, string? next)
     {
-
         if (string.IsNullOrEmpty(next)) next = "\n";
 
-        if (links.TryGetValue(current, out Link? value)) value.Add(next);
-        else links.Add(current, new Link(current));
+        bool hasSeen = false;
 
-        LinkStored ls = (await context.Links.FirstOrDefaultAsync(x => x.Key == current)) ?? context.Links.Add(new LinkStored()
+        if (links.TryGetValue(current, out Link? value)) {value.Add(next); hasSeen = true; }
+        else links.Add(current, new Link(current));
+        
+        LinkStored ls;
+
+        if (hasSeen)
+        {
+            ls = (await context.Links.FirstOrDefaultAsync(x => x.Key == current))!;
+        }
+        else
+        {
+            ls = context.Links.Add(new LinkStored()
             {
                 Key = current,
                 NextWords = [new WordCountPair()
@@ -71,6 +80,8 @@ internal static class Markov
                     Count = 1,
                 }]
             }).Entity;
+            await context.SaveChangesAsync();
+        }
 
         WordCountPair? wc = ls.NextWords.FirstOrDefault(x => x.Word == next);
 
@@ -84,6 +95,9 @@ internal static class Markov
 
     public static async Task<string> Prune()
     {
+        hasLoaded = false;
+        await context.SaveChangesAsync();
+
         int startingCount = links.Count;
         int prunedCount = 0;
         
@@ -111,27 +125,49 @@ internal static class Markov
         }
 
         await context.SaveChangesAsync();
+        hasLoaded = true;
 
         return $"Pruned {prunedCount} links ( {float.Round((prunedCount / (float)startingCount) * 100, 3)}% )";
     }
 
     public static void Load(MarkovContext contextInjected)
     {
+        hasLoaded = false;
         long start = Stopwatch.GetTimestamp();
         int duplicates = 0;
-        BotCore.Nlog.Info("started loading markov");
+        int duplicateWords = 0;
+
         context = contextInjected;
 
-        foreach (var b in context.Links.Include(x => x.NextWords).AsNoTracking())
+        BotCore.Nlog.Info("started loading markov");
+
+        var loadedLinks = contextInjected.Links.Include(x => x.NextWords).AsNoTracking();
+
+        foreach (var b in loadedLinks)
         {
             if (links.ContainsKey(b.Key))
             {
+                //foreach (var n in b.NextWords) { contextInjected.Remove(b); }
+                //contextInjected.Remove(b);
                 duplicates++;
                 continue;
             }
+
+            List<string> next = [];
+            foreach (var c in b.NextWords.ToList())
+            {
+                if (next.Contains(c.Word))
+                {
+                    //b.NextWords.Remove(c);
+                    //contextInjected.Remove(c);
+                    duplicateWords++;
+                    continue;
+                }
+                next.Add(c.Word);
+            }
             links.Add(b.Key, new Link(b.Key, b.NextWords));
         }
-        BotCore.Nlog.Info($"finished loading markov, has {duplicates} dupes ({Stopwatch.GetElapsedTime(start).TotalSeconds}s )");
+        BotCore.Nlog.Info($"finished loading markov, had {duplicates} duplicate links, and {duplicateWords} duplicate words ({Stopwatch.GetElapsedTime(start).TotalSeconds}s )");
 
         hasLoaded = true;
         lastSaveTimestamp = Stopwatch.GetTimestamp();
