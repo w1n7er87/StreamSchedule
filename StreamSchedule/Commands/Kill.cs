@@ -17,14 +17,6 @@ internal class Kill : Command
 
         if (message.sender.Privileges == Privileges.Uuh && usedArgs.TryGetValue("fr", out _))
         {
-            string[] split = text.Split(' ');
-            int duration = 1;
-            if (split.Length > 0)
-            {
-                _ = int.TryParse(split[0], out duration);
-            }
-            TimeSpan delay = TimeSpan.FromSeconds(Math.Clamp(duration, 1, int.MaxValue));
-
             await BotCore.DBContext.SaveChangesAsync();
             await Markov.Markov.SaveAsync();
 

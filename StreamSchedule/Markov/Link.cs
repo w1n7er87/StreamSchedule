@@ -26,6 +26,10 @@ internal class Link
     {
         foreach (WordCountPair wcp in words)
         {
+            if (next.ContainsKey(wcp.Word))
+            {
+                continue;
+            }
             next.Add(wcp.Word, wcp.Count);
         }
     }
