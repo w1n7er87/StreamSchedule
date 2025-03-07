@@ -45,10 +45,10 @@ public class GraphQLClient
         return result.Data?.User;
     }
 
-    public async Task<(User?, bool)> GetUserByLoginAndUsernameAvailability(string userLogin)
+    public async Task<User?> GetUserByLogin(string userLogin)
     {
         GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestUserByLogin(userLogin));
-        return (result.Data?.User, result.Data?.IsUsernameAvailable ?? false);
+        return result.Data?.User;
     }
 
     public async Task<ChatSettings?> GetChatSettings(string userID)

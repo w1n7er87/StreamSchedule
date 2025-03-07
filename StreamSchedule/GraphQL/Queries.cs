@@ -219,7 +219,6 @@ internal class Queries
                 createdAt
                 deletedAt
             }
-            isUsernameAvailable(username:$login)
         }
         """);
 }

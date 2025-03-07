@@ -7,7 +7,7 @@ namespace StreamSchedule.Commands;
 
 internal class UserInfo2 : Command
 {
-    internal override string Call => "whois";
+    internal override string Call => "whois3";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "user info: [username]";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
@@ -22,13 +22,22 @@ internal class UserInfo2 : Command
 
         string targetUsername = message.sender.Username!;
 
-        if (!string.IsNullOrWhiteSpace(split[0])) targetUsername = split[0].Replace("@", "");
+        bool idProvided = false;
+        int userIDNumber = 0;
+        if (!string.IsNullOrWhiteSpace(split[0]))
+        {
+            if (split[0].StartsWith('#')) idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
 
-        (User?, bool) userAndNameAvailability = await BotCore.GQLClient.GetUserByLoginAndUsernameAvailability(targetUsername);
-        if (userAndNameAvailability.Item1 is null) return new CommandResult(userAndNameAvailability.Item2 ? "username is available." : "user does not exist and username is not available.");
-        User uu = userAndNameAvailability.Item1;
+            if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
+        }
 
-        string generalInfo = GetGeneralInfo(uu);
+        User? user;
+        if (idProvided) user = await BotCore.GQLClient.GetUserByID(userIDNumber.ToString());
+        else user = await BotCore.GQLClient.GetUserByLogin(targetUsername);
+
+        if (user is null) return new CommandResult("user does not exist");
+
+        string generalInfo = GetGeneralInfo(user);
 
         if (usedArgs.Count == 0) { return generalInfo; }
 
@@ -44,30 +53,30 @@ internal class UserInfo2 : Command
 
         if (usedArgs.TryGetValue("n", out _))
         {
-            response += PreviousUsernames(uu.Login!) + " ";
+            response += PreviousUsernames(user.Login!) + " ";
         }
 
         if (usedArgs.TryGetValue("c", out _) || all)
         {
-            color = await GetColor(uu, detailedInfo: !all);
+            color = await GetColor(user, detailedInfo: !all);
             response += color + " ";
         }
 
         if (usedArgs.TryGetValue("f", out _) || all)
         {
-            followers = (uu.Followers?.TotalCount ?? 0) + " followers";
+            followers = (user.Followers?.TotalCount ?? 0) + " followers";
             response += followers + " ";
         }
 
         if (usedArgs.TryGetValue("e", out _) || all)
         {
-            emotes = await GetEmotes(uu.Id!);
+            emotes = await GetEmotes(user.Id!);
             response += emotes[1] + " ";
         }
 
         if (usedArgs.TryGetValue("s", out _) || all)
         {
-            liveInfo = GetLiveStatus(uu);
+            liveInfo = GetLiveStatus(user);
             response += (message.sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
         }
 

@@ -6,5 +6,5 @@ public class QueryResponse
     public Emote? Emote { get; set; }
     public Message? Message { get; set; }
     public User? User { get; set; }
-    public bool IsUsernameAvailable { get; set; }
+    public bool? IsUsernameAvailable { get; set; }
 }
