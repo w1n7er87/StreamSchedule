@@ -96,6 +96,11 @@ internal class Queries
 
     private static readonly GraphQLQuery _userByIDQuery = new GraphQLQuery("""
         query GetUser($id:ID!, $type: UserLookupType) {
+            userResultByID(id: $id) {
+        	    ... on UserDoesNotExist {
+        		    reason
+        	    }
+            }
             user(id:$id, lookupType: $type){
                 login
                 id
@@ -112,6 +117,9 @@ internal class Queries
                     isStaff
                 }
                 channel {
+                    chatters {
+                        count
+                    }
                     founderBadgeAvailability
                     hypeTrain {
                         execution {
@@ -161,6 +169,11 @@ internal class Queries
 
     private static readonly GraphQLQuery _userByLoginQuery = new GraphQLQuery("""
         query GetUser($login:String!, $type: UserLookupType) {
+            userResultByLogin(login: $login) {
+        	    ... on UserDoesNotExist {
+        		    reason
+        	    }
+            }
             user(login:$login, lookupType: $type){
                 login
                 id
@@ -177,6 +190,9 @@ internal class Queries
                     isStaff
                 }
                 channel {
+                    chatters {
+                        count
+                    }
                     founderBadgeAvailability
                     hypeTrain {
                         execution {

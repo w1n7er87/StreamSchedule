@@ -55,4 +55,13 @@ public static class Helpers
         if ((roles?.IsStaff ?? false) || (roles?.IsGlobalMod ?? false) || (roles?.IsSiteAdmin ?? false)) return "staff";
         return "";
     }
+
+    public static string UserErrorReasonToString(GetUserErrorReason? reason) => reason switch
+    {
+        GetUserErrorReason.DEACTIVATED => "Deleted",
+        GetUserErrorReason.DMCA => "BAND DMCA",
+        GetUserErrorReason.TOS_INDEFINITE => "BAND TOS",
+        GetUserErrorReason.TOS_TEMPORARY => "temporary BAND TOS",
+        _ => "",
+    };
 }

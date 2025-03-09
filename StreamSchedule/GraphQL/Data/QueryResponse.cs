@@ -2,6 +2,8 @@
 
 public class QueryResponse
 {
+    public UserDoesNotExist? UserResultByLogin { get; set; }
+    public UserDoesNotExist? UserResultByID { get; set; }
     public Stream? Stream { get; set; }
     public Emote? Emote { get; set; }
     public Message? Message { get; set; }

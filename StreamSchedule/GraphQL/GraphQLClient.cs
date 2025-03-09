@@ -39,16 +39,16 @@ public class GraphQLClient
         return [.. result.Data.Message.Content.Fragments.Where(x => x?.Content is not null).Select(e => e!.Content!.ID)];
     }
 
-    public async Task<User?> GetUserByID(string userID)
+    public async Task<(User?, GetUserErrorReason?)> GetUserByID(string userID)
     {
         GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestUserByID(userID));
-        return result.Data?.User;
+        return (result.Data?.User, result.Data?.UserResultByID?.Reason);
     }
 
-    public async Task<User?> GetUserByLogin(string userLogin)
+    public async Task<(User?, GetUserErrorReason?)> GetUserOrReasonByLogin(string userLogin)
     {
         GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestUserByLogin(userLogin));
-        return result.Data?.User;
+        return (result.Data?.User, result.Data?.UserResultByLogin?.Reason);
     }
 
     public async Task<ChatSettings?> GetChatSettings(string userID)

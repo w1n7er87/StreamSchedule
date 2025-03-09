@@ -12,7 +12,7 @@ internal class UserInfo2 : Command
     internal override string Help => "user info: [username]";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n"];
+    internal override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n", "l"];
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -31,13 +31,14 @@ internal class UserInfo2 : Command
             if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
         }
 
-        User? user;
-        if (idProvided) user = await BotCore.GQLClient.GetUserByID(userIDNumber.ToString());
-        else user = await BotCore.GQLClient.GetUserByLogin(targetUsername);
+        (User?, GetUserErrorReason?) userError;
+        if (idProvided) userError = await BotCore.GQLClient.GetUserByID(userIDNumber.ToString());
+        else userError = await BotCore.GQLClient.GetUserOrReasonByLogin(targetUsername);
 
-        if (user is null) return new CommandResult("user does not exist");
+        if (userError.Item1 is null) return new CommandResult("user does not exist");
+        User user = userError.Item1;
 
-        string generalInfo = GetGeneralInfo(user);
+        string generalInfo = GetGeneralInfo(userError);
 
         if (usedArgs.Count == 0) { return generalInfo; }
 
@@ -45,6 +46,7 @@ internal class UserInfo2 : Command
         string followers = "";
         string[] emotes = [];
         string[] liveInfo = [];
+        string lurkers = "";
 
         bool all = usedArgs.TryGetValue("a", out _);
 
@@ -53,7 +55,7 @@ internal class UserInfo2 : Command
 
         if (usedArgs.TryGetValue("n", out _))
         {
-            response += PreviousUsernames(user.Login!) + " ";
+            response += PreviousUsernames(user.Id!) + " ";
         }
 
         if (usedArgs.TryGetValue("c", out _) || all)
@@ -80,7 +82,13 @@ internal class UserInfo2 : Command
             response += (message.sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
         }
 
-        return all ? new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}") : response;
+        if (usedArgs.TryGetValue("l", out _) || all)
+        {
+            lurkers = (user!.Channel?.Chatters?.Count) switch { >0 => user.Channel.Chatters.Count + " lurkers", _ => "no lurkers"};
+            response += lurkers + " ";
+        }
+
+        return all ? new($"{generalInfo} | {color} | {followers} | {lurkers} | {emotes[0]} | {liveInfo[0]}") : response;
     }
 
     private static async Task<string[]> GetEmotes(string userID)
@@ -186,14 +194,14 @@ internal class UserInfo2 : Command
         return [$"live{mature} {game}", $"live{mature} ({duration}) : {game} - \" {title} \" for {viewcount} viewers.{mature} {streamStatus} {clips} {hypeTrain}"];
     }
 
-    private static string GetGeneralInfo(User user)
+    private static string GetGeneralInfo((User?, GetUserErrorReason?) userReason)
     {
-        return $"{Helpers.UserRolesIsStaff(user.Roles)} {Helpers.UserRolesIsPartnerOrAffiliate(user.Roles)} {user.Login} (id:{user.Id}) created: {user.CreatedAt:dd/MMM/yyyy} {(user.DeletedAt is null ? "" : $"deleted: {user.DeletedAt:dd/MMM/yyyy} {user.Channel?.FounderBadgeAvailability switch { (> 0) => $" {user.Channel.FounderBadgeAvailability} founder slots available", _ => "" }}")}";
+        return $"{Helpers.UserErrorReasonToString(userReason.Item2)} {Helpers.UserRolesIsStaff(userReason.Item1!.Roles)} {Helpers.UserRolesIsPartnerOrAffiliate(userReason.Item1!.Roles)} {userReason.Item1.Login} (id:{userReason.Item1.Id}) created: {userReason.Item1.CreatedAt:dd/MMM/yyyy} {(userReason.Item1.DeletedAt is null ? "" : $"deleted: {userReason.Item1.DeletedAt:dd/MMM/yyyy} {userReason.Item1.Channel?.FounderBadgeAvailability switch { (> 0) => $" {userReason.Item1.Channel.FounderBadgeAvailability} founder slots available", _ => "" }}")}";
     }
 
-    private static string PreviousUsernames(string username)
+    private static string PreviousUsernames(string userID)
     {
-        if (!Data.Models.User.TryGetUser(username, out Data.Models.User dbData)) return "Unknown user";
+        if (!Data.Models.User.TryGetUser("this is a bad design" , out Data.Models.User dbData, userID)) return "Unknown user";
 
         List<string>? previousUsernames = dbData.PreviousUsernames;
         if (previousUsernames is null || previousUsernames.Count == 0) return "Nothing recorded so far";
