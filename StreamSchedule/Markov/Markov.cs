@@ -102,15 +102,15 @@ internal static class Markov
         int prunedCount = 0;
         
         List<Link> noChildren = [];
-        foreach(Link l in links.Values)
+        foreach (Link l in links.Values)
         {
-            if(l.next.Count == 1 && l.next.Keys.First().Equals("\n") ) noChildren.Add(l);
+            if(l.next.Count == 1 && l.next.Keys.First().Equals("\n")) noChildren.Add(l);
         }
 
-        foreach(Link noChildrenCandidate in noChildren)
+        foreach (Link noChildrenCandidate in noChildren)
         {
             bool isPresentAsNext = false;
-            foreach(Link linkInMemory in links.Values)
+            foreach (Link linkInMemory in links.Values)
             {
                 if (linkInMemory.next.ContainsKey(noChildrenCandidate.Key)) isPresentAsNext = true;
             }
@@ -118,9 +118,14 @@ internal static class Markov
             if (isPresentAsNext) continue;
             
             links.Remove(noChildrenCandidate.Key);
-            var linkInDb = context.Links.First(x => x.Key == noChildrenCandidate.Key);
+            var linkInDb = context.Links.FirstOrDefault(x => x.Key == noChildrenCandidate.Key);
+
+            if (linkInDb is null) continue;
+
             context.Links.Remove(linkInDb);
-            context.NextWords.Remove(linkInDb.NextWords.First());
+            var nextWordsToRemove = linkInDb.NextWords.FirstOrDefault();
+            if (nextWordsToRemove is not null) context.NextWords.Remove(nextWordsToRemove);
+            
             prunedCount++;
         }
 
