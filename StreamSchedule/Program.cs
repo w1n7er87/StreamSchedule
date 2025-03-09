@@ -306,7 +306,7 @@ internal static class BotCore
 
     public static async void SendLongMessage(string channel, string? replyID, string message)
     {
-        string[] parts = Utils.Filter(message).Split(' ');
+        string[] parts = message.Split(' ');
         string result = "";
 
         for (int i = 0; i < parts.Length; i++)

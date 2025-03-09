@@ -23,13 +23,13 @@ internal class Markovs : Command
             return new CommandResult(isMuted ? "ok i shut up" : "ok unmuted");
         }
 
-        if(usedArgs.TryGetValue("prune", out _) && message.sender.Privileges == Privileges.Uuh) return Utils.Responses.Ok + (await Markov.Markov.Prune());
+        if (usedArgs.TryGetValue("prune", out _) && message.sender.Privileges == Privileges.Uuh) return Utils.Responses.Ok + (await Markov.Markov.Prune());
 
         if (usedArgs.TryGetValue("count", out _)) return new CommandResult($"there are {Markov.Markov.Count()} links");
 
         LinkGenerationMethod method = usedArgs.TryGetValue("w", out _) ? LinkGenerationMethod.Weighted : LinkGenerationMethod.Random;
         method = usedArgs.TryGetValue("o", out _) ? LinkGenerationMethod.Ordered : method;
 
-        return new CommandResult(isMuted ? "muted ok " : Markov.Markov.Generate(cleanContent, method));
+        return new CommandResult(isMuted ? "muted ok " : Utils.Filter(Markov.Markov.Generate(cleanContent, method)));
     }
 }
