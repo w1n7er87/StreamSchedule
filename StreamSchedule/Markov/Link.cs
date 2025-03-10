@@ -5,7 +5,9 @@ namespace StreamSchedule.Markov;
 internal enum LinkGenerationMethod
 {
     Weighted,
+    InverseWeighted,
     Ordered,
+    InverseOrdered,
     Random,
 }
 
@@ -47,15 +49,27 @@ internal class Link
             KeyValuePair<string, int>[] upperHalf = [.. next.Where(x => !x.Key.Equals("\n")).OrderBy(x => x.Value).TakeLast(randomCutoff)];
             return (upperHalf.Length < 1) ? EOL : Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
         }
-        if (method is LinkGenerationMethod.Random)
+        if (method is LinkGenerationMethod.InverseOrdered)
         {
-            return Markov.GetByKeyOrDefault(next.Keys.ToArray()[Random.Shared.Next(next.Keys.Count)]);
+            int randomCutoff = Random.Shared.Next(1, next.Count + 1);
+            KeyValuePair<string, int>[] lowerHalf = [.. next.Where(x => !x.Key.Equals("\n")).OrderBy(x => -x.Value).TakeLast(randomCutoff)];
+            return (lowerHalf.Length < 1) ? EOL : Markov.GetByKeyOrDefault(lowerHalf[Random.Shared.Next(lowerHalf.Length)].Key);
         }
-        else
+        if (method is LinkGenerationMethod.Weighted)
         {
             int randomCutoff = Random.Shared.Next(next.Max(x => x.Value));
             KeyValuePair<string, int>[] upperHalf = [.. next.Where(x => !x.Key.Equals("\n") && x.Value >= randomCutoff)];
             return (upperHalf.Length < 1) ? EOL : Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
+        }
+        if ( method is LinkGenerationMethod.InverseWeighted)
+        {
+            int randomCutoff = Random.Shared.Next(next.Max(x => x.Value));
+            KeyValuePair<string, int>[] lowerHalf = [.. next.Where(x => !x.Key.Equals("\n") && x.Value <= randomCutoff)];
+            return (lowerHalf.Length < 1) ? EOL : Markov.GetByKeyOrDefault(lowerHalf[Random.Shared.Next(lowerHalf.Length)].Key);
+        }
+        else
+        {
+            return Markov.GetByKeyOrDefault(next.Keys.ToArray()[Random.Shared.Next(next.Keys.Count)]);
         }
     }
 

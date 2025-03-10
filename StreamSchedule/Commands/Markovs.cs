@@ -10,7 +10,7 @@ internal class Markovs : Command
     internal override string Help => "Markov chain formed from this chat's messages";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.HalfAMinute);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["muted", "w", "o", "prune", "count"];
+    internal override string[] Arguments => ["muted", "w", "iw", "o", "io", "prune", "count"];
 
     private static bool isMuted = true;
 
@@ -27,8 +27,11 @@ internal class Markovs : Command
 
         if (usedArgs.TryGetValue("count", out _)) return new CommandResult($"there are {Markov.Markov.Count()} links");
 
-        LinkGenerationMethod method = usedArgs.TryGetValue("w", out _) ? LinkGenerationMethod.Weighted : LinkGenerationMethod.Random;
-        method = usedArgs.TryGetValue("o", out _) ? LinkGenerationMethod.Ordered : method;
+        LinkGenerationMethod method = usedArgs.TryGetValue("w", out _) ? LinkGenerationMethod.Weighted : 
+            usedArgs.TryGetValue("o", out _) ? LinkGenerationMethod.Ordered : 
+            usedArgs.TryGetValue("iw", out _) ? LinkGenerationMethod.InverseWeighted : 
+            usedArgs.TryGetValue("io", out _) ? LinkGenerationMethod.InverseOrdered : 
+            LinkGenerationMethod.Random;
 
         return new CommandResult(isMuted ? "muted ok " : Utils.Filter(Markov.Markov.Generate(cleanContent, method)));
     }
