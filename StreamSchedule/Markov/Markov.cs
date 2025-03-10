@@ -62,32 +62,28 @@ internal static class Markov
 
         if (links.TryGetValue(current, out Link? value)) {value.Add(next); hasSeen = true; }
         else links.Add(current, new Link(current));
-        
-        LinkStored ls;
 
         if (hasSeen)
         {
-            ls = (await context.Links.FirstOrDefaultAsync(x => x.Key == current))!;
-        }
-        else
-        {
-            ls = context.Links.Add(new LinkStored()
-            {
-                Key = current,
-                NextWords = [new WordCountPair()
-                {
-                    Word = next,
-                    Count = 1,
-                }]
-            }).Entity;
-            await context.SaveChangesAsync();
+            LinkStored ls = await context.Links.FirstAsync(x => x.Key == current);
+
+            WordCountPair? wc = ls.NextWords.FirstOrDefault(x => x.Word.Equals(next));
+
+            if (wc is not null) wc.Count++;
+            else ls.NextWords.Add(new WordCountPair() { Word = next, Count = 1, });
             return;
         }
 
-        WordCountPair? wc = ls.NextWords.FirstOrDefault(x => x.Word == next);
-
-        if (wc is not null) wc.Count++;
-        else ls.NextWords.Add(new WordCountPair() { Word = next, Count = 1, });
+        await context.Links.AddAsync(new LinkStored()
+        {
+            Key = current,
+            NextWords = [new WordCountPair()
+            {
+                Word = next,
+                Count = 1,
+            }]
+        });
+        await context.SaveChangesAsync();
     }
 
     internal static Link GetByKeyOrDefault(string key) => links.TryGetValue(key, out Link? result) ? result : Link.EOL;
