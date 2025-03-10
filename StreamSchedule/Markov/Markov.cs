@@ -81,6 +81,7 @@ internal static class Markov
                 }]
             }).Entity;
             await context.SaveChangesAsync();
+            return;
         }
 
         WordCountPair? wc = ls.NextWords.FirstOrDefault(x => x.Word == next);
