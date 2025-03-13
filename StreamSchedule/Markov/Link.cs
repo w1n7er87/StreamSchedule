@@ -57,15 +57,21 @@ internal class Link
         }
         if (method is LinkGenerationMethod.Weighted)
         {
-            int randomCutoff = Random.Shared.Next(next.Max(x => x.Value));
-            KeyValuePair<string, int>[] upperHalf = [.. next.Where(x => !x.Key.Equals("\n") && x.Value >= randomCutoff)];
-            return (upperHalf.Length < 1) ? EOL : Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
+            IEnumerable<KeyValuePair<string, int>> noEOL = next.Where(x => !x.Key.Equals("\n"));
+            if (!noEOL.Any()) return EOL;
+
+            int randomCutoff = Random.Shared.Next(noEOL.Max(x => x.Value));
+            KeyValuePair<string, int>[] upperHalf = [.. noEOL.Where(x => x.Value >= randomCutoff)];
+            return (upperHalf.Length == 0) ? EOL : Markov.GetByKeyOrDefault(upperHalf[Random.Shared.Next(upperHalf.Length)].Key);
         }
         if ( method is LinkGenerationMethod.InverseWeighted)
         {
-            int randomCutoff = Random.Shared.Next(next.Max(x => x.Value));
-            KeyValuePair<string, int>[] lowerHalf = [.. next.Where(x => !x.Key.Equals("\n") && x.Value <= randomCutoff)];
-            return (lowerHalf.Length < 1) ? EOL : Markov.GetByKeyOrDefault(lowerHalf[Random.Shared.Next(lowerHalf.Length)].Key);
+            IEnumerable<KeyValuePair<string, int>> noEOL = next.Where(x => !x.Key.Equals("\n"));
+            if (!noEOL.Any()) return EOL;
+
+            int randomCutoff = Random.Shared.Next(noEOL.Min(x => x.Value), noEOL.Max(x => x.Value));
+            KeyValuePair<string, int>[] lowerHalf = [.. noEOL.Where(x => x.Value <= randomCutoff)];
+            return (lowerHalf.Length == 0) ? EOL : Markov.GetByKeyOrDefault(lowerHalf[Random.Shared.Next(lowerHalf.Length)].Key);
         }
         else
         {

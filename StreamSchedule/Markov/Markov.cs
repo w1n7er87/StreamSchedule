@@ -9,7 +9,7 @@ internal static class Markov
     private static MarkovContext context;
 
     private static readonly Dictionary<string, Link> links = [];
-    private const int MaxLinks = 111;
+    private const int MaxLinks = 25;
 
     private static bool hasLoaded = false;
     private static long lastSaveTimestamp;
