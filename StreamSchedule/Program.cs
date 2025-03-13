@@ -312,6 +312,9 @@ internal static class BotCore
         for (int i = 0; i < parts.Length; i++)
         {
             string part = parts[i];
+
+            if (part.Length >= MessageLengthLimit) result = part;
+
             if (result.Length + part.Length <= MessageLengthLimit)
             {
                 result += part + ' ';
