@@ -14,9 +14,7 @@ namespace StreamSchedule.Commands
         internal override Task<CommandResult> Handle(UniversalMessageInfo message)
         {
             string content = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
-
-            CommandResult result = "";
-
+            
             bool verbose = usedArgs.TryGetValue("v", out _);
 
             List<long> results = [];
@@ -46,13 +44,17 @@ namespace StreamSchedule.Commands
                 rolled.Add($"{amount}d{sides - 1}");
             }
 
-            if (results.Count < 1) return Task.FromResult(new CommandResult($"rolled {RollInternal(1, 7)[0]} (1d6) "));
-
-            if (results.Count > 50) verbose = false;
-
-            if (!verbose) return Task.FromResult(new CommandResult(results.Sum().ToString()));
-
-            return Task.FromResult(new CommandResult($"rolled: {string.Join(", ", results)} ({results.Sum()} total; {string.Join(", ", rolled)})"));
+            switch (results.Count)
+            {
+                case < 1:
+                    return Task.FromResult(new CommandResult($"rolled {RollInternal(1, 7)[0]} (1d6) "));
+                case > 50:
+                    verbose = false;
+                    break;
+            }
+            
+            CommandResult result = (verbose)? $"rolled: {string.Join(", ", results)} ({results.Sum()} total; {string.Join(", ", rolled)})": results.Sum().ToString();
+            return Task.FromResult(result);
         }
 
         private static long[] RollInternal(int amount, int sides)
