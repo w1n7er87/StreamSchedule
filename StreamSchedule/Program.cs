@@ -306,28 +306,43 @@ internal static class BotCore
 
     public static async void SendLongMessage(string channel, string? replyID, string message)
     {
-        string[] parts = message.Split(' ');
-        string result = "";
+        string[] parts = message.Split(' ', StringSplitOptions.TrimEntries);
+        string accumulatedBelowLimit = "";
 
         for (int i = 0; i < parts.Length; i++)
         {
             string part = parts[i];
 
-            if (part.Length >= MessageLengthLimit) result = part;
+            if (accumulatedBelowLimit.Length + part.Length + 1 <= MessageLengthLimit)
+            {
+                accumulatedBelowLimit += part + ' ';
+                continue;
+            }
 
-            if (result.Length + part.Length <= MessageLengthLimit)
+            if (part.Length > MessageLengthLimit)
             {
-                result += part + ' ';
-            }
-            else
-            {
-                if (replyID is not null) Client.SendReply(channel, replyID, result);
-                else Client.SendMessage(channel, result);
-                result = part + ' ';
+                if (!string.IsNullOrWhiteSpace(accumulatedBelowLimit))
+                {
+                    SendShortMessage(accumulatedBelowLimit);
+                    accumulatedBelowLimit = "";
+                    await Task.Delay(1100);
+                }
+                SendShortMessage(part);
                 await Task.Delay(1100);
+                continue;
             }
+
+            SendShortMessage(accumulatedBelowLimit);
+            accumulatedBelowLimit = part + ' ';
+            await Task.Delay(1100);
         }
-        if (replyID is not null) Client.SendReply(channel, replyID, result);
-        else Client.SendMessage(channel, result);
+
+        SendShortMessage(accumulatedBelowLimit);
+
+        void SendShortMessage(string message)
+        {
+            if (replyID is not null) Client.SendReply(channel, replyID, message);
+            else Client.SendMessage(channel, message);
+        }
     }
 }
