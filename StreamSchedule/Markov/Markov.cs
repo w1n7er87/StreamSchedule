@@ -65,7 +65,7 @@ internal static class Markov
 
         if (hasSeen)
         {
-            LinkStored ls = await context.Links.FirstAsync(x => x.Key == current);
+            LinkStored ls = await context.Links.Include(linkStored => linkStored.NextWords).FirstAsync(x => x.Key == current);
 
             WordCountPair? wc = ls.NextWords.FirstOrDefault(x => x.Word.Equals(next));
 
@@ -115,7 +115,7 @@ internal static class Markov
             if (isPresentAsNext) continue;
             
             links.Remove(noChildrenCandidate.Key);
-            var linkInDb = context.Links.FirstOrDefault(x => x.Key == noChildrenCandidate.Key);
+            var linkInDb = context.Links.Include(linkStored => linkStored.NextWords).FirstOrDefault(x => x.Key == noChildrenCandidate.Key);
 
             if (linkInDb is null) continue;
 
