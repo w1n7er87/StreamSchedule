@@ -10,24 +10,19 @@ public static class ChannelEmoteExtensions
 
     public static bool DeserializeChangedEmote(this ChannelEmote emote, ChannelEmote other, out string deserializedAddedEmoteWithChangesWithRespectToTheOldOne)
     {
-        if (emote.Name.Equals(other.Name))
-        {
-            string image = emote.Images.Url1X.Equals(other.Images.Url1X) ? "" : " 🖼️ => 🖼️ ";
-            string tier = emote.Tier.Equals(other.Tier) ? TierToString(emote.Tier) : $"{TierToString(other.Tier)} => {TierToString(emote.Tier)}";
-            string type = emote.EmoteType.Equals(other.EmoteType) ? TypeToString(emote.EmoteType) : $"{TypeToString(other.EmoteType)} => {TypeToString(emote.EmoteType)}";
-            string format = FormatToString(emote.Format, other.Format);
-            deserializedAddedEmoteWithChangesWithRespectToTheOldOne = $"{emote.Name} ({image}{tier}{type}{format})";
-            return true;
-        }
-        else
-        {
-            deserializedAddedEmoteWithChangesWithRespectToTheOldOne = "";
-            return false;
-        }
+        deserializedAddedEmoteWithChangesWithRespectToTheOldOne = "";
+        if (emote.Name.Equals(other.Name)) return false;
+        
+        string image = emote.Images.Url1X.Equals(other.Images.Url1X) ? "" : " 🖼️ => 🖼️ ";
+        string tier = emote.Tier.Equals(other.Tier) ? TierToString(emote.Tier) : $"{TierToString(other.Tier)} => {TierToString(emote.Tier)}";
+        string type = emote.EmoteType.Equals(other.EmoteType) ? TypeToString(emote.EmoteType) : $"{TypeToString(other.EmoteType)} => {TypeToString(emote.EmoteType)}";
+        string format = FormatToString(emote.Format, other.Format);
+        deserializedAddedEmoteWithChangesWithRespectToTheOldOne = $"{emote.Name} ({image}{tier}{type}{format})";
+        return true;
 
-        string TierToString(string tier)
+        string TierToString(string tr)
         {
-            return tier switch
+            return tr switch
             {
                 "1000" => "T1",
                 "2000" => "T2",
@@ -36,9 +31,9 @@ public static class ChannelEmoteExtensions
             };
         }
 
-        string TypeToString(string type)
+        string TypeToString(string tp)
         {
-            return type switch
+            return tp switch
             {
                 "bitstier" => "B",
                 "follower" => "F",

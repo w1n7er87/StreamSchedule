@@ -10,7 +10,6 @@ public struct RatioScore(float r, float s)
 
 internal static class Userscore
 {
-    
     public static RatioScore GetRatioAndScore(User u)
     {
         int offline = u.MessagesOffline;

@@ -7,12 +7,12 @@ internal class EvaluateUsers : Command
 {
     internal override string Call => "evaluate";
     internal override Privileges MinPrivilege => Privileges.Uuh;
-    internal override string Help => "evaluate user's scores and assign privileges accordingly: [username](optional) ";
+    internal override string Help => "evaluate user's scores and assign privileges accordingly: [username](optional)";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["s"];
 
-    private static float DefaultCutoffScore => 4.0f;
+    private static float DefaultCutoffScore => 3.2f;
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {

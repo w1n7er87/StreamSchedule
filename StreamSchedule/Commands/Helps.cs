@@ -7,7 +7,7 @@ internal class Helps : Command
 {
     internal override string Call => "helps";
     internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "show command help: [command name] ";
+    internal override string Help => "show command help: [command name]";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
@@ -23,12 +23,12 @@ internal class Helps : Command
         {
             var cmdAliases = BotCore.DBContext.CommandAliases.Find(c.Call.ToLower());
 
-            if ((cmdAliases is null || cmdAliases.Aliases is null || !cmdAliases.Aliases.Contains(requestedCommand)) && !requestedCommand.Equals(c.Call)) continue;
+            if ((cmdAliases?.Aliases is null || !cmdAliases.Aliases.Contains(requestedCommand)) && !requestedCommand.Equals(c.Call)) continue;
 
             string aliases = "";
             if (cmdAliases?.Aliases is not null && cmdAliases.Aliases.Count != 0)
             {
-                aliases = $"({string.Join(",", cmdAliases.Aliases)}) ";
+                aliases = $"( {string.Join(" , ", cmdAliases.Aliases)} ) ";
             }
 
             string args = "";
@@ -49,7 +49,7 @@ internal class Helps : Command
             string aliases = "";
             if (c.Aliases is not null && c.Aliases.Count != 0)
             {
-                aliases = $"({string.Join(",", c.Aliases)}) ";
+                aliases = $"( {string.Join(" , ", c.Aliases)} ) ";
             }
 
             return Task.FromResult(new CommandResult($"{aliases}simple text command mhm . ", false));

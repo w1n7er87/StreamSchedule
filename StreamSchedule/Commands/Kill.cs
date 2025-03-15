@@ -6,7 +6,7 @@ internal class Kill : Command
 {
     internal override string Call => "kill";
     internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "kill the bot: [time] (in seconds, optional)";
+    internal override string Help => "kill the bot";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["fr"];
@@ -25,10 +25,8 @@ internal class Kill : Command
             return new CommandResult("buhbye ", false);
         }
 
-        string target = message.content.Split(' ')[0];
+        string target = text.Split(' ')[0];
 
-        if (Random.Shared.Next(100) > 25) return new CommandResult("✋ unauthorized action. ", false);
-
-        return new CommandResult($"MEGALUL 🔪 {target}", false);
+        return Random.Shared.Next(100) > 25 ? new CommandResult("✋ unauthorized action. ", false) : new CommandResult($"MEGALUL 🔪 {target}", false);
     }
 }

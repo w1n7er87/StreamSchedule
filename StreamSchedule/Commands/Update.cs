@@ -16,7 +16,7 @@ internal class Update : Command
     {
         BotCore.SendLongMessage(message.channelName, null, "📆 🛠️ ");
 
-        BotCore.DBContext.SaveChanges();
+        await BotCore.DBContext.SaveChangesAsync();
         await Markov.Markov.SaveAsync();
 
         Process.Start(new ProcessStartInfo

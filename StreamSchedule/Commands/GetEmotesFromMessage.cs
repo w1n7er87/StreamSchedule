@@ -19,7 +19,7 @@ internal class GetEmotesFromMessage : Command
         CommandResult response = new();
         _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 
-        List<string> emoteIDs;
+        List<string?> emoteIDs;
         ChatMessage? reply = null;
 
         if (usedArgs.TryGetValue("emoteid", out string? passedEmoteID))
@@ -49,8 +49,9 @@ internal class GetEmotesFromMessage : Command
 
         List<Task<GraphQL.Data.Emote?>> tasks = [];
 
-        foreach (string emoteID in emoteIDs.Distinct())
+        foreach (string? emoteID in emoteIDs.Distinct())
         {
+            if (emoteID is null) continue;
             tasks.Add(BotCore.GQLClient.GetEmote(emoteID));
         }
 

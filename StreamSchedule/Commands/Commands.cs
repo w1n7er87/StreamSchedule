@@ -6,7 +6,7 @@ namespace StreamSchedule.Commands;
 
 internal static class Commands
 {
-    private static List<Type> KnownCommands => Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(Command))).ToList();
+    private static List<Type> KnownCommands => [.. Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(Command)))];
 
     public static List<Command> CurrentCommands { get; private set; } = [];
     public static List<TextCommand> CurrentTextCommands { get; private set; } = [];
@@ -20,7 +20,7 @@ internal static class Commands
 
         foreach (string ss in split)
         {
-            foreach (var arg in args)
+            foreach (string arg in args)
             {
                 if (!ss.Contains($"-{arg}", StringComparison.InvariantCultureIgnoreCase)) continue;
                 usedArgs[arg.ToLower()] = ss.Replace($"-{arg}", "");
@@ -72,10 +72,6 @@ internal static class Commands
 
         return !commandNames.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase)) && !_allCurrentAliasStrings.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase));
     }
-
-    internal static void AddNewTextCommand(TextCommand textCommand) => CurrentTextCommands.Add(textCommand);
-
-    internal static void RemoveTextCommand(TextCommand textCommand) => CurrentTextCommands.Remove(textCommand);
 
     internal static void AddAlias(string alias) => _allCurrentAliasStrings.Add(alias);
 

@@ -6,7 +6,7 @@ internal class Randoms : Command
 {
     internal override string Call => "random";
     internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get random number [0 - n( = 100)]; -flip for 50/50; -w(x = 5) for words from recent messages (50 max)";
+    internal override string Help => "get random number [0 - n( = 100)]; -flip for 50/50";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["flip"];
