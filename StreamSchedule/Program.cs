@@ -7,7 +7,6 @@ using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using StreamSchedule.Extensions;
 using StreamSchedule.GraphQL;
-using StreamSchedule.Markov;
 using System.Diagnostics;
 using TwitchLib.Api;
 using TwitchLib.Api.Services;
@@ -42,11 +41,7 @@ public static class Program
             DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>()
                 .UseSqlite("Data Source=StreamSchedule.data").Options);
             dbContext.Database.EnsureCreated();
-
-            MarkovContext markovContext = new(new DbContextOptionsBuilder<MarkovContext>()
-                .UseSqlite("Data Source=Markov.data").Options);
-            markovContext.Database.EnsureCreated();
-
+            
             List<string> channelNames = [];
 
             foreach (int id in channelIDs)
@@ -57,7 +52,6 @@ public static class Program
 
             BotCore.Init(channelNames, dbContext, logger);
             Scheduling.Init();
-            Markov.Markov.Load(markovContext);
 
             Console.ReadLine();
         }
@@ -185,11 +179,7 @@ internal static class BotCore
             }
         }
 
-        if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
-        {
-            if ((userSent.MessagesOnline > 100 || userSent.MessagesOffline > 100) && userSent.Privileges >= Privileges.None && e.ChatMessage.Channel.Equals("vedal987")) await Markov.Markov.AddMessageAsync(messageAsCodepoints.ToStringRepresentation().Replace("\U000e0000", "").Trim());
-            return;
-        }
+        if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints)) return;
 
         if (messageAsCodepoints.Length < 2) return;
 

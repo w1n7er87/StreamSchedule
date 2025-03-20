@@ -18,7 +18,6 @@ internal class Kill : Command
         if (message.sender.Privileges == Privileges.Uuh && usedArgs.TryGetValue("fr", out _))
         {
             await BotCore.DBContext.SaveChangesAsync();
-            await Markov.Markov.SaveAsync();
 
             Environment.Exit(0);
 
