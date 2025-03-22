@@ -79,7 +79,8 @@ internal class UserInfo2 : Command
         if (usedArgs.TryGetValue("s", out _) || all)
         {
             liveInfo = GetLiveStatus(user);
-            response += (message.sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
+            response += (message.sender.Privileges < Privileges.Trusted ? liveInfo[0] : liveInfo[1]) + " ";
+            response.requiresFilter = message.sender.Privileges < Privileges.Trusted;
         }
 
         if (usedArgs.TryGetValue("l", out _) || all)

@@ -5,17 +5,20 @@ namespace StreamSchedule.Data;
 internal class CommandResult()
 {
     public bool reply = true;
+    public bool requiresFilter = false;
     private readonly StringBuilder _stringBuilder = new();
 
-    public CommandResult(string content, bool reply = true) : this()
+    public CommandResult(string content, bool reply = true, bool requiresFilter = false) : this()
     {
         this.reply = reply;
+        this.requiresFilter = requiresFilter;
         _stringBuilder = new(content);
     }
 
-    public CommandResult(StringBuilder stringBuilder, bool reply = true) : this()
+    public CommandResult(StringBuilder stringBuilder, bool reply = true, bool requiresFilter = false) : this()
     {
         this.reply = reply;
+        this.requiresFilter = requiresFilter;
         _stringBuilder = stringBuilder;
     }
 
@@ -31,18 +34,8 @@ internal class CommandResult()
         return cr;
     }
 
-    public override string ToString()
-    {
-        return _stringBuilder.ToString();
-    }
+    public override string ToString() => _stringBuilder.ToString();
+    public static implicit operator CommandResult(string s) => new(s);
+    public static implicit operator CommandResult(StringBuilder sb) => new(sb);
 
-    public static implicit operator CommandResult(string s)
-    {
-        return new CommandResult(s);
-    }
-
-    public static implicit operator CommandResult(StringBuilder sb)
-    {
-        return new CommandResult(sb);
-    }
 }

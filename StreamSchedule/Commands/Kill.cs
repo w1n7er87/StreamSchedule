@@ -26,6 +26,6 @@ internal class Kill : Command
 
         string target = text.Split(' ')[0];
 
-        return Random.Shared.Next(100) > 25 ? new CommandResult("✋ unauthorized action. ", false) : new CommandResult($"MEGALUL 🔪 {target}", false);
+        return Random.Shared.Next(100) > 25 ? new CommandResult("✋ unauthorized action. ", false) : new CommandResult($"MEGALUL 🔪 {target}", false, true);
     }
 }

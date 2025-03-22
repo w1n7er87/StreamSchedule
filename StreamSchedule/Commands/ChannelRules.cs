@@ -20,6 +20,6 @@ internal class ChannelRules : Command
             _ => ""
         };
 
-        return new($"{links}chat rules: {string.Join(", ", settings?.Rules ?? ["no channel rules set (or failed to fetch idk."])}");
+        return new($"{links}chat rules: {string.Join(", ", settings?.Rules ?? ["no channel rules set (or failed to fetch idk."])}", true, true);
     }
 }

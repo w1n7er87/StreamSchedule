@@ -234,7 +234,7 @@ internal static class BotCore
 
             Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds}ms) [{response}]");
             
-            SendLongMessage(e.ChatMessage.Channel, response.reply ? e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id : null, response.ToString() + bypassSameMessage);
+            SendLongMessage(e.ChatMessage.Channel, response.reply ? e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id : null, response.ToString() + bypassSameMessage, response.requiresFilter);
 
             _sameMessage = !_sameMessage;
             if (userSent.Privileges < Privileges.Mod) c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
@@ -294,9 +294,12 @@ internal static class BotCore
 
     #endregion EVENTS
 
-    public static async void SendLongMessage(string channel, string? replyID, string message)
+    public static async void SendLongMessage(string channel, string? replyID, string message, bool requiresFilter = false)
     {
-        string[] parts = message.Split(' ', StringSplitOptions.TrimEntries);
+        string[] parts = requiresFilter
+            ? Utils.Filter(message).Split(' ', StringSplitOptions.TrimEntries)
+            : message.Split(' ', StringSplitOptions.TrimEntries);
+        
         string accumulatedBelowLimit = "";
 
         for (int i = 0; i < parts.Length; i++)
@@ -329,10 +332,10 @@ internal static class BotCore
 
         SendShortMessage(accumulatedBelowLimit);
 
-        void SendShortMessage(string message)
+        void SendShortMessage(string msg)
         {
-            if (replyID is not null) Client.SendReply(channel, replyID, message);
-            else Client.SendMessage(channel, message);
+            if (replyID is not null) Client.SendReply(channel, replyID, msg);
+            else Client.SendMessage(channel, msg);
         }
     }
 }
