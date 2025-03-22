@@ -10,7 +10,7 @@ public static class Monitoring
     private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(10);
 
     private static Dictionary<int, List<Emote>> Emotes = [];
-    private static List<EmoteMonitorChannel> Channels;
+    private static List<EmoteMonitorChannel> Channels = [];
 
     public static void Init()
     {

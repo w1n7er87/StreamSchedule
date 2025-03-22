@@ -18,7 +18,7 @@ public record EmoteCost(EmoteCostType Type, int Value)
         return $"{Type switch
         {
             EmoteCostType.Unknown => "",
-            EmoteCostType.Subscription => "Sub",
+            EmoteCostType.Subscription => "T",
             EmoteCostType.Bits => "Bits",
             EmoteCostType.Follow => "Follow",
             _ => "",
@@ -33,10 +33,10 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
         return new Emote(ID: channelEmote.Id, Cost: new EmoteCost(
             Type: channelEmote.EmoteType switch
             {
-                "bitstier" => EmoteCostType.Bits, "subscription" => EmoteCostType.Subscription,
-                "follow" => EmoteCostType.Follow, _ => EmoteCostType.Unknown
+                "bitstier" => EmoteCostType.Bits, "subscriptions" => EmoteCostType.Subscription,
+                "follower" => EmoteCostType.Follow, _ => EmoteCostType.Unknown
             },
-            Value: int.TryParse(channelEmote.Tier, out int tierValue) ? tierValue : 0
+            Value: channelEmote.Tier switch { "1000" => 1, "2000" => 2, "3000" => 3, _ => 0}
         ), Token: channelEmote.Name, channelEmote.EmoteType.Contains("animated"));
     }
 
