@@ -1,4 +1,5 @@
 ﻿using TwitchLib.Api.Helix.Models.Chat.Emotes;
+using Emote = StreamSchedule.Data.Emote;
 
 namespace StreamSchedule.Extensions;
 

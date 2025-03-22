@@ -68,6 +68,7 @@ internal class Queries
                 }
                 subscriptionTier
                 type
+                assetType
                 suffix
                 token
         	}

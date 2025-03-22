@@ -8,6 +8,7 @@ using StreamSchedule.Data.Models;
 using StreamSchedule.Extensions;
 using StreamSchedule.GraphQL;
 using System.Diagnostics;
+using StreamSchedule.EmoteMonitors;
 using TwitchLib.Api;
 using TwitchLib.Api.Services;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
@@ -51,7 +52,7 @@ public static class Program
             }
 
             BotCore.Init(channelNames, dbContext, logger);
-            Scheduling.Init();
+            Monitoring.Init();
 
             Console.ReadLine();
         }

@@ -1,5 +1,6 @@
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
+using StreamSchedule.EmoteMonitors;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
 namespace StreamSchedule.Commands;
@@ -47,7 +48,7 @@ internal class EmoteFeed : Command
                 {
                     toDelete.Deleted = true;
                     await BotCore.DBContext.SaveChangesAsync();
-                    Scheduling.RemoveEmoteMonitor(toDelete);
+                    Monitoring.RemoveMonitor(toDelete);
                     return Utils.Responses.Ok + $"removed emote monitor for {toDelete.ChannelName}";
                 }
                 else
@@ -94,7 +95,7 @@ internal class EmoteFeed : Command
             }
 
             BotCore.DBContext.EmoteMonitorChannels.Add(emc);
-            Scheduling.StartNewChannelMonitorJob(emc);
+            Monitoring.AddMonitor(emc);
             await BotCore.DBContext.SaveChangesAsync();
             return Utils.Responses.Ok + $"added emote monitor for {emc.ChannelName} in {emc.OutputChannelName}";
         }
@@ -109,13 +110,13 @@ internal class EmoteFeed : Command
     {
         try
         {
-            Scheduling.RemoveEmoteMonitor(emc);
+            Monitoring.RemoveMonitor(emc);
         }
-        catch (Exception ex)
+        catch
         {
-            BotCore.Nlog.Warn("error while trying to remove emote monitor:", ex);
+            BotCore.Nlog.Warn("error while trying to remove emote monitor:");
         }
 
-        Scheduling.StartNewChannelMonitorJob(emc);
+        Monitoring.AddMonitor(emc);
     }
 }
