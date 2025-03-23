@@ -6,8 +6,7 @@ namespace StreamSchedule.EmoteMonitors;
 
 public static class Monitoring
 {
-    private static readonly TimeSpan delayBetweenChannels = TimeSpan.FromSeconds(0.3);
-    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(30);
 
     private static Dictionary<int, List<Emote>> Emotes = [];
     private static List<EmoteMonitorChannel> Channels = [];
@@ -31,7 +30,6 @@ public static class Monitoring
             foreach (EmoteMonitorChannel channel in Channels)
             {
                 Emotes[channel.ChannelID] = await GetEmotes(channel);
-                await Task.Delay(delayBetweenChannels);
             }
 
             await Task.Delay(monitorCycleTimeout);
@@ -40,32 +38,38 @@ public static class Monitoring
 
     private static async Task<List<Emote>> GetEmotes(EmoteMonitorChannel channel)
     {
+
+        List<Emote> oldEmotes = Emotes[channel.ChannelID];
         try
         {
-            List<Emote> emotes =
+            List<Emote> loadedEmotes =
             [
                 .. (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(channel.ChannelID.ToString())).ChannelEmotes
                 .Select(x => (Emote)x)
             ];
-            if (Emotes[channel.ChannelID].Count == 0)
+
+            if (oldEmotes.Count == 0)
             {
                 BotCore.Nlog.Info($"first run for {channel.ChannelName} emote monitor");
-                return emotes;
+                return loadedEmotes;
             }
 
-            List<Emote> removed = [.. Emotes[channel.ChannelID].Except(emotes)];
-            List<Emote> added = [.. emotes.Except(Emotes[channel.ChannelID])];
+            BotCore.Nlog.Info($"{oldEmotes.Count} > {loadedEmotes.Count} > {channel.ChannelName}");
+            if (oldEmotes.Count != loadedEmotes.Count) BotCore.Nlog.Info("!!!");
 
-            if (added.Count == 0 && removed.Count == 0) return emotes;
+            List<Emote> removed = [.. oldEmotes.Except(loadedEmotes)];
+            List<Emote> added = [.. loadedEmotes.Except(oldEmotes)];
+
+            if (added.Count == 0 && removed.Count == 0) return oldEmotes;
 
             string result = $"{channel.ChannelName} Emotes ";
-            if (added.Count != 0) result += $"added 📥 : {string.Join(", ", added)} ";
             if (removed.Count != 0) result += $"removed 📤 : {string.Join(", ", removed)} ";
+            if (added.Count != 0) result += $"added 📥 : {string.Join(", ", added)} ";
 
             result += string.Join(" @", channel.UpdateSubscribers);
 
             BotCore.SendLongMessage(channel.OutputChannelName, null, result);
-            return emotes;
+            return loadedEmotes;
         }
         catch (Exception e)
         {

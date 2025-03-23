@@ -22,7 +22,7 @@ public record EmoteCost(EmoteCostType Type, int Value)
             EmoteCostType.Bits => "Bits",
             EmoteCostType.Follow => "Follow",
             _ => "",
-        }} {(Value > 0 ? Value.ToString() : "")}";
+        }}{(Value > 0 ? Value.ToString() : "")}";
     }
 }
 

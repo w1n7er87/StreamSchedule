@@ -18,7 +18,7 @@ internal class UserInfo2 : Command
     {
         string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
         string[] split = text.Split(' ');
-        CommandResult response = new();
+        CommandResult response = new() { requiresFilter = true };
 
         string targetUsername = message.sender.Username!;
 
@@ -80,7 +80,6 @@ internal class UserInfo2 : Command
         {
             liveInfo = GetLiveStatus(user);
             response += (message.sender.Privileges < Privileges.Trusted ? liveInfo[0] : liveInfo[1]) + " ";
-            response.requiresFilter = message.sender.Privileges < Privileges.Trusted;
         }
 
         if (usedArgs.TryGetValue("l", out _) || all)
