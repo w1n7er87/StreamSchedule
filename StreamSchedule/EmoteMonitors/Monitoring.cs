@@ -10,15 +10,13 @@ public static class Monitoring
 
     private static Dictionary<int, List<Emote>> Emotes = [];
     private static List<EmoteMonitorChannel> Channels = [];
+    private static List<string> GlobalEmoteTokens = [];
 
     public static void Init()
     {
         Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => x.Deleted == false).AsNoTracking()];
 
-        foreach (EmoteMonitorChannel channel in Channels)
-        {
-            Emotes.Add(channel.ChannelID, []);
-        }
+        foreach (EmoteMonitorChannel channel in Channels) Emotes.Add(channel.ChannelID, []);
 
         Scheduler();
     }
@@ -31,14 +29,13 @@ public static class Monitoring
             {
                 Emotes[channel.ChannelID] = await GetEmotes(channel);
             }
-
+            await UpdateGlobalEmotes();
             await Task.Delay(monitorCycleTimeout);
         }
     }
 
     private static async Task<List<Emote>> GetEmotes(EmoteMonitorChannel channel)
     {
-
         List<Emote> oldEmotes = Emotes[channel.ChannelID];
         try
         {
@@ -54,8 +51,7 @@ public static class Monitoring
                 return loadedEmotes;
             }
 
-            BotCore.Nlog.Info($"{oldEmotes.Count} > {loadedEmotes.Count} > {channel.ChannelName}");
-            if (oldEmotes.Count != loadedEmotes.Count) BotCore.Nlog.Info("!!!");
+            if (oldEmotes.Count != loadedEmotes.Count) BotCore.Nlog.Info($"{oldEmotes.Count} > {loadedEmotes.Count} > {channel.ChannelName} emotes updated !!! ");
 
             List<Emote> removed = [.. oldEmotes.Except(loadedEmotes)];
             List<Emote> added = [.. loadedEmotes.Except(oldEmotes)];
@@ -76,6 +72,38 @@ public static class Monitoring
             BotCore.Nlog.Error($"failed to get emotes for {channel.ChannelName}");
             BotCore.Nlog.Error(e);
             return Emotes[channel.ID];
+        }
+    }
+
+    private static async Task UpdateGlobalEmotes()
+    {
+        try
+        {
+            List<string> newGlobalEmoteTokens = [.. (await BotCore.API.Helix.Chat.GetGlobalEmotesAsync()).GlobalEmotes.Select(x => x.Name)];
+            if (GlobalEmoteTokens.Count == 0)
+            {
+                BotCore.Nlog.Info("first run for Twitch Global emotes");
+                GlobalEmoteTokens = newGlobalEmoteTokens;
+            }
+
+            List<string> removed = [.. GlobalEmoteTokens.Except(newGlobalEmoteTokens)];
+            List<string> added = [.. newGlobalEmoteTokens.Except(GlobalEmoteTokens)];
+
+            if (added.Count == 0 && removed.Count == 0) return;
+
+            string response = "Twitch Emotes ";
+            if (removed.Count != 0) response += $"added: {string.Join(" ", removed)} ";
+            if (added.Count != 0) response += $"removed: {string.Join(" ", added)} ";
+
+            BotCore.SendLongMessage("w1n7er", null, response);
+            BotCore.SendLongMessage("vedal987", null, response);
+
+            GlobalEmoteTokens = newGlobalEmoteTokens;
+        }
+        catch (Exception e)
+        {
+            BotCore.Nlog.Error("Failed to get global emotes");
+            BotCore.Nlog.Error(e);
         }
     }
 
