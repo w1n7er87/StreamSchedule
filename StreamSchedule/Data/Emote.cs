@@ -42,6 +42,7 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
 
     public static implicit operator Emote(GraphQL.Data.Emote gqlEmote)
     {
+
         return new Emote(ID: gqlEmote.ID ?? "", new EmoteCost(
             Type: gqlEmote.Type switch
             {
@@ -53,7 +54,7 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
             Value: gqlEmote.Type switch
             {
                 EmoteType.BITS_BADGE_TIERS => gqlEmote.BitsBadgeTierSummary?.Threshold ?? 0,
-                EmoteType.SUBSCRIPTIONS => gqlEmote.SubscriptionTier switch {
+                EmoteType.SUBSCRIPTIONS => gqlEmote.GetTier() switch {
                     SubscriptionSummaryTier.TIER_1 => 1,
                     SubscriptionSummaryTier.TIER_2 => 2,
                     SubscriptionSummaryTier.TIER_3 => 3,

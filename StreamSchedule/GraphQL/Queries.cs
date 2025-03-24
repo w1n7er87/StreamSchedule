@@ -66,7 +66,9 @@ internal class Queries
         	    bitsBadgeTierSummary {
                     threshold
                 }
-                subscriptionTier
+                subscriptionSummaries {
+                    tier
+                }
                 type
                 assetType
                 suffix

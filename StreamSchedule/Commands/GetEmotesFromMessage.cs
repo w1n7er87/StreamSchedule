@@ -65,7 +65,7 @@ internal class GetEmotesFromMessage : Command
             string subTierOrBitPrice = task.Result.Type switch
             {
                 EmoteType.BITS_BADGE_TIERS => task.Result.BitsBadgeTierSummary?.Threshold.ToString() ?? "",
-                EmoteType.SUBSCRIPTIONS => Helpers.SubscriptionSummaryTierToString(task.Result.SubscriptionTier),
+                EmoteType.SUBSCRIPTIONS => Helpers.SubscriptionSummaryTierToString(task.Result.GetTier()),
                 _ => ""
             };
 
