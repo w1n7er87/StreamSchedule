@@ -39,7 +39,7 @@ internal class Schedule : Command
             string when = stream.StreamDate > inAWeek
                 ? $"{streamDate:(MMM/dd) ddd HH:mm}"
                 : $"{streamDate:ddd HH:mm}";
-            sb.Append($"{when} : {stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)]}. ");
+            sb.Append($"{when} : {stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)]} . ");
         }
 
         sb.Append($"(UTC{currentOrLatestTZ})");
