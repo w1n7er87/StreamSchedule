@@ -58,9 +58,9 @@ public static class Monitoring
 
             if (added.Count == 0 && removed.Count == 0) return oldEmotes;
 
-            string result = $"{channel.ChannelName} Emotes ";
-            if (removed.Count != 0) result += $"removed 📤 : {string.Join(", ", removed)} ";
-            if (added.Count != 0) result += $"added 📥 : {string.Join(", ", added)} ";
+            string result = $"{channel.ChannelName} emotes ";
+            if (removed.Count != 0) result += $"removed {removed.Count} 📤 : {string.Join(", ", removed)} ";
+            if (added.Count != 0) result += $"added {added.Count} 📥 : {string.Join(", ", added)} ";
 
             result += string.Join(" @", channel.UpdateSubscribers);
 
@@ -92,8 +92,8 @@ public static class Monitoring
             if (added.Count == 0 && removed.Count == 0) return;
 
             string response = "Twitch Emotes ";
-            if (removed.Count != 0) response += $"added: {string.Join(" ", removed)} ";
-            if (added.Count != 0) response += $"removed: {string.Join(" ", added)} ";
+            if (removed.Count != 0) response += $"{removed.Count} added: {string.Join(" ", removed)} ";
+            if (added.Count != 0) response += $"{added.Count} removed: {string.Join(" ", added)} ";
 
             BotCore.SendLongMessage("w1n7er", null, response);
             BotCore.SendLongMessage("vedal987", null, response);
