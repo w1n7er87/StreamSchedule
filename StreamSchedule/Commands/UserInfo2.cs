@@ -40,7 +40,7 @@ internal class UserInfo2 : Command
 
         string generalInfo = GetGeneralInfo(userError);
 
-        if (usedArgs.Count == 0) { return generalInfo; }
+        if (usedArgs.Count == 0) { return new(generalInfo, requiresFilter:true); }
 
         string color = "";
         string followers = "";
@@ -88,7 +88,7 @@ internal class UserInfo2 : Command
             response += lurkers + " ";
         }
 
-        return all ? new($"{generalInfo} | {color} | {followers} | {lurkers} | {emotes[0]} | {liveInfo[0]}") : response;
+        return all ? new($"{generalInfo} | {color} | {followers} | {lurkers} | {emotes[0]} | {liveInfo[0]}", requiresFilter: true) : response;
     }
 
     private static async Task<string[]> GetEmotes(string userID)
