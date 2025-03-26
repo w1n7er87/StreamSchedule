@@ -298,16 +298,16 @@ internal static class BotCore
     {
         bool sameMessageFlip = false;
         string sameMessageBypass = sameMessageFlip ? " \U000e0000" : "";
-        Queue <OutgoingMessage> q = OutQueuePerChannel[channel];
 
         while (true)
         {
-            if (q.Count <= 0) continue;
-            OutgoingMessage response = q.Peek();
+            if (OutQueuePerChannel[channel].Count <= 0) { await Task.Delay(50); continue; }
+
+            OutgoingMessage response = OutQueuePerChannel[channel].Peek();
             _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass, response.Result.requiresFilter);
             sameMessageFlip = !sameMessageFlip;
             await Task.Delay(1100);
-            q.Dequeue();
+            OutQueuePerChannel[channel].Dequeue();
         }
     }
 
