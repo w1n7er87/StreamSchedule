@@ -8,27 +8,25 @@ public static class Monitoring
 {
     private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(30);
 
-    private static Dictionary<int, List<Emote>> Emotes = [];
+    private static readonly Dictionary<int, List<Emote>> Emotes = [];
     private static List<EmoteMonitorChannel> Channels = [];
     private static List<string> GlobalEmoteTokens = [];
 
     public static void Init()
     {
-        Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => x.Deleted == false).AsNoTracking()];
+        Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted).AsNoTracking()];
 
         foreach (EmoteMonitorChannel channel in Channels) Emotes.Add(channel.ChannelID, []);
 
         Task.Run(Scheduler);
     }
 
-    private static async void Scheduler()
+    private static async Task Scheduler()
     {
         while (true)
         {
-            foreach (EmoteMonitorChannel channel in Channels)
-            {
-                Emotes[channel.ChannelID] = await GetEmotes(channel);
-            }
+            foreach (EmoteMonitorChannel channel in Channels) Emotes[channel.ChannelID] = await GetEmotes(channel);
+
             await UpdateGlobalEmotes();
             await Task.Delay(monitorCycleTimeout);
         }

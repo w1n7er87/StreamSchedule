@@ -7,7 +7,7 @@ internal class OutgoingMessage
 
     private OutgoingMessage() { }
 
-    public OutgoingMessage(CommandResult result)
+    private OutgoingMessage(CommandResult result)
     {
         Result = result;
     }

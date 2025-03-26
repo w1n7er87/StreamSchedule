@@ -150,7 +150,7 @@ internal static class BotCore
         if(Stopwatch.GetElapsedTime(_lastSave).TotalSeconds >= 10)
         {
             _lastSave = start;
-            DBContext.SaveChanges();
+            await DBContext.SaveChangesAsync();
         }
 
         User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType >= TwitchLib.Client.Enums.UserType.Moderator, e.ChatMessage.IsVip, DBContext);
@@ -266,9 +266,7 @@ internal static class BotCore
     private static void Client_OnGifted(object? sender, OnGiftedSubscriptionArgs e)
     {
         if (e.GiftedSubscription.MsgParamRecipientUserName.Equals(Client.TwitchUsername.ToLower()))
-        {
-            SendLongMessage(e.Channel, null, $"Thanks for the sub, {e.GiftedSubscription.Login} PogChamp");
-        }
+            OutQueuePerChannel[e.Channel].Enqueue(new CommandResult($"Thanks for the sub, {e.GiftedSubscription.Login} PogChamp", reply: false));
     }
 
     private static void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
@@ -281,14 +279,12 @@ internal static class BotCore
         Nlog.Info($"rate limited {e.Message}");
     }
 
-    private static async void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
+    private static void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
     {
         if (e.RawIRC.Contains("automod", StringComparison.InvariantCultureIgnoreCase) || e.RawIRC.Contains("moderation", StringComparison.InvariantCultureIgnoreCase))
         {
-            TwitchClient? twitchClient = sender as TwitchClient;
             Nlog.Info($"{e.RawIRC} {e.Channel} {e.Location}");
-            await Task.Delay(2000);
-            twitchClient?.SendMessage(e.Channel, "moderation 1984 ");
+            OutQueuePerChannel[e.Channel].Enqueue(new CommandResult("moderation 1984 ", reply: false));
             return;
         }
         Nlog.Info($"[{e.Channel}] [{e.RawIRC}]");
@@ -306,14 +302,12 @@ internal static class BotCore
 
         while (true)
         {
-            if (q.Count > 0)
-            {
-                OutgoingMessage response = q.Peek();
-                _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass, response.Result.requiresFilter);
-                sameMessageFlip = !sameMessageFlip;
-                await Task.Delay(1100);
-                q.Dequeue();
-            }
+            if (q.Count <= 0) continue;
+            OutgoingMessage response = q.Peek();
+            _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass, response.Result.requiresFilter);
+            sameMessageFlip = !sameMessageFlip;
+            await Task.Delay(1100);
+            q.Dequeue();
         }
     }
 
@@ -325,10 +319,8 @@ internal static class BotCore
         
         string accumulatedBelowLimit = "";
 
-        for (int i = 0; i < parts.Length; i++)
+        foreach (string part in parts)
         {
-            string part = parts[i];
-
             if (accumulatedBelowLimit.Length + part.Length + 1 <= MessageLengthLimit)
             {
                 accumulatedBelowLimit += part + ' ';
