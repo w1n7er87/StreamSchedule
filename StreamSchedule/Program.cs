@@ -5,16 +5,17 @@ using NLog;
 using StreamSchedule.Commands;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
+using StreamSchedule.EmoteMonitors;
 using StreamSchedule.Extensions;
 using StreamSchedule.GraphQL;
 using System.Diagnostics;
-using StreamSchedule.EmoteMonitors;
 using TwitchLib.Api;
 using TwitchLib.Api.Services;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
+using OutgoingMessage = StreamSchedule.Data.OutgoingMessage;
 
 namespace StreamSchedule;
 
@@ -81,7 +82,6 @@ internal static class BotCore
     private static Dictionary<string, bool> ChannelLiveState { get; set; } = null!;
 
     private static DateTime _textCommandLastUsed = DateTime.MinValue;
-    private static bool _sameMessage;
 
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
@@ -120,6 +120,18 @@ internal static class BotCore
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
 
+        ChannelLiveState = [];
+        foreach (string channel in channelNames) 
+        {
+            OutQueuePerChannel.Add(channel, []);
+            ChannelLiveState.Add(channel, false);
+            Task.Run(() => OutPump(channel));
+        }
+
+        Commands.Commands.InitializeCommands(channelNames, DBContext);
+
+        GQLClient = new GraphQLClient();
+
         Client = new();
         Client.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
         Client.OnUnaccountedFor += Client_OnUnaccounted;
@@ -129,13 +141,6 @@ internal static class BotCore
         Client.OnRateLimit += Client_OnRateLimit;
         Client.OnGiftedSubscription += Client_OnGifted;
         Client.Connect();
-
-        ChannelLiveState = [];
-        foreach (string channel in channelNames) ChannelLiveState[channel] = false;
-
-        Commands.Commands.InitializeCommands(channelNames, DBContext);
-
-        GQLClient = new GraphQLClient();
     }
 
     private static async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
@@ -160,8 +165,6 @@ internal static class BotCore
 
         MessageCache.Add(e.ChatMessage);
         if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
-
-        string bypassSameMessage = _sameMessage ? " \U000e0000" : "";
 
         ReadOnlySpan<Codepoint> messageAsCodepoints = [.. e.ChatMessage.Message.Codepoints()];
 
@@ -202,8 +205,7 @@ internal static class BotCore
                 if (userSent.Privileges < command.Privileges) return;
 
                 Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds}ms) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
-                SendLongMessage(e.ChatMessage.Channel, null, command.Content + bypassSameMessage);
-                _sameMessage = !_sameMessage;
+                OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new CommandResult(command.Content, reply: false));
                 _textCommandLastUsed = DateTime.Now;
                 return;
             }
@@ -235,9 +237,8 @@ internal static class BotCore
 
             Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds}ms) [{response}]");
             
-            SendLongMessage(e.ChatMessage.Channel, response.reply ? e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id : null, response.ToString() + bypassSameMessage, response.requiresFilter);
+            OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new OutgoingMessage(response, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id));
 
-            _sameMessage = !_sameMessage;
             if (userSent.Privileges < Privileges.Mod) c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
             return;
         }
@@ -295,7 +296,28 @@ internal static class BotCore
 
     #endregion EVENTS
 
-    public static async void SendLongMessage(string channel, string? replyID, string message, bool requiresFilter = false)
+    public static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
+
+    private static async Task OutPump(string channel)
+    {
+        bool sameMessageFlip = false;
+        string sameMessageBypass = sameMessageFlip ? " \U000e0000" : "";
+        Queue <OutgoingMessage> q = OutQueuePerChannel[channel];
+
+        while (true)
+        {
+            if (q.Count > 0)
+            {
+                OutgoingMessage response = q.Peek();
+                _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass, response.Result.requiresFilter);
+                sameMessageFlip = !sameMessageFlip;
+                await Task.Delay(1100);
+                q.Dequeue();
+            }
+        }
+    }
+
+    private static async Task<bool> SendLongMessage(string channel, string? replyID, string message, bool requiresFilter = false)
     {
         string[] parts = requiresFilter
             ? Utils.Filter(message).Split(' ', StringSplitOptions.TrimEntries)
@@ -332,6 +354,8 @@ internal static class BotCore
         }
 
         SendShortMessage(accumulatedBelowLimit);
+
+        return true;
 
         void SendShortMessage(string msg)
         {

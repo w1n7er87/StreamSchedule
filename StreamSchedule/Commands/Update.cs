@@ -14,7 +14,7 @@ internal class Update : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        BotCore.SendLongMessage(message.channelName, null, "📆 🛠️ ");
+        BotCore.OutQueuePerChannel[message.channelName].Enqueue(new CommandResult("📆 🛠️ ", reply: false));
 
         await BotCore.DBContext.SaveChangesAsync();
 

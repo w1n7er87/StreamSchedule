@@ -18,10 +18,10 @@ public static class Monitoring
 
         foreach (EmoteMonitorChannel channel in Channels) Emotes.Add(channel.ChannelID, []);
 
-        Scheduler();
+        Task.Run(Scheduler);
     }
 
-    private static async Task Scheduler()
+    private static async void Scheduler()
     {
         while (true)
         {
@@ -64,7 +64,7 @@ public static class Monitoring
 
             result += string.Join(" @", channel.UpdateSubscribers);
 
-            BotCore.SendLongMessage(channel.OutputChannelName, null, result);
+            BotCore.OutQueuePerChannel[channel.OutputChannelName].Enqueue(new CommandResult(result, reply: false));
             return loadedEmotes;
         }
         catch (Exception e)
@@ -95,8 +95,8 @@ public static class Monitoring
             if (removed.Count != 0) response += $"{removed.Count} added: {string.Join(" ", removed)} ";
             if (added.Count != 0) response += $"{added.Count} removed: {string.Join(" ", added)} ";
 
-            BotCore.SendLongMessage("w1n7er", null, response);
-            BotCore.SendLongMessage("vedal987", null, response);
+            BotCore.OutQueuePerChannel["w1n7er"].Enqueue(new CommandResult(response, reply: false));
+            BotCore.OutQueuePerChannel["vedal987"].Enqueue(new CommandResult(response, reply: false));
 
             GlobalEmoteTokens = newGlobalEmoteTokens;
         }
