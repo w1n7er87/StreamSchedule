@@ -90,6 +90,8 @@ internal static class BotCore
     private static long _lastSave;
 
     public static List<PermittedTerm> PermittedTerms { get; set; } = [];
+    
+    public static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
 
     private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
     {
@@ -292,7 +294,6 @@ internal static class BotCore
 
     #endregion EVENTS
 
-    public static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
 
     private static async Task OutPump(string channel)
     {

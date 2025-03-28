@@ -25,14 +25,14 @@ public static class Monitoring
     {
         while (true)
         {
-            foreach (EmoteMonitorChannel channel in Channels) Emotes[channel.ChannelID] = await GetEmotes(channel);
+            foreach (EmoteMonitorChannel channel in Channels) Emotes[channel.ChannelID] = await UpdateEmotes(channel);
 
             await UpdateGlobalEmotes();
             await Task.Delay(monitorCycleTimeout);
         }
     }
 
-    private static async Task<List<Emote>> GetEmotes(EmoteMonitorChannel channel)
+    private static async Task<List<Emote>> UpdateEmotes(EmoteMonitorChannel channel)
     {
         List<Emote> oldEmotes = Emotes[channel.ChannelID];
         try
@@ -48,17 +48,16 @@ public static class Monitoring
                 BotCore.Nlog.Info($"first run for {channel.ChannelName} emote monitor");
                 return loadedEmotes;
             }
-
-            if (oldEmotes.Count != loadedEmotes.Count) BotCore.Nlog.Info($"{oldEmotes.Count} > {loadedEmotes.Count} > {channel.ChannelName} emotes updated !!! ");
-
+            
             List<Emote> removed = [.. oldEmotes.Except(loadedEmotes)];
             List<Emote> added = [.. loadedEmotes.Except(oldEmotes)];
 
             if (added.Count == 0 && removed.Count == 0) return oldEmotes;
-
+            BotCore.Nlog.Info($"{channel.ChannelName} emotes updated !!! removed { removed.Count} added {added.Count}");
+            
             string result = $"{channel.ChannelName} emotes ";
-            if (removed.Count != 0) result += $"removed {removed.Count} 📤 : {string.Join(", ", removed)} ";
-            if (added.Count != 0) result += $"added {added.Count} 📥 : {string.Join(", ", added)} ";
+            if (removed.Count != 0) result += $"{removed.Count} removed 📤 : {string.Join(", ", removed)} ";
+            if (added.Count != 0) result += $"{added.Count} added 📥 : {string.Join(", ", added)} ";
 
             result += string.Join(" @", channel.UpdateSubscribers);
 
@@ -90,8 +89,8 @@ public static class Monitoring
             if (added.Count == 0 && removed.Count == 0) return;
 
             string response = "Twitch Emotes ";
-            if (removed.Count != 0) response += $"{removed.Count} added: {string.Join(" ", removed)} ";
-            if (added.Count != 0) response += $"{added.Count} removed: {string.Join(" ", added)} ";
+            if (removed.Count != 0) response += $"{removed.Count} removed: {string.Join(" ", removed)} ";
+            if (added.Count != 0) response += $"{added.Count} added: {string.Join(" ", added)} ";
 
             BotCore.OutQueuePerChannel["w1n7er"].Enqueue(new CommandResult(response, reply: false));
             BotCore.OutQueuePerChannel["vedal987"].Enqueue(new CommandResult(response, reply: false));
