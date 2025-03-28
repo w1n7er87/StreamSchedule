@@ -37,7 +37,7 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
                 "follower" => EmoteCostType.Follow, _ => EmoteCostType.Unknown
             },
             Value: channelEmote.Tier switch { "1000" => 1, "2000" => 2, "3000" => 3, _ => 0}
-        ), Token: channelEmote.Name, channelEmote.EmoteType.Contains("animated"));
+        ), Token: channelEmote.Name, channelEmote.Format.Contains("animated"));
     }
 
     public static implicit operator Emote(GraphQL.Data.Emote gqlEmote)
