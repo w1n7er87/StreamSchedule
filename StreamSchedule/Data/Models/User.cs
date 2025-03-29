@@ -55,14 +55,31 @@ public class User
     {
         username = username.ToLower().Replace("@", "");
 
-        if (string.IsNullOrEmpty(username)) { user = new User(); return false; }
+        if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(id))
+        {
+            user = new User();
+            return false;
+        }
 
-        User? u = BotCore.DBContext.Users.FirstOrDefault(x => (id == null) ? x.Username == username : x.Id == int.Parse(id));
+        User? u = BotCore.DBContext.Users.FirstOrDefault(x => id == null ? x.Username == username : x.Id == int.Parse(id));
 
-        if (u is null) { user = new User(); return false; }
+        if (u is not null)
+        {
+            user = u;
+            return true;
+        }
 
-        user = u;
-        return true;
+        User? byOldName = BotCore.DBContext.Users
+            .Where(x => x.PreviousUsernames != null)
+            .FirstOrDefault(x => x.PreviousUsernames!.Contains(username));
+
+        if (byOldName is not null)
+        {
+            user = byOldName;
+            return true;
+        }
+
+        user = new User();
+        return false;
     }
-    
 }

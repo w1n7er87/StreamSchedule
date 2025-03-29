@@ -195,7 +195,7 @@ internal class UserInfo2 : Command
     
     private static string PreviousUsernames(string userID)
     {
-        if (!Data.Models.User.TryGetUser("this is a bad design" , out Data.Models.User dbData, userID)) return "Unknown user";
+        if (!Data.Models.User.TryGetUser("" , out Data.Models.User dbData, userID)) return "Unknown user";
 
         List<string>? previousUsernames = dbData.PreviousUsernames;
         if (previousUsernames is null || previousUsernames.Count == 0) return "Nothing recorded so far";
