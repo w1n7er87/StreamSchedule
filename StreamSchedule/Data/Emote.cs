@@ -42,7 +42,6 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
 
     public static implicit operator Emote(GraphQL.Data.Emote gqlEmote)
     {
-
         return new Emote(ID: gqlEmote.ID ?? "", new EmoteCost(
             Type: gqlEmote.Type switch
             {
@@ -62,13 +61,8 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
                 },
                 EmoteType.FOLLOWER => 0,
                 _ => 0,
-                
             }), Token: gqlEmote.Token ?? "", gqlEmote.AssetType is EmoteAssetType.ANIMATED);
     }
 
-    public override string ToString()
-    {
-
-        return $"{Token} ({Cost}{(Animated ? "A" : "")})";
-    }
+    public override string ToString() => $"{Token} ({Cost}{(Animated ? "A" : "")})";
 };

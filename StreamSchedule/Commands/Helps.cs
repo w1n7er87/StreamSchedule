@@ -26,16 +26,11 @@ internal class Helps : Command
             if ((cmdAliases?.Aliases is null || !cmdAliases.Aliases.Contains(requestedCommand)) && !requestedCommand.Equals(c.Call)) continue;
 
             string aliases = "";
-            if (cmdAliases?.Aliases is not null && cmdAliases.Aliases.Count != 0)
-            {
-                aliases = $"( {string.Join(" , ", cmdAliases.Aliases)} ) ";
-            }
+            if (cmdAliases?.Aliases is not null && cmdAliases.Aliases.Count != 0) aliases = $"( {string.Join(" , ", cmdAliases.Aliases)} ) ";
 
             string args = "";
-            if (c.Arguments is not null)
-            {
-                args = $". args: {string.Join(", ", c.Arguments)}";
-            }
+            if (c.Arguments is not null) args = $". args: {string.Join(", ", c.Arguments)}";
+
             string cd = $". cooldown: {c.Cooldown.TotalSeconds}s";
 
             return Task.FromResult(new CommandResult(aliases + c.Help + args + cd));
@@ -47,12 +42,9 @@ internal class Helps : Command
             if ((c.Aliases is null || !c.Aliases.Contains(requestedCommand)) && !requestedCommand.Equals(c.Name)) continue;
 
             string aliases = "";
-            if (c.Aliases is not null && c.Aliases.Count != 0)
-            {
-                aliases = $"( {string.Join(" , ", c.Aliases)} ) ";
-            }
+            if (c.Aliases is not null && c.Aliases.Count != 0) aliases = $"( {string.Join(" , ", c.Aliases)} ) ";
 
-            return Task.FromResult(new CommandResult($"{aliases}simple text command mhm . ", false));
+            return Task.FromResult(new CommandResult($"{aliases}simple text command mhm . "));
         }
 
         return Task.FromResult(new CommandResult(this.Help));

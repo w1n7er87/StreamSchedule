@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text;
+using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 
@@ -16,57 +17,73 @@ internal class Top : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> args);
-        CommandResult result = new();
-
         int page = args.TryGetValue("p", out string? p) ? int.TryParse(p, out int pp) ? Math.Max(pp - 1, 0) : 0 : 0;
-        
         bool descending = args.TryGetValue("d", out _);
 
-        if (args.TryGetValue("ratio", out _))
+        if (args.TryGetValue("ratio", out _)) return Task.FromResult((CommandResult)GetTopByRatio(page, descending));
+        if (args.TryGetValue("score", out _)) return Task.FromResult((CommandResult)GetTopByScore(page, descending));
+        if (args.TryGetValue("online", out _)) return Task.FromResult((CommandResult)GetTopByOnline(page, descending));
+        
+        return Task.FromResult((CommandResult)GetTopByOffline(page, descending));
+    }
+
+    private static StringBuilder GetTopByRatio(int page, bool descending)
+    {
+        StringBuilder result = new();
+        List<User> topTen = [.. BotCore.DBContext.Users.AsNoTracking().AsEnumerable().OrderByDescending(x => descending ? -Userscore.GetRatioAndScore(x).ratio : Userscore.GetRatioAndScore(x).ratio)];
+        int start = Math.Min(page * 10, topTen.Count - 10);
+        topTen = topTen.GetRange(start, 10);
+        for (int i = 0; i < topTen.Count; i++)
         {
-            List<User> topTen = [.. BotCore.DBContext.Users.AsNoTracking().AsEnumerable().OrderByDescending(x => descending ? -Userscore.GetRatioAndScore(x).ratio : Userscore.GetRatioAndScore(x).ratio)];
-            int start = Math.Min(page * 10, topTen.Count - 10);
-            topTen = topTen.GetRange(start, 10);
-            for (int i = 0; i < topTen.Count; i++)
-            {
-                User user = topTen[i];
-                result += $"{start + i + 1} {user.Username!.Insert(1, "󠀀")} {MathF.Round(Userscore.GetRatioAndScore(user).ratio, 3)} er ";
-            }
-        }
-        else if (args.TryGetValue("score", out _))
-        {
-            List<User> topTen = [.. BotCore.DBContext.Users.AsNoTracking().AsEnumerable().OrderByDescending(x => descending ? -Userscore.GetRatioAndScore(x).score : Userscore.GetRatioAndScore(x).score)];
-            int start = Math.Min(page * 10, topTen.Count - 10);
-            topTen = topTen.GetRange(start, 10);
-            for (int i = 0; i < topTen.Count; i++)
-            {
-                User user = topTen[i];
-                result += $"{start + i + 1} {user.Username!.Insert(1, "󠀀")} {MathF.Round(Userscore.GetRatioAndScore(user).score, 3)} er ";
-            }
-        }
-        else if (args.TryGetValue("online", out _))
-        {
-            List<User> topTen = [.. BotCore.DBContext.Users.OrderByDescending(x => descending ? -x.MessagesOnline : x.MessagesOnline).AsNoTracking()];
-            int start = Math.Min(page * 10, topTen.Count - 10);
-            topTen = topTen.GetRange(start, 10);
-            for (int i = 0; i < topTen.Count; i++)
-            {
-                User user = topTen[i];
-                result += $"{start + i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOnline} er ";
-            }
-        }
-        else
-        {
-            List<User> topTen = [.. BotCore.DBContext.Users.OrderByDescending(x => descending ? -x.MessagesOffline : x.MessagesOffline).AsNoTracking()];
-            int start = Math.Min(page * 10, topTen.Count - 10);
-            topTen = topTen.GetRange(start, 10);
-            for (int i = 0; i < topTen.Count; i++)
-            {
-                User user = topTen[i];
-                result += $"{start + i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOffline} er ";
-            }
+            User user = topTen[i];
+            result.Append($"{start + i + 1} {user.Username!.Insert(1, "󠀀")} {MathF.Round(Userscore.GetRatioAndScore(user).ratio, 3)} er ");
         }
 
-        return Task.FromResult(result);
+        return result;
+    }
+
+    private static StringBuilder GetTopByScore(int page, bool descending)
+    {
+        StringBuilder result = new();
+        List<User> topTen = [.. BotCore.DBContext.Users.AsNoTracking().AsEnumerable().OrderByDescending(x => descending ? -Userscore.GetRatioAndScore(x).score : Userscore.GetRatioAndScore(x).score)];
+        int start = Math.Min(page * 10, topTen.Count - 10);
+        topTen = topTen.GetRange(start, 10);
+        for (int i = 0; i < topTen.Count; i++)
+        {
+            User user = topTen[i];
+            result.Append($"{start + i + 1} {user.Username!.Insert(1, "󠀀")} {MathF.Round(Userscore.GetRatioAndScore(user).score, 3)} er ");
+        }
+        
+        return result;
+    }
+
+    private static StringBuilder GetTopByOnline(int page, bool descending)
+    {
+        StringBuilder result = new();
+        List<User> topTen = [.. BotCore.DBContext.Users.OrderByDescending(x => descending ? -x.MessagesOnline : x.MessagesOnline).AsNoTracking()];
+        int start = Math.Min(page * 10, topTen.Count - 10);
+        topTen = topTen.GetRange(start, 10);
+        for (int i = 0; i < topTen.Count; i++)
+        {
+            User user = topTen[i];
+            result.Append($"{start + i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOnline} er ");
+        }
+
+        return result;
+    }
+
+    private static StringBuilder GetTopByOffline(int page, bool descending)
+    {
+        StringBuilder result = new();
+        List<User> topTen = [.. BotCore.DBContext.Users.OrderByDescending(x => descending ? -x.MessagesOffline : x.MessagesOffline).AsNoTracking()];
+        int start = Math.Min(page * 10, topTen.Count - 10);
+        topTen = topTen.GetRange(start, 10);
+        for (int i = 0; i < topTen.Count; i++)
+        {
+            User user = topTen[i];
+            result.Append($"{start + i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOffline} er ");
+        }
+
+        return result;
     }
 }

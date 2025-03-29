@@ -20,9 +20,9 @@ public class GraphQLClient
 
     public async Task<(int, Chatter?[]?)> GetChattersCount(string userID, string? userLogin = null)
     {
-        GraphQLResponse<QueryResponse?> result = (userLogin is null) ?
-            await _client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersByID(userID)) :
-            await _client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersByLogin(userLogin));
+        GraphQLResponse<QueryResponse?> result = (userLogin is null)
+            ? await _client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersByID(userID))
+            : await _client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersByLogin(userLogin));
         return (result.Data?.User?.Channel?.Chatters?.Count ?? 0, result.Data?.User?.Channel?.Chatters?.Viewers ?? []);
     }
 

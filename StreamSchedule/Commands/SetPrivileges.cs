@@ -18,12 +18,9 @@ internal class SetPrivileges : Command
 
         Privileges p = PrivilegeUtils.ParsePrivilege(split[0]);
 
-        if (!User.TryGetUser(split[1], out User target))
-        {
-            return Task.FromResult(Utils.Responses.Surprise);
-        }
+        if (!User.TryGetUser(split[1], out User target)) return Task.FromResult(Utils.Responses.Surprise);
 
-        if (target.Privileges >= message.sender.Privileges) { return Task.FromResult(Utils.Responses.Fail); }
+        if (target.Privileges >= message.sender.Privileges) return Task.FromResult(Utils.Responses.Fail); 
 
         BotCore.DBContext.Users.Update(target);
         target.Privileges = p;

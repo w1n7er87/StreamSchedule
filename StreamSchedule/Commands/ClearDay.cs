@@ -16,24 +16,17 @@ internal class ClearDay : Command
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.content.Split(' ');
-        DateTime temp = new();
 
-        if (split.Length < 1 || !DateTime.TryParseExact(split[0], _inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out temp))
-        {
+        if (split.Length < 1 || !DateTime.TryParseExact(split[0], _inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out DateTime temp))
             return Task.FromResult(Utils.Responses.Fail + "bad date ");
-        }
-
+        
         Data.Models.Stream? interest = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(temp));
 
-        if (interest == null)
-        {
-            return Task.FromResult(new CommandResult("Nothing on that day.", false));
-        }
-        else
-        {
-            BotCore.DBContext.Streams.Remove(interest);
-            BotCore.DBContext.SaveChanges();
-            return Task.FromResult(Utils.Responses.Ok);
-        }
+        if (interest == null) return Task.FromResult(new CommandResult("Nothing on that day.", false));
+        
+        BotCore.DBContext.Streams.Remove(interest);
+        BotCore.DBContext.SaveChanges();
+        return Task.FromResult(Utils.Responses.Ok);
+        
     }
 }

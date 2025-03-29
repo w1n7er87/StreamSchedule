@@ -16,7 +16,6 @@ internal class GetEmotesFromMessage : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        CommandResult response = new();
         _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 
         List<string?> emoteIDs;
@@ -28,21 +27,12 @@ internal class GetEmotesFromMessage : Command
         }
         else
         {
-            if (!string.IsNullOrEmpty(message.replyID))
-            {
-                reply = BotCore.MessageCache.Find(x => x.Id == message.replyID);
-            }
-
-            if (reply is null)
-            {
-                emoteIDs = await BotCore.GQLClient.GetEmoteIDsFromMessage(usedArgs.TryGetValue("messageid", out string? passedMessageID) ? passedMessageID : message.replyID ?? message.ID);
-            }
-            else
-            {
-                emoteIDs = [.. reply.EmoteSet.Emotes.Select(e => e.Id)];
-            }
-
-            if (emoteIDs.Count == 0) { return response + "no emotes found"; }
+            if (!string.IsNullOrEmpty(message.replyID)) reply = BotCore.MessageCache.Find(x => x.Id == message.replyID);
+            
+            if (reply is null)emoteIDs = await BotCore.GQLClient.GetEmoteIDsFromMessage(usedArgs.TryGetValue("messageid", out string? passedMessageID) ? passedMessageID : message.replyID ?? message.ID);
+            else emoteIDs = [.. reply.EmoteSet.Emotes.Select(e => e.Id)];
+            
+            if (emoteIDs.Count == 0) { return "no emotes found"; }
         }
 
         List<string> channels = [];
@@ -69,13 +59,11 @@ internal class GetEmotesFromMessage : Command
                 _ => ""
             };
 
-            string artist = (task.Result.Artist?.Login is null) ? "" : $"By: {task.Result.Artist.Login}";
+            string artist = task.Result.Artist?.Login is null ? "" : $"By: {task.Result.Artist.Login}";
 
             channels.Add($"( {task.Result.Token} @{task.Result.Owner.Login} {subTierOrBitPrice} {Helpers.EmoteTypeToString(task.Result.Type)} {artist} )");
         }
-
-        response += string.Join(" ", channels);
-
-        return response;
+        
+        return string.Join(" ", channels);
     }
 }

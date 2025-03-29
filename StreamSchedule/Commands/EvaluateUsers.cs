@@ -41,7 +41,7 @@ internal class EvaluateUsers : Command
     {
         int promoted = 0;
         int demoted = 0;
-        var users = BotCore.DBContext.Users.AsAsyncEnumerable();
+        IAsyncEnumerable<User> users = BotCore.DBContext.Users.AsAsyncEnumerable();
         await foreach (var user in users)
         {
             if (user.Privileges == Privileges.Banned) continue;

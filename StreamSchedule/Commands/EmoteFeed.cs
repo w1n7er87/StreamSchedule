@@ -16,7 +16,6 @@ internal class EmoteFeed : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        CommandResult response = new();
         string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArs);
         string[] split = text.Split(' ');
 
@@ -28,10 +27,7 @@ internal class EmoteFeed : Command
 
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
-            if (split[0].StartsWith('#'))
-            {
-                idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
-            }
+            if (split[0].StartsWith('#')) idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
             if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
         }
 
@@ -51,12 +47,10 @@ internal class EmoteFeed : Command
                     Monitoring.RemoveMonitor(toDelete);
                     return Utils.Responses.Ok + $"removed emote monitor for {toDelete.ChannelName}";
                 }
-                else
-                {
-                    if (toDelete.UpdateSubscribers.Contains(message.sender.Username!)) return Utils.Responses.Ok + "removed you from ping list";
-                    RestartMonitor(toDelete);
-                    return Utils.Responses.Fail + $"you are not in the ping list for {toDelete.ChannelName}";
-                }
+
+                if (toDelete.UpdateSubscribers.Contains(message.sender.Username!)) return Utils.Responses.Ok + "removed you from ping list";
+                RestartMonitor(toDelete);
+                return Utils.Responses.Fail + $"you are not in the ping list for {toDelete.ChannelName}";
             }
 
             GetUsersResponse? a = idProvided

@@ -11,7 +11,7 @@ internal class Randoms : Command
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["flip"];
 
-    private static readonly string[] neuros = ["nwero", "hiyori", "eliv", "nuero", "newero", "wuero", "cleliv", "cluero", "weliv"];
+    private static readonly string[] neuros = ["nwero", "hiyori", "eliv", "nuero", "newero", "wuero", "cleliv", "cluero", "weliv", "newliv"];
 
     internal override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -19,11 +19,8 @@ internal class Randoms : Command
 
         string[] split = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs).Split(' ');
 
-        if (usedArgs.TryGetValue("flip", out _))
-        {
-            return Task.FromResult(result + (Random.Shared.Next(100) < 50 ? "YES " : "NO "));
-        }
-
+        if (usedArgs.TryGetValue("flip", out _)) return Task.FromResult(result + (Random.Shared.Next(100) < 50 ? "YES " : "NO "));
+        
         int maxValue = int.TryParse(split[0], out int c) ? int.Clamp(c + 1, 1, int.MaxValue) : 101;
 
         return Task.FromResult(result + Random.Shared.Next(1, maxValue).ToString());

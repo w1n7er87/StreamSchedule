@@ -50,13 +50,9 @@ internal class UserInfo2 : Command
 
         bool all = usedArgs.TryGetValue("a", out _);
 
-        if (usedArgs.TryGetValue("g", out _) || all)
-        { response += generalInfo + " "; }
+        if (usedArgs.TryGetValue("g", out _) || all) response += generalInfo + " "; 
 
-        if (usedArgs.TryGetValue("n", out _))
-        {
-            response += PreviousUsernames(user.Id!) + " ";
-        }
+        if (usedArgs.TryGetValue("n", out _)) response += PreviousUsernames(user.Id!) + " ";
 
         if (usedArgs.TryGetValue("c", out _) || all)
         {
@@ -194,11 +190,9 @@ internal class UserInfo2 : Command
         return [$"live{mature} {game}", $"live{mature} ({duration}) : {game} - \" {title} \" for {viewcount} viewers.{mature} {streamStatus} {clips} {hypeTrain}"];
     }
 
-    private static string GetGeneralInfo((User?, GetUserErrorReason?) userReason)
-    {
-        return $"{Helpers.UserErrorReasonToString(userReason.Item2)} {Helpers.UserRolesIsStaff(userReason.Item1!.Roles)} {Helpers.UserRolesIsPartnerOrAffiliate(userReason.Item1!.Roles)} {userReason.Item1.Login} (id:{userReason.Item1.Id}) created: {userReason.Item1.CreatedAt:dd/MMM/yyyy} {(userReason.Item1.DeletedAt is null ? "" : $"deleted: {userReason.Item1.DeletedAt:dd/MMM/yyyy} {userReason.Item1.Channel?.FounderBadgeAvailability switch { (> 0) => $" {userReason.Item1.Channel.FounderBadgeAvailability} founder slots available", _ => "" }}")}";
-    }
-
+    private static string GetGeneralInfo((User?, GetUserErrorReason?) userReason) =>
+        $"{Helpers.UserErrorReasonToString(userReason.Item2)} {Helpers.UserRolesIsStaff(userReason.Item1!.Roles)} {Helpers.UserRolesIsPartnerOrAffiliate(userReason.Item1!.Roles)} {userReason.Item1.Login} (id:{userReason.Item1.Id}) created: {userReason.Item1.CreatedAt:dd/MMM/yyyy} {(userReason.Item1.DeletedAt is null ? "" : $"deleted: {userReason.Item1.DeletedAt:dd/MMM/yyyy} {userReason.Item1.Channel?.FounderBadgeAvailability switch { (> 0) => $" {userReason.Item1.Channel.FounderBadgeAvailability} founder slots available", _ => "" }}")}";
+    
     private static string PreviousUsernames(string userID)
     {
         if (!Data.Models.User.TryGetUser("this is a bad design" , out Data.Models.User dbData, userID)) return "Unknown user";

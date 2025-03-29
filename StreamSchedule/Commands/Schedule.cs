@@ -42,7 +42,6 @@ internal class Schedule : Command
             sb.Append($"{when} : {stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)]} . ");
         }
 
-        sb.Append($"(UTC{currentOrLatestTZ})");
-        return Task.FromResult(new CommandResult(sb));
+        return Task.FromResult(new CommandResult(sb.Append($"(UTC{currentOrLatestTZ})")));
     }
 }

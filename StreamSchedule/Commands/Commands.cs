@@ -64,7 +64,7 @@ internal static class Commands
         CurrentTextCommands = textCommands;
     }
 
-    internal static bool CheckNameAvailability(string alias)
+    internal static bool IsNameAvailable(string alias)
     {
         List<string> commandNames = [];
         CurrentCommands.ForEach(x => commandNames.Add(x.Call));

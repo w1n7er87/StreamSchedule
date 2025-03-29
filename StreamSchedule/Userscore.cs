@@ -2,10 +2,10 @@
 
 namespace StreamSchedule;
 
-public struct RatioScore(float r, float s)
+public readonly struct RatioScore(float r, float s)
 {
-    public float ratio = r;
-    public float score = s;
+    public readonly float ratio = r;
+    public readonly float score = s;
 }
 
 internal static class Userscore
