@@ -46,7 +46,7 @@ internal class EvaluateUsers : Command
         {
             if (user.Privileges == Privileges.Banned) continue;
 
-            float score = Userscore.GetRatioAndScore(user).score;
+            float score = Userscore.Score(user);
 
             switch (user.Privileges)
             {
@@ -70,7 +70,7 @@ internal class EvaluateUsers : Command
 
         if (user.Privileges is Privileges.Banned or >= Privileges.Mod) return false;
 
-        float score = Userscore.GetRatioAndScore(user).score;
+        float score = Userscore.Score(user);
 
         switch (user.Privileges)
         {

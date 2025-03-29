@@ -2,7 +2,7 @@
 
 public class User
 {
-    public int Id { get; set; }
+    public int Id { get; init; }
     public string? Username { get; set; }
     public List<string>? PreviousUsernames { get; set; }
     public Privileges Privileges { get; set; } = Privileges.None;
@@ -64,4 +64,5 @@ public class User
         user = u;
         return true;
     }
+    
 }
