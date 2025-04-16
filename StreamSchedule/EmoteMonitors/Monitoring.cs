@@ -6,18 +6,15 @@ namespace StreamSchedule.EmoteMonitors;
 
 public static class Monitoring
 {
-    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(30);
-
+    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(300);
     private static readonly Dictionary<int, List<Emote>> Emotes = [];
     private static List<EmoteMonitorChannel> Channels = [];
     private static List<string> GlobalEmoteTokens = [];
 
     public static void Init()
     {
-        Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted).AsNoTracking()];
-
-        foreach (EmoteMonitorChannel channel in Channels) Emotes.Add(channel.ChannelID, []);
-
+        Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted)];
+        Channels.ForEach(x => Emotes.Add(x.ChannelID, []));
         Task.Run(Scheduler);
     }
 
@@ -25,8 +22,16 @@ public static class Monitoring
     {
         while (true)
         {
-            foreach (EmoteMonitorChannel channel in Channels) Emotes[channel.ChannelID] = await UpdateEmotes(channel);
+            int channelCount = 0;
+            
+            foreach (EmoteMonitorChannel channel in Channels)
+            {
+                channelCount++;
+                Emotes[channel.ChannelID] = await UpdateEmotes(channel);
+            }
 
+            BotCore.Nlog.Info($"Emon cycle {channelCount} channels");
+            
             await UpdateGlobalEmotes();
             await Task.Delay(monitorCycleTimeout);
         }
@@ -49,6 +54,8 @@ public static class Monitoring
                 return loadedEmotes;
             }
             
+            BotCore.Nlog.Info($"{channel.ChannelName} {Emotes[channel.ChannelID].Count} => {loadedEmotes.Count}");
+            
             List<Emote> removed = [.. oldEmotes.Except(loadedEmotes)];
             List<Emote> added = [.. loadedEmotes.Except(oldEmotes)];
 
@@ -59,7 +66,7 @@ public static class Monitoring
             if (removed.Count != 0) result += $"{removed.Count} removed 📤 : {string.Join(", ", removed)} ";
             if (added.Count != 0) result += $"{added.Count} added 📥 : {string.Join(", ", added)} ";
 
-            result += string.Join(" @", channel.UpdateSubscribers);
+            result += string.Join(" ", channel.UpdateSubscribers.Select(x => "@" + x));
 
             BotCore.OutQueuePerChannel[channel.OutputChannelName].Enqueue(new CommandResult(result, reply: false));
             return loadedEmotes;
