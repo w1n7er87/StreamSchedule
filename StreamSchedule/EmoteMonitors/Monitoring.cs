@@ -75,7 +75,9 @@ public static class Monitoring
         {
             BotCore.Nlog.Error($"failed to get emotes for {channel.ChannelName}");
             BotCore.Nlog.Error(e);
+            Task.Run(Scheduler);
             return Emotes[channel.ID];
+
         }
     }
 
@@ -108,6 +110,7 @@ public static class Monitoring
         {
             BotCore.Nlog.Error("Failed to get global emotes");
             BotCore.Nlog.Error(e);
+            Task.Run(Scheduler);
         }
     }
 
