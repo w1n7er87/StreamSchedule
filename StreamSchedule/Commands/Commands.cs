@@ -50,10 +50,8 @@ internal static class Commands
         foreach (var c in KnownCommands)
         {
             CurrentCommands.Add((Command)Activator.CreateInstance(c)!);
-            foreach (string channel in channels)
-            {
-                CurrentCommands[^1].LastUsedOnChannel.Add(channel, DateTime.Now);
-            }
+
+            channels.ForEach(x => CurrentCommands[^1].LastUsedOnChannel.Add(x, DateTime.Now));
 
             if (!aliases.Any(x => x.CommandName.Equals(CurrentCommands[^1].Call, StringComparison.OrdinalIgnoreCase)))
             {

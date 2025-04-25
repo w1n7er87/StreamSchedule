@@ -45,12 +45,7 @@ public static class Program
             dbContext.Database.EnsureCreated();
             
             List<string> channelNames = [];
-
-            foreach (int id in channelIDs)
-            {
-                User u = dbContext.Users.Find(id)!;
-                channelNames.Add(u.Username!);
-            }
+            channelNames.AddRange(channelIDs.Select(id => dbContext.Users.Find(id)!).Select(u => u.Username!));
 
             BotCore.Init(channelNames, dbContext, logger);
             Monitoring.Init();
@@ -72,7 +67,7 @@ internal static class BotCore
 {
     public static DatabaseContext DBContext { get; private set; } = null!;
     public static TwitchAPI API { get; private set; } = null!;
-    public static TwitchClient Client { get; private set; } = null!;
+    public static TwitchClient ChatClient { get; private set; } = null!;
     public static Logger Nlog { get; private set; } = null!;
     public static GraphQLClient GQLClient { get; private set; } = null!;
 
@@ -85,11 +80,9 @@ internal static class BotCore
 
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
-    public static int MessageLengthLimit = 260;
+    public static int MessageLengthLimit = 270;
 
     private static long _lastSave;
-
-    public static List<PermittedTerm> PermittedTerms { get; set; } = [];
     
     public static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
 
@@ -97,8 +90,8 @@ internal static class BotCore
     {
         Monitor.SetChannelsByName(channelNames);
 
-        Monitor.OnStreamOnline += Monitor_OnLive;
-        Monitor.OnStreamOffline += Monitor_OnOffline;
+        Monitor.OnStreamOnline += MonitorOnLive;
+        Monitor.OnStreamOffline += MonitorOnOffline;
         Monitor.Start();
 
         await Task.Delay(-1);
@@ -118,7 +111,7 @@ internal static class BotCore
             }
         };
 
-        Monitor = new(API, 5);
+        Monitor = new(API, 1);
 
         Task.Run(() => ConfigLiveMonitorAsync(channelNames));
 
@@ -134,18 +127,18 @@ internal static class BotCore
 
         GQLClient = new GraphQLClient();
 
-        Client = new();
-        Client.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
-        Client.OnUnaccountedFor += Client_OnUnaccounted;
-        Client.OnJoinedChannel += Client_OnJoinedChannel;
-        Client.OnMessageReceived += Client_OnMessageReceived;
-        Client.OnConnected += Client_OnConnected;
-        Client.OnRateLimit += Client_OnRateLimit;
-        Client.OnGiftedSubscription += Client_OnGifted;
-        Client.Connect();
+        ChatClient = new TwitchClient();
+        ChatClient.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
+        ChatClient.OnUnaccountedFor += ChatClientOnUnaccounted;
+        ChatClient.OnJoinedChannel += ChatClientOnJoinedChannel;
+        ChatClient.OnMessageReceived += ChatClientOnMessageReceived;
+        ChatClient.OnConnected += ChatClientOnConnected;
+        ChatClient.OnRateLimit += ChatClientOnRateLimit;
+        ChatClient.OnGiftedSubscription += ChatClientOnGifted;
+        ChatClient.Connect();
     }
 
-    private static async void Client_OnMessageReceived(object? sender, OnMessageReceivedArgs e)
+    private static async void ChatClientOnMessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         long start = Stopwatch.GetTimestamp();
 
@@ -176,6 +169,8 @@ internal static class BotCore
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
             try
             {
+                // stripping leading mandatory @username in reply messages 
+                // this sometimes throws array index for some reason, still can't figure out why 
                 messageAsCodepoints = messageAsCodepoints[(e.ChatMessage.Message.Split(" ")[0].Codepoints().Count() + 1)..];
             }
             catch (Exception ex)
@@ -248,40 +243,40 @@ internal static class BotCore
 
     #region EVENTS
 
-    private static void Monitor_OnLive(object? sender, OnStreamOnlineArgs args)
+    private static void MonitorOnLive(object? sender, OnStreamOnlineArgs args)
     {
         ChannelLiveState[args.Channel] = true;
         Nlog.Info($"{args.Channel} went live");
     }
 
-    private static void Monitor_OnOffline(object? sender, OnStreamOfflineArgs args)
+    private static void MonitorOnOffline(object? sender, OnStreamOfflineArgs args)
     {
         ChannelLiveState[args.Channel] = false;
         Nlog.Info($"{args.Channel} went offline");
     }
 
-    private static void Client_OnConnected(object? sender, OnConnectedArgs e)
+    private static void ChatClientOnConnected(object? sender, OnConnectedArgs e)
     {
         Nlog.Info($"{e.BotUsername} Connected ");
     }
 
-    private static void Client_OnGifted(object? sender, OnGiftedSubscriptionArgs e)
+    private static void ChatClientOnGifted(object? sender, OnGiftedSubscriptionArgs e)
     {
-        if (e.GiftedSubscription.MsgParamRecipientUserName.Equals(Client.TwitchUsername.ToLower()))
+        if (e.GiftedSubscription.MsgParamRecipientUserName.Equals(ChatClient.TwitchUsername.ToLower()))
             OutQueuePerChannel[e.Channel].Enqueue(new CommandResult($"Thanks for the sub, {e.GiftedSubscription.Login} PogChamp", reply: false));
     }
 
-    private static void Client_OnJoinedChannel(object? sender, OnJoinedChannelArgs e)
+    private static void ChatClientOnJoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
         Nlog.Info($"Joined {e.Channel}");
     }
 
-    private static void Client_OnRateLimit(object? sender, OnRateLimitArgs e)
+    private static void ChatClientOnRateLimit(object? sender, OnRateLimitArgs e)
     {
         Nlog.Info($"rate limited {e.Message}");
     }
 
-    private static void Client_OnUnaccounted(object? sender, OnUnaccountedForArgs e)
+    private static void ChatClientOnUnaccounted(object? sender, OnUnaccountedForArgs e)
     {
         if (e.RawIRC.Contains("automod", StringComparison.InvariantCultureIgnoreCase) || e.RawIRC.Contains("moderation", StringComparison.InvariantCultureIgnoreCase))
         {
@@ -352,8 +347,8 @@ internal static class BotCore
 
         void SendShortMessage(string msg)
         {
-            if (replyID is not null) Client.SendReply(channel, replyID, msg);
-            else Client.SendMessage(channel, msg);
+            if (replyID is not null) ChatClient.SendReply(channel, replyID, msg);
+            else ChatClient.SendMessage(channel, msg);
         }
     }
 }

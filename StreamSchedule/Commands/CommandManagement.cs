@@ -27,16 +27,16 @@ internal class CommandManagement : Command
 
         if (usedArguments.TryGetValue("add", out _))
         {
-            return Task.FromResult(usedArguments.TryGetValue("alias", out _) ?
-                AddAlias(commandName, text, ref commands):
-                AddCommand(commandName, text, privileges));
+            return Task.FromResult(usedArguments.TryGetValue("alias", out _)
+                ? AddAlias(commandName, text, ref commands)
+                : AddCommand(commandName, text, privileges));
         }
 
         if (usedArguments.TryGetValue("rm", out _))
         {
-            return Task.FromResult(usedArguments.TryGetValue("alias", out _) ?
-                RemoveAlias(commandName, text, ref commands):
-                RemoveCommand(commandName, commands));
+            return Task.FromResult(usedArguments.TryGetValue("alias", out _)
+                ? RemoveAlias(commandName, text, ref commands)
+                : RemoveCommand(commandName, commands));
         }
 
         return Task.FromResult(Utils.Responses.Surprise);

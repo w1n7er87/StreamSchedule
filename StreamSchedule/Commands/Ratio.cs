@@ -7,7 +7,7 @@ internal class Ratio : Command
 {
     internal override string Call => "score";
     internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "show user offline/total chat ratio and offliner score: [username]";
+    internal override string Help => "show user offline/total chat ratio and chat score: [username]";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
@@ -26,6 +26,6 @@ internal class Ratio : Command
 
         RatioScore ratioScore = Userscore.GetRatioAndScore(target);
 
-        return Task.FromResult(result + $"messages: {target.MessagesOffline}/{target.MessagesOnline} ({MathF.Round(ratioScore.ratio, 3)}), offliner score: {MathF.Round(ratioScore.score, 3)} ");
+        return Task.FromResult(result + $"messages: {target.MessagesOffline}/{target.MessagesOnline} ({MathF.Round(ratioScore.ratio, 3)}), chat score: {MathF.Round(ratioScore.score, 3)} ");
     }
 }

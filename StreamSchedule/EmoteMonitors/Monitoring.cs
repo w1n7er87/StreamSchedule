@@ -54,8 +54,6 @@ public static class Monitoring
                 return loadedEmotes;
             }
             
-            BotCore.Nlog.Info($"{channel.ChannelName} {Emotes[channel.ChannelID].Count} => {loadedEmotes.Count}");
-            
             List<Emote> removed = [.. oldEmotes.Except(loadedEmotes)];
             List<Emote> added = [.. loadedEmotes.Except(oldEmotes)];
 
