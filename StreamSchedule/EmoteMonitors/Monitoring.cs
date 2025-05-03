@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 
@@ -11,19 +10,16 @@ public static class Monitoring
     private static List<EmoteMonitorChannel> Channels = [];
     private static List<string> GlobalEmoteTokens = [];
 
-    public static void Init()
-    {
-        Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted)];
-        Channels.ForEach(x => Emotes.Add(x.ChannelID, []));
-        Task.Run(Scheduler);
-    }
+    public static void Init() => Task.Run(Scheduler);
 
     private static async Task Scheduler()
     {
         while (true)
         {
-            int channelCount = 0;
+            Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted)];
             
+            int channelCount = 0;
+
             foreach (EmoteMonitorChannel channel in Channels)
             {
                 channelCount++;
@@ -39,9 +35,14 @@ public static class Monitoring
 
     private static async Task<List<Emote>> UpdateEmotes(EmoteMonitorChannel channel)
     {
-        List<Emote> oldEmotes = Emotes[channel.ChannelID];
         try
         {
+            if (!Emotes.TryGetValue(channel.ChannelID, out List<Emote>? oldEmotes))
+            {
+                Emotes.Add(channel.ChannelID, new List<Emote>());
+                oldEmotes = new List<Emote>();
+            }
+            
             List<Emote> loadedEmotes =
             [
                 .. (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(channel.ChannelID.ToString())).ChannelEmotes
@@ -50,7 +51,7 @@ public static class Monitoring
 
             if (oldEmotes.Count == 0)
             {
-                BotCore.Nlog.Info($"first run for {channel.ChannelName} emote monitor");
+                BotCore.Nlog.Info($"first run for {channel.ChannelName} emote monitor, {channel.UpdateSubscribersUsers.Count} subs");
                 return loadedEmotes;
             }
             
@@ -64,7 +65,7 @@ public static class Monitoring
             if (removed.Count != 0) result += $"{removed.Count} removed 📤 : {string.Join(", ", removed)} ";
             if (added.Count != 0) result += $"{added.Count} added 📥 : {string.Join(", ", added)} ";
 
-            result += string.Join(" ", channel.UpdateSubscribers.Select(x => "@" + x));
+            result += string.Join(" ", channel.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
 
             BotCore.OutQueuePerChannel[channel.OutputChannelName].Enqueue(new CommandResult(result, reply: false));
             return loadedEmotes;
@@ -75,7 +76,6 @@ public static class Monitoring
             BotCore.Nlog.Error(e);
             Task.Run(Scheduler);
             return Emotes[channel.ID];
-
         }
     }
 
@@ -110,17 +110,5 @@ public static class Monitoring
             BotCore.Nlog.Error(e);
             Task.Run(Scheduler);
         }
-    }
-
-    public static void AddMonitor(EmoteMonitorChannel channel)
-    {
-        Channels.Add(channel);
-        _ = Emotes.TryAdd(channel.ChannelID, []);
-    }
-
-    public static void RemoveMonitor(EmoteMonitorChannel channel)
-    {
-        Emotes.Remove(channel.ChannelID);
-        Channels.Remove(channel);
     }
 }

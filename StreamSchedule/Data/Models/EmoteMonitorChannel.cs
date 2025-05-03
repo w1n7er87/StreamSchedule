@@ -10,5 +10,5 @@ public class EmoteMonitorChannel
     public int ChannelID { get; set; }
     public string ChannelName { get; set; }
     public string OutputChannelName { get; set; }
-    public List<string> UpdateSubscribers { get; set; } = [];
+    public List<int> UpdateSubscribersUsers { get; set; } = [];
 }

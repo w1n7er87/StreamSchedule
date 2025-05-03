@@ -1,6 +1,5 @@
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
-using StreamSchedule.EmoteMonitors;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
 namespace StreamSchedule.Commands;
@@ -44,13 +43,14 @@ internal class EmoteFeed : Command
                 {
                     toDelete.Deleted = true;
                     await BotCore.DBContext.SaveChangesAsync();
-                    Monitoring.RemoveMonitor(toDelete);
                     return Utils.Responses.Ok + $"removed emote monitor for {toDelete.ChannelName}";
                 }
 
-                if (toDelete.UpdateSubscribers.Contains(message.sender.Username!)) return Utils.Responses.Ok + "removed you from ping list";
-                RestartMonitor(toDelete);
-                return Utils.Responses.Fail + $"you are not in the ping list for {toDelete.ChannelName}";
+                if (!toDelete.UpdateSubscribersUsers.Contains(message.sender.Id)) return Utils.Responses.Fail + $"you are not in the ping list for {toDelete.ChannelName}";
+                
+                toDelete.UpdateSubscribersUsers.Remove(message.sender.Id);
+                await BotCore.DBContext.SaveChangesAsync();
+                return Utils.Responses.Ok + $"removed you from the ping list for {toDelete.ChannelName}";
             }
 
             GetUsersResponse? a = idProvided
@@ -65,7 +65,7 @@ internal class EmoteFeed : Command
                 ChannelID = int.Parse(u.Id),
                 ChannelName = u.Login,
                 OutputChannelName = targetOutputChannelName,
-                UpdateSubscribers = [message.sender.Username!]
+                UpdateSubscribersUsers = [message.sender.Id]
             };
 
             EmoteMonitorChannel? existing = BotCore.DBContext.EmoteMonitorChannels.SingleOrDefault(x => x.ChannelID == emc.ChannelID);
@@ -73,23 +73,21 @@ internal class EmoteFeed : Command
             {
                 CommandResult res = Utils.Responses.Ok + $"already monitoring {emc.ChannelName}";
                 if (existing.Deleted) { res += " (restored)"; existing.Deleted = false; }
-                if (existing.UpdateSubscribers.Contains(message.sender.Username!))
+                if (existing.UpdateSubscribersUsers.Contains(message.sender.Id))
                 {
                     res += " you are in the ping list.";
                 }
                 else
                 {
                     res += " added you to the ping list.";
-                    existing.UpdateSubscribers.Add(message.sender.Username!);
+                    existing.UpdateSubscribersUsers.Add(message.sender.Id);
                 }
 
-                RestartMonitor(existing);
                 await BotCore.DBContext.SaveChangesAsync();
                 return res;
             }
 
             BotCore.DBContext.EmoteMonitorChannels.Add(emc);
-            Monitoring.AddMonitor(emc);
             await BotCore.DBContext.SaveChangesAsync();
             return Utils.Responses.Ok + $"added emote monitor for {emc.ChannelName} in {emc.OutputChannelName}";
         }
@@ -98,19 +96,5 @@ internal class EmoteFeed : Command
             BotCore.Nlog.Error(ex);
             return Utils.Responses.Fail;
         }
-    }
-
-    private static void RestartMonitor(EmoteMonitorChannel emc)
-    {
-        try
-        {
-            Monitoring.RemoveMonitor(emc);
-        }
-        catch
-        {
-            BotCore.Nlog.Warn("error while trying to remove emote monitor:");
-        }
-
-        Monitoring.AddMonitor(emc);
     }
 }
