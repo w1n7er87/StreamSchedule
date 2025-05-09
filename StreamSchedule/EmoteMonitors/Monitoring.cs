@@ -5,7 +5,7 @@ namespace StreamSchedule.EmoteMonitors;
 
 public static class Monitoring
 {
-    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(300);
+    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(60);
     private static readonly Dictionary<int, List<Emote>> Emotes = [];
     private static List<EmoteMonitorChannel> Channels = [];
     private static List<string> GlobalEmoteTokens = [];
@@ -60,11 +60,23 @@ public static class Monitoring
 
             if (added.Count == 0 && removed.Count == 0) return oldEmotes;
             BotCore.Nlog.Info($"{channel.ChannelName} emotes updated !!! removed { removed.Count} added {added.Count}");
-            
-            string result = $"{channel.ChannelName} emotes ";
-            if (removed.Count != 0) result += $"{removed.Count} removed 📤 : {string.Join(", ", removed)} ";
-            if (added.Count != 0) result += $"{added.Count} added 📥 : {string.Join(", ", added)} ";
 
+            string result = $"{channel.ChannelName} emotes ";
+            
+            if (removed.Count == loadedEmotes.Count && oldEmotes.Count == added.Count)
+            {
+                GraphQL.Data.Emote? oldEmote = await BotCore.GQLClient.GetEmote(oldEmotes[0].ID);
+                GraphQL.Data.Emote? newEmote = await BotCore.GQLClient.GetEmote(loadedEmotes[0].ID);
+                string oldPrefix = oldEmote?.Token?[0 .. (oldEmote.Suffix?.Length ?? 0)] ?? "";
+                string newPrefix = newEmote?.Token?[0 .. (newEmote.Suffix?.Length ?? 0)] ?? "";
+                result += $"prefix changed \"{oldPrefix}\" -> \"{newPrefix}\" ";
+            }
+            else
+            {
+                if (removed.Count != 0) result += $"{removed.Count} removed 📤 : {string.Join(", ", removed)} ";
+                if (added.Count != 0) result += $"{added.Count} added 📥 : {string.Join(", ", added)} ";
+            }
+            
             result += string.Join(" ", channel.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
 
             BotCore.OutQueuePerChannel[channel.OutputChannelName].Enqueue(new CommandResult(result, reply: false));
