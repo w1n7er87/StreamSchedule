@@ -65,11 +65,10 @@ public static class Monitoring
             
             if (removed.Count == loadedEmotes.Count && oldEmotes.Count == added.Count)
             {
-                GraphQL.Data.Emote? oldEmote = await BotCore.GQLClient.GetEmote(oldEmotes[0].ID);
                 GraphQL.Data.Emote? newEmote = await BotCore.GQLClient.GetEmote(loadedEmotes[0].ID);
-                string oldPrefix = oldEmote?.Token?[0 .. (oldEmote.Suffix?.Length ?? 0)] ?? "";
-                string newPrefix = newEmote?.Token?[0 .. (newEmote.Suffix?.Length ?? 0)] ?? "";
-                result += $"prefix changed \"{oldPrefix}\" -> \"{newPrefix}\" ";
+                string oldPrefix = oldEmotes[0].Token?[..^(newEmote?.Suffix?.Length ?? 0)] ?? "";
+                string newPrefix = newEmote?.Token?[..^(newEmote.Suffix?.Length ?? 0)] ?? "";
+                result += $"prefix changed \"{oldPrefix}\" > \"{newPrefix}\" ";
             }
             else
             {
