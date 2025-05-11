@@ -3,7 +3,7 @@ using StreamSchedule.GraphQL.Data;
 
 namespace StreamSchedule.GraphQL;
 
-internal class Queries
+internal static class Queries
 {
     internal static GraphQLRequest RequestChattersByID(string userID) => new GraphQLRequest(_chattersByIDQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetChatters");
 

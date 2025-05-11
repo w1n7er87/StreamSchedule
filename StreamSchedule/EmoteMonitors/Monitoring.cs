@@ -5,7 +5,7 @@ namespace StreamSchedule.EmoteMonitors;
 
 public static class Monitoring
 {
-    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(120);
     private static readonly Dictionary<int, List<Emote>> Emotes = [];
     private static List<EmoteMonitorChannel> Channels = [];
     private static List<string> GlobalEmoteTokens = [];
@@ -14,22 +14,32 @@ public static class Monitoring
 
     private static async Task Scheduler()
     {
-        while (true)
+        try
         {
-            Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted)];
-            
-            int channelCount = 0;
-
-            foreach (EmoteMonitorChannel channel in Channels)
+            while (true)
             {
-                channelCount++;
-                Emotes[channel.ChannelID] = await UpdateEmotes(channel);
-            }
 
-            BotCore.Nlog.Info($"Emon cycle {channelCount} channels");
-            
-            await UpdateGlobalEmotes();
-            await Task.Delay(monitorCycleTimeout);
+                Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted)];
+
+                int channelCount = 0;
+
+                foreach (EmoteMonitorChannel channel in Channels)
+                {
+                    channelCount++;
+                    Emotes[channel.ChannelID] = await UpdateEmotes(channel);
+                }
+
+                BotCore.Nlog.Info($"Emon cycle {channelCount} channels");
+
+                await UpdateGlobalEmotes();
+                await Task.Delay(monitorCycleTimeout);
+            }
+        }
+        catch (Exception e)
+        {
+            BotCore.Nlog.Error($"emon died lol");
+            BotCore.Nlog.Error(e);
+            Task.Run(Scheduler);
         }
     }
 
@@ -86,7 +96,7 @@ public static class Monitoring
             BotCore.Nlog.Error($"failed to get emotes for {channel.ChannelName}");
             BotCore.Nlog.Error(e);
             Task.Run(Scheduler);
-            return Emotes[channel.ID];
+            throw;
         }
     }
 
@@ -120,6 +130,7 @@ public static class Monitoring
             BotCore.Nlog.Error("Failed to get global emotes");
             BotCore.Nlog.Error(e);
             Task.Run(Scheduler);
+            throw;
         }
     }
 }
