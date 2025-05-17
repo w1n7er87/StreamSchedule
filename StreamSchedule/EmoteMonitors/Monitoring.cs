@@ -5,7 +5,7 @@ namespace StreamSchedule.EmoteMonitors;
 
 public static class Monitoring
 {
-    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(120);
+    private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(180);
     private static readonly Dictionary<int, List<Emote>> Emotes = [];
     private static List<EmoteMonitorChannel> Channels = [];
     private static List<string> GlobalEmoteTokens = [];
@@ -39,6 +39,7 @@ public static class Monitoring
         {
             BotCore.Nlog.Error($"emon died lol");
             BotCore.Nlog.Error(e);
+            await Task.Delay(monitorCycleTimeout);
             Task.Run(Scheduler);
         }
     }
