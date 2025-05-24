@@ -173,7 +173,9 @@ internal class UserInfo2 : Command
             }
             else
             {
-                TimeSpan sincePastStream = DateTime.Now - (user.LastBroadcast.StartedAt ?? DateTime.Now);
+                TimeSpan sincePastStream = (user.LastBroadcast.StartedAt is null)
+                    ? TimeSpan.Zero
+                    : DateTime.Now - TimeZoneInfo.ConvertTimeFromUtc((DateTime)user.LastBroadcast.StartedAt, TimeZoneInfo.Local);
                 a = $"offline, last stream: {user.LastBroadcast.Game?.DisplayName ?? ""} - \" {user.LastBroadcast.Title} \" ({(sincePastStream.Days != 0 ? sincePastStream.Days + "d " : "")}{(sincePastStream.Hours != 0 ? sincePastStream.Hours + "h " : "")}{sincePastStream:m'm 's's '} ago). {hypeTrain}";
             }
             return ["offline", a];

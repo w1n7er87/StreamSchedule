@@ -161,6 +161,8 @@ internal static class BotCore
         MessageCache.Add(e.ChatMessage);
         if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
 
+        if (ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges < Privileges.Mod) return;
+        
         ReadOnlySpan<Codepoint> messageAsCodepoints = [.. e.ChatMessage.Message.Codepoints()];
 
         string? replyID = null;
@@ -186,6 +188,7 @@ internal static class BotCore
 
         string trimmedMessage = messageAsCodepoints.ToStringRepresentation();
         string requestedCommand = trimmedMessage.Split(' ')[0];
+        
 
         List<TextCommand> textCommands = Commands.Commands.CurrentTextCommands;
 
@@ -207,9 +210,7 @@ internal static class BotCore
                 return;
             }
         }
-
-        if (ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges < Privileges.Mod) return;
-
+        
         foreach (Command c in Commands.Commands.CurrentCommands)
         {
             ReadOnlySpan<char> usedCall = c.Call;
