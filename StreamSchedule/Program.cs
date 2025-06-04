@@ -192,7 +192,7 @@ internal static class BotCore
 
         List<TextCommand> textCommands = Commands.Commands.CurrentTextCommands;
 
-        if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds(5) && !Silent && textCommands.Count > 0)
+        if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds((int)Cooldowns.Long) && !Silent && textCommands.Count > 0)
         {
             foreach (TextCommand command in textCommands)
             {

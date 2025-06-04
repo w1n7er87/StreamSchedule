@@ -8,7 +8,7 @@ internal class Ratio : Command
     internal override string Call => "score";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "show user offline/total chat ratio and chat score: [username]";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
 

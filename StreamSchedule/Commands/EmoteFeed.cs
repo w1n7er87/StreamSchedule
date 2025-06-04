@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
+using StreamSchedule.EmoteMonitors;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
 namespace StreamSchedule.Commands;
@@ -9,7 +11,7 @@ internal class EmoteFeed : Command
     internal override string Call => "emon";
     internal override Privileges MinPrivilege => Privileges.Trusted;
     internal override string Help => "add channel to monitor emote changes in my chat";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["rm", "channel"];
 
@@ -43,6 +45,7 @@ internal class EmoteFeed : Command
                 {
                     toDelete.Deleted = true;
                     await BotCore.DBContext.SaveChangesAsync();
+                    Monitoring.Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted).AsNoTracking()];
                     return Utils.Responses.Ok + $"removed emote monitor for {toDelete.ChannelName}";
                 }
 
@@ -50,6 +53,7 @@ internal class EmoteFeed : Command
                 
                 toDelete.UpdateSubscribersUsers.Remove(message.sender.Id);
                 await BotCore.DBContext.SaveChangesAsync();
+                Monitoring.Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted).AsNoTracking()];
                 return Utils.Responses.Ok + $"removed you from the ping list for {toDelete.ChannelName}";
             }
 
@@ -84,11 +88,13 @@ internal class EmoteFeed : Command
                 }
 
                 await BotCore.DBContext.SaveChangesAsync();
+                Monitoring.Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted).AsNoTracking()];
                 return res;
             }
 
             BotCore.DBContext.EmoteMonitorChannels.Add(emc);
             await BotCore.DBContext.SaveChangesAsync();
+            Monitoring.Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted).AsNoTracking()];
             return Utils.Responses.Ok + $"added emote monitor for {emc.ChannelName} in {emc.OutputChannelName}";
         }
         catch (Exception ex)

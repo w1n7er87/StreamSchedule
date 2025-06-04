@@ -7,7 +7,7 @@ internal class Oh : Command
     internal override string Call => "oh";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "oh or Tutoh with 1% chance";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
 

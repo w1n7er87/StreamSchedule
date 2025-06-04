@@ -8,7 +8,7 @@ internal class GetStream : Command
     internal override string Call => "stream";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "time until next stream on the schedule";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["h", "min", "s", "mic", "ms", "ns", "d", "y"];
 

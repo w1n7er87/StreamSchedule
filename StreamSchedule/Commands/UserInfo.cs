@@ -8,7 +8,7 @@ internal class UserInfo : Command
     internal override string Call => "whois_";
     internal override Privileges MinPrivilege => Privileges.Uuh;
     internal override string Help => "user info: [username] / [#id]";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n"];
 

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 
@@ -7,10 +8,14 @@ public static class Monitoring
 {
     private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(180);
     private static readonly Dictionary<int, List<Emote>> Emotes = [];
-    private static List<EmoteMonitorChannel> Channels = [];
+    public static List<EmoteMonitorChannel> Channels {private get; set;} = [];
     private static List<string> GlobalEmoteTokens = [];
 
-    public static void Init() => Task.Run(Scheduler);
+    public static void Init()
+    {
+        Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted).AsNoTracking()];
+        Task.Run(Scheduler);
+    }
 
     private static async Task Scheduler()
     {
@@ -18,9 +23,7 @@ public static class Monitoring
         {
             while (true)
             {
-
-                Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted)];
-
+                
                 int channelCount = 0;
 
                 foreach (EmoteMonitorChannel channel in Channels)
