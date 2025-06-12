@@ -44,10 +44,10 @@ public static class Program
                 .UseSqlite("Data Source=StreamSchedule.data").Options);
             dbContext.Database.EnsureCreated();
             
-            List<string> channelNames = [];
-            channelNames.AddRange(channelIDs.Select(id => dbContext.Users.Find(id)!).Select(u => u.Username!));
+            List<User> JoinedUsers = [];
+            JoinedUsers.AddRange(channelIDs.Select(id => dbContext.Users.Find(id)!));
 
-            BotCore.Init(channelNames, dbContext, logger);
+            BotCore.Init(JoinedUsers, dbContext, logger);
             Monitoring.Init();
 
             Console.ReadLine();
@@ -83,6 +83,8 @@ internal static class BotCore
     public static int MessageLengthLimit = 270;
 
     private static long _lastSave;
+
+    public const string BotID = "871501999";
     
     public static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
 
@@ -97,7 +99,7 @@ internal static class BotCore
         await Task.Delay(-1);
     }
 
-    public static void Init(List<string> channelNames, DatabaseContext dbContext, Logger logger)
+    public static void Init(List<User> joinedUsers, DatabaseContext dbContext, Logger logger)
     {
         DBContext = dbContext;
         Nlog = logger;
@@ -113,22 +115,22 @@ internal static class BotCore
 
         Monitor = new(API, 1);
 
-        Task.Run(() => ConfigLiveMonitorAsync(channelNames));
+        Task.Run(() => ConfigLiveMonitorAsync(joinedUsers.Select(u => u.Username).ToList()!));
 
         ChannelLiveState = [];
-        foreach (string channel in channelNames) 
+        foreach (User user in joinedUsers) 
         {
-            OutQueuePerChannel.Add(channel, []);
-            ChannelLiveState.Add(channel, false);
-            Task.Run(() => OutPump(channel));
+            OutQueuePerChannel.Add(user.Username!, []);
+            ChannelLiveState.Add(user.Username!, false);
+            Task.Run(() => OutPump(user));
         }
 
-        Commands.Commands.InitializeCommands(channelNames, DBContext);
+        Commands.Commands.InitializeCommands([.. joinedUsers.Select(u => u.Username!)], DBContext);
 
         GQLClient = new GraphQLClient();
 
         ChatClient = new TwitchClient();
-        ChatClient.Initialize(new(Credentials.username, Credentials.oauth), [.. channelNames]);
+        ChatClient.Initialize(new(Credentials.username, Credentials.oauth), [.. joinedUsers.Select(u => u.Username!)]);
         ChatClient.OnUnaccountedFor += ChatClientOnUnaccounted;
         ChatClient.OnJoinedChannel += ChatClientOnJoinedChannel;
         ChatClient.OnMessageReceived += ChatClientOnMessageReceived;
@@ -291,24 +293,24 @@ internal static class BotCore
     #endregion EVENTS
 
 
-    private static async Task OutPump(string channel)
+    private static async Task OutPump(User channel)
     {
         bool sameMessageFlip = false;
         string sameMessageBypass = sameMessageFlip ? " \U000e0000" : "";
 
         while (true)
         {
-            if (OutQueuePerChannel[channel].Count <= 0) { await Task.Delay(50); continue; }
+            if (OutQueuePerChannel[channel.Username!].Count <= 0) { await Task.Delay(50); continue; }
 
-            OutgoingMessage response = OutQueuePerChannel[channel].Peek();
+            OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
             _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass, response.Result.requiresFilter);
             sameMessageFlip = !sameMessageFlip;
             await Task.Delay(1100);
-            OutQueuePerChannel[channel].Dequeue();
+            OutQueuePerChannel[channel.Username!].Dequeue();
         }
     }
 
-    private static async Task<bool> SendLongMessage(string channel, string? replyID, string message, bool requiresFilter = false)
+    private static async Task<bool> SendLongMessage(User channel, string? replyID, string message, bool requiresFilter = false)
     {
         string[] parts = requiresFilter
             ? Utils.Filter(message).Split(' ', StringSplitOptions.TrimEntries)
@@ -348,8 +350,7 @@ internal static class BotCore
 
         void SendShortMessage(string msg)
         {
-            if (replyID is not null) ChatClient.SendReply(channel, replyID, msg);
-            else ChatClient.SendMessage(channel, msg);
+            API.Helix.Chat.SendChatMessage(channel.Id.ToString(), BotID, msg, replyID);
         }
     }
 }

@@ -43,6 +43,7 @@ public static class Monitoring
             BotCore.Nlog.Error($"emon died lol");
             BotCore.Nlog.Error(e);
             await Task.Delay(monitorCycleTimeout);
+            if (e is TwitchLib.Api.Core.Exceptions.HttpResponseException) return;
             Task.Run(Scheduler);
         }
     }
