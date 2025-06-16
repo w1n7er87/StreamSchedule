@@ -350,7 +350,8 @@ internal static class BotCore
 
         void SendShortMessage(string msg)
         {
-            API.Helix.Chat.SendChatMessage(channel.Id.ToString(), BotID, msg, replyID);
+            if (replyID is not null) ChatClient.SendReply(channel.Username, replyID, msg);
+            else ChatClient.SendMessage(channel.Username, msg);
         }
     }
 }
