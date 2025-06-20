@@ -3,6 +3,5 @@
 public class ChattersInfo
 {
     public int? Count { get; set; }
-
     public Chatter?[]? Viewers { get; set; }
 }

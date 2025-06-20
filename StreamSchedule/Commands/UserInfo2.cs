@@ -12,7 +12,7 @@ internal class UserInfo2 : Command
     internal override string Help => "user info: [username]";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n", "l"];
+    internal override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n", "l", "h"];
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -82,6 +82,11 @@ internal class UserInfo2 : Command
         {
             lurkers = (user!.Channel?.Chatters?.Count) switch { >0 => user.Channel.Chatters.Count + " lurkers", _ => "no lurkers"};
             response += lurkers + " ";
+        }
+
+        if (usedArgs.TryGetValue("h", out _) || all)
+        {
+            response += GetHypeTran(user);
         }
 
         return all ? new($"{generalInfo} | {color} | {followers} | {lurkers} | {emotes[0]} | {liveInfo[0]}", requiresFilter: true) : response;
@@ -158,9 +163,9 @@ internal class UserInfo2 : Command
     private static string[] GetLiveStatus(User user)
     {
         string hypeTrain = "";
-        if (user.Channel?.HypeTrain?.Execution?.IsActive ?? false)
+        if (user.Channel?.HypeTrain?.Execution is not null)
         {
-            float progress = MathF.Round(((float)(user.Channel.HypeTrain.Execution.Progress?.Progression ?? 1.0f) / (user.Channel.HypeTrain.Execution.Progress?.Goal ?? 1.0f)) * 100.0f, 4);
+            float progress = MathF.Round(((user.Channel.HypeTrain.Execution.Progress?.Progression ?? 1.0f) / (user.Channel.HypeTrain.Execution.Progress?.Goal ?? 1.0f)) * 100.0f, 4);
             hypeTrain = $"lvl {user.Channel.HypeTrain.Execution.Progress?.Level?.Value ?? 0} {Helpers.HypeTrainDifficultyToString(user.Channel.HypeTrain.Execution.Config?.Difficulty)} hype train - {progress}%";
         }
 
@@ -204,4 +209,50 @@ internal class UserInfo2 : Command
 
         return $"aka: {string.Join(", ", previousUsernames)}.";
     }
+
+    private static string GetHypeTran(User user)
+    {
+        if (user.Channel?.HypeTrain?.Approaching is not null)
+        {
+            string events = user.Channel.HypeTrain.Approaching.EventsRemaining?.FirstOrDefault()?.Events.ToString() ?? "0";
+            string isKappaApproaching = user.Channel.HypeTrain.Approaching.IsGoldenKappaTrain ?? false ? "golden Kappa" : "";
+            string isTreasureApproaching = user.Channel.HypeTrain.Approaching.IsTreasureTrain ?? false ? "treasure" : "";
+            string secondsLeft = ((user.Channel.HypeTrain.Approaching.ExpiresAt ?? DateTime.UtcNow) - DateTime.UtcNow).Seconds.ToString();
+            return $"{isKappaApproaching} {isTreasureApproaching} hype train is approaching ({events} more events) {secondsLeft}s";
+        }
+        
+        if (user.Channel?.HypeTrain?.Execution is null) return "no active hype trains";
+
+        string isKappa = user.Channel.HypeTrain.Execution.IsGoldenKappaTrain ?? false ? "golden Kappa " : "";
+        string isTreasure = user.Channel.HypeTrain.Execution.IsTreasureTrain ?? false ? "treasure " : "";
+        
+        float progress = GetPercentage(user.Channel.HypeTrain.Execution.Progress?.Progression, user.Channel.HypeTrain.Execution.Progress?.Goal);
+        string hypeTrain = $"lvl {user.Channel.HypeTrain.Execution.Progress?.Level?.Value ?? 0} {Helpers.HypeTrainDifficultyToString(user.Channel.HypeTrain.Execution.Config?.Difficulty)} {isTreasure}{isKappa}hype train - {progress}%";
+        hypeTrain += $" ( record: lvl {user.Channel.HypeTrain.Execution.AllTimeHigh?.Level?.Value ?? 0} {GetPercentage(user.Channel.HypeTrain.Execution.AllTimeHigh?.Progression, user.Channel.HypeTrain.Execution.AllTimeHigh?.Goal)}% ) ";
+
+        string shared = "";
+        if (user.Channel.HypeTrain.Execution.SharedHypeTrainDetails is not null)
+        {
+            shared = "shared contribution: ";
+            shared += string.Join(", ", user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedProgress?.Select(x => $"{x?.User?.Login} - {GetPercentage(x?.ChannelProgress?.Total, user.Channel.HypeTrain.Execution.Progress?.Total)}%") ?? []);
+            shared += $". ( shared record: lvl {user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0].ChannelAllTimeHigh?.Level?.Value ?? 0} {GetPercentage(user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0].ChannelAllTimeHigh?.Progression, user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0].ChannelAllTimeHigh?.Goal)}% ) ";
+        }
+        
+        string treasureDetails = "";
+        if (user.Channel.HypeTrain.Execution.TreasureTrainDetails is not null)
+        {
+            treasureDetails = $" ( discount {user.Channel.HypeTrain.Execution.TreasureTrainDetails.DiscountPercentage}%, starts at lvl{user.Channel.HypeTrain.Execution.TreasureTrainDetails.DiscountLevelThreshold} ) ";
+        }
+
+        hypeTrain += treasureDetails;
+        hypeTrain += shared;
+        hypeTrain += string.Join("; ", user.Channel.HypeTrain.Execution.Participations?.Select(x => x?.ToString() ?? "") ?? []);
+
+        return hypeTrain;
+        
+        static float GetPercentage(int? currentProgress, int? goal)
+        {
+            return MathF.Round((currentProgress ?? 1.0f) / (goal ?? 1.0f) * 100.0f, 4);
+        }
+    } 
 }

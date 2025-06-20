@@ -125,8 +125,38 @@ internal static class Queries
                     }
                     founderBadgeAvailability
                     hypeTrain {
+                        approaching {
+                            expiresAt
+                            goal
+                            isGoldenKappaTrain
+                            isTreasureTrain
+                            eventsRemaining {
+                                events
+                            }
+                        }
                         execution {
-                            isActive
+                            startedAt
+                            expiresAt
+                            updatedAt
+                            isGoldenKappaTrain
+                            isTreasureTrain
+                            isFastMode
+                            treasureTrainDetails {
+                                discountPercentage
+                                discountLevelThreshold
+                            }
+                            allTimeHigh {
+                                level {
+                                    value
+                                }
+                                goal
+                                progression
+                            }
+                            participations {
+                                action
+                                source
+                                quantity
+                            }
                             config {
                                 difficulty
                             }
@@ -136,6 +166,26 @@ internal static class Queries
                                 }
                                 goal
                                 progression
+                                total
+                            }
+                            sharedHypeTrainDetails {
+                                sharedProgress {
+                                    user {
+                                        login
+                                    }
+                                    channelProgress {
+                                        total
+                                    }
+                                }
+                                sharedAllTimeHighRecords {
+                                    channelAllTimeHigh {
+                                        level {
+                                            value
+                                        }
+                                        goal
+                                        progression
+                                    }
+                                }
                             }
                         }
                     }
@@ -198,8 +248,38 @@ internal static class Queries
                     }
                     founderBadgeAvailability
                     hypeTrain {
+                        approaching {
+                            expiresAt
+                            goal
+                            isGoldenKappaTrain
+                            isTreasureTrain
+                            eventsRemaining {
+                                events
+                            }
+                        }
                         execution {
-                            isActive
+                            startedAt
+                            expiresAt
+                            updatedAt
+                            isGoldenKappaTrain
+                            isTreasureTrain
+                            isFastMode
+                            treasureTrainDetails {
+                                discountPercentage
+                                discountLevelThreshold
+                            }
+                            allTimeHigh {
+                                level {
+                                    value
+                                }
+                                goal
+                                progression
+                            }
+                            participations {
+                                action
+                                source
+                                quantity
+                            }
                             config {
                                 difficulty
                             }
@@ -209,6 +289,26 @@ internal static class Queries
                                 }
                                 goal
                                 progression
+                                total
+                            }
+                            sharedHypeTrainDetails {
+                                sharedProgress {
+                                    user {
+                                        login
+                                    }
+                                    channelProgress {
+                                    total
+                                    }
+                                }
+                                sharedAllTimeHighRecords {
+                                    channelAllTimeHigh {
+                                        level {
+                                            value
+                                        }
+                                        goal
+                                        progression
+                                    }
+                                }
                             }
                         }
                     }
