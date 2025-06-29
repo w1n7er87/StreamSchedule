@@ -9,6 +9,7 @@ using StreamSchedule.EmoteMonitors;
 using StreamSchedule.Extensions;
 using StreamSchedule.GraphQL;
 using System.Diagnostics;
+using StreamSchedule.VedalPlush;
 using TwitchLib.Api;
 using TwitchLib.Api.Services;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
@@ -70,6 +71,7 @@ internal static class BotCore
     public static TwitchClient ChatClient { get; private set; } = null!;
     public static Logger Nlog { get; private set; } = null!;
     public static GraphQLClient GQLClient { get; private set; } = null!;
+    public static VedalPlushClient VedalPlushClient { get; private set; } = null!;
 
     public static bool Silent { get; set; }
 
@@ -128,7 +130,8 @@ internal static class BotCore
         Commands.Commands.InitializeCommands([.. joinedUsers.Select(u => u.Username!)], DBContext);
 
         GQLClient = new GraphQLClient();
-
+        VedalPlushClient = new VedalPlushClient();
+        
         ChatClient = new TwitchClient();
         ChatClient.Initialize(new(Credentials.username, Credentials.oauth), [.. joinedUsers.Select(u => u.Username!)]);
         ChatClient.OnUnaccountedFor += ChatClientOnUnaccounted;
