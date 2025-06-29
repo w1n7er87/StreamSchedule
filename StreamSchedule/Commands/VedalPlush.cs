@@ -2,7 +2,7 @@ using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
-public class VedalPlush : Command
+internal class VedalPlush : Command
 {
     internal override string Call => "plush";
     internal override Privileges MinPrivilege => Privileges.None;
@@ -16,7 +16,13 @@ public class VedalPlush : Command
         var count = await BotCore.VedalPlushClient.GetPlushCount();
         if (count is null) return new CommandResult("no data", false, false);
 
+        if (!DateTime.TryParse(count.Node?.MetafieldsWithReference?.FirstOrDefault(x => x?.Type?.Equals("date_time") ?? false)?.Value ?? "", out DateTime endTime))
+            endTime = DateTime.UtcNow;
+
+        TimeSpan span = endTime - DateTime.UtcNow;
+        string time = $"{(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}";
+
         string isLive = (count.Node?.AvailableForSale ?? false) ? "is live" : "";
-        return new CommandResult($"Vedal plush {isLive} and has sold {Math.Abs(count.Node?.Quantity ?? 0)}");
+        return new CommandResult($"Vedal plush {isLive} and has sold {Math.Abs(count.Node?.Quantity ?? 0)} . Only {time} left DinkDonk ", false);
     }
 }

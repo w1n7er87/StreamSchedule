@@ -37,11 +37,15 @@ public class VedalPlushClient
     private static readonly GraphQLQuery GetPlushCountQuery = new GraphQLQuery(
         """
             query ($id:ID!)  { node (id: $id) { __typename, ...ProductFragment } }
-            
+                fragment MetafieldWithReferenceFragment on Metafield  {key,type,value},
                 fragment ProductFragment on Product  { 
                     id,
                     availableForSale,
                     quantity: totalInventory,
+                    metafieldsWithReference: metafields (identifiers: 
+                    [				
+        	            {namespace: "productListing" key: "campaignEnd"}
+                    ]) { ...MetafieldWithReferenceFragment }
                 }
         """);
 }
