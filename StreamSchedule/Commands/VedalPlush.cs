@@ -17,12 +17,13 @@ internal class VedalPlush : Command
         if (count is null) return new CommandResult("no data", false, false);
 
         if (!DateTime.TryParse(count.Node?.MetafieldsWithReference?.FirstOrDefault(x => x?.Type?.Equals("date_time") ?? false)?.Value ?? "", out DateTime endTime))
-            endTime = DateTime.UtcNow;
-
+            endTime = DateTime.Now;
+        endTime = TimeZoneInfo.ConvertTimeToUtc(endTime);
+        
         TimeSpan span = endTime - DateTime.UtcNow;
         string time = $"{(span.Days != 0 ? span.Days + "d " : "")}{(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}";
 
-        string isLive = (count.Node?.AvailableForSale ?? false) ? "is live" : "";
-        return new CommandResult($"Vedal plush {isLive} and has sold {Math.Abs(count.Node?.Quantity ?? 0)} . Only {time} left DinkDonk ", false);
+        string isLive = (count.Node?.AvailableForSale ?? false) ? "is live and" : "";
+        return new CommandResult($"Vedal plush {isLive} has sold {Math.Abs(count.Node?.Quantity ?? 0)} . Only {time} left DinkDonk ", false);
     }
 }
