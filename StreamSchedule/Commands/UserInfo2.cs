@@ -31,14 +31,15 @@ internal class UserInfo2 : Command
             if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
         }
 
-        (User?, GetUserErrorReason?) userError;
-        if (idProvided) userError = await BotCore.GQLClient.GetUserByID(userIDNumber.ToString());
-        else userError = await BotCore.GQLClient.GetUserOrReasonByLogin(targetUsername);
+        (User?, GetUserErrorReason?, bool?) userErrorAndNameAvailable;
+        if (idProvided) userErrorAndNameAvailable = await BotCore.GQLClient.GetUserByID(userIDNumber.ToString());
+        else userErrorAndNameAvailable = await BotCore.GQLClient.GetUserOrReasonByLogin(targetUsername);
 
-        if (userError.Item1 is null) return new CommandResult("user does not exist");
-        User user = userError.Item1;
+        string usernameAvailable = userErrorAndNameAvailable.Item3 ?? false ? " yet" : "";
+        if (userErrorAndNameAvailable.Item1 is null) return new CommandResult($"user does not exist{usernameAvailable}");
+        User user = userErrorAndNameAvailable.Item1;
 
-        string generalInfo = GetGeneralInfo(userError);
+        string generalInfo = GetGeneralInfo(userErrorAndNameAvailable);
 
         if (usedArgs.Count == 0) { return new(generalInfo, requiresFilter:true); }
 
@@ -197,7 +198,7 @@ internal class UserInfo2 : Command
         return [$"live{mature} {game}", $"live{mature} ({duration}) : {game} - \" {title} \" for {viewcount} viewers.{mature} {streamStatus} {clips} {hypeTrain}"];
     }
 
-    private static string GetGeneralInfo((User?, GetUserErrorReason?) userReason) =>
+    private static string GetGeneralInfo((User?, GetUserErrorReason?, bool?) userReason) =>
         $"{Helpers.UserErrorReasonToString(userReason.Item2)} {Helpers.UserRolesIsStaff(userReason.Item1!.Roles)} {Helpers.UserRolesIsPartnerOrAffiliate(userReason.Item1!.Roles)} {userReason.Item1.Login} (id:{userReason.Item1.Id}) created: {userReason.Item1.CreatedAt:dd/MMM/yyyy} {(userReason.Item1.DeletedAt is null ? "" : $"deleted: {userReason.Item1.DeletedAt:dd/MMM/yyyy} {userReason.Item1.Channel?.FounderBadgeAvailability switch { (> 0) => $" {userReason.Item1.Channel.FounderBadgeAvailability} founder slots available", _ => "" }}")}";
     
     private static string PreviousUsernames(string userID)

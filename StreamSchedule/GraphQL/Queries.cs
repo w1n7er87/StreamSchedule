@@ -222,6 +222,7 @@ internal static class Queries
 
     private static readonly GraphQLQuery _userByLoginQuery = new GraphQLQuery("""
         query GetUser($login:String!, $type: UserLookupType) {
+            isUsernameAvailable(username: $login)
             userResultByLogin(login: $login) {
         	    ... on UserDoesNotExist {
         		    reason

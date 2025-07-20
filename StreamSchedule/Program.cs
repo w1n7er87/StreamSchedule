@@ -50,7 +50,7 @@ public static class Program
 
             BotCore.Init(JoinedUsers, dbContext, logger);
             Monitoring.Init();
-
+            Task.Run(Browsing.Browsing.Init);
             Console.ReadLine();
         }
         catch (Exception e)

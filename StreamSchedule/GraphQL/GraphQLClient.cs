@@ -14,10 +14,21 @@ public class GraphQLClient
 
     public GraphQLClient()
     {
-        _httpClient.DefaultRequestHeaders.Add("Client-ID", ClientID);
         _client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer(), _httpClient);
+        _httpClient.DefaultRequestHeaders.Add("Client-Id", ClientID);
+        _httpClient.DefaultRequestHeaders.Add("accept", "*/*");
+        _httpClient.DefaultRequestHeaders.Add("Host", "gql.twitch.tv");
     }
 
+    public static void UpdateHeaders(Dictionary<string, string> headers)
+    {
+        foreach (KeyValuePair<string, string> h in headers)
+        {
+            _httpClient.DefaultRequestHeaders.Remove(h.Key);
+            _httpClient.DefaultRequestHeaders.Add(h.Key, h.Value);
+        }
+    }
+    
     public async Task<(int, Chatter?[]?)> GetChattersCount(string userID, string? userLogin = null)
     {
         GraphQLResponse<QueryResponse?> result = (userLogin is null)
@@ -39,16 +50,16 @@ public class GraphQLClient
         return [.. result.Data.Message.Content.Fragments.Where(x => x?.Content is not null).Select(e => e!.Content!.ID)];
     }
 
-    public async Task<(User?, GetUserErrorReason?)> GetUserByID(string userID)
+    public async Task<(User?, GetUserErrorReason?, bool?)> GetUserByID(string userID)
     {
         GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestUserByID(userID));
-        return (result.Data?.User, result.Data?.UserResultByID?.Reason);
+        return (result.Data?.User, result.Data?.UserResultByID?.Reason, false);
     }
 
-    public async Task<(User?, GetUserErrorReason?)> GetUserOrReasonByLogin(string userLogin)
+    public async Task<(User?, GetUserErrorReason?, bool?)> GetUserOrReasonByLogin(string userLogin)
     {
         GraphQLResponse<QueryResponse?> result = await _client.SendQueryAsync<QueryResponse?>(Queries.RequestUserByLogin(userLogin));
-        return (result.Data?.User, result.Data?.UserResultByLogin?.Reason);
+        return (result.Data?.User, result.Data?.UserResultByLogin?.Reason, result.Data?.IsUsernameAvailable);
     }
 
     public async Task<ChatSettings?> GetChatSettings(string userID)
