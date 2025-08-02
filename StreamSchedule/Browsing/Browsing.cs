@@ -16,6 +16,7 @@ public static class Browsing
         {
             if (DateTime.Now > NextUpdate)
             {
+                BotCore.Nlog.Info("Obtaining new integrity ... ");
                 Integrity i = await ObtainIntegrity();
                 if (!string.IsNullOrEmpty(i.Token) && !string.IsNullOrEmpty(i.DeviceID))
                 {
@@ -36,7 +37,6 @@ public static class Browsing
     
     private static async Task<Integrity> ObtainIntegrity()
     {
-        BotCore.Nlog.Info("Obtaining new integrity");
         bool haveIntegrity = false;
         bool haveDeviceID = false;
         
@@ -74,11 +74,11 @@ public static class Browsing
             RequestMatcher = (data) => data.Headers?.TryGetValue("user-agent", out _) ?? false,
             RequestTransformer = (data) =>
             {
-                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{Random.Shared.Next(130, 136)}.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(115, 120)}.0.0.0 (Edition Yx 05)";
+                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{Random.Shared.Next(130, 138)}.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(115, 120)}.0.0.0 (Edition Yx 05)";
                 return data;
             }
         };
-                
+        
         BotCore.Nlog.Info("starting navigation");
         
         WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(20));
@@ -136,6 +136,8 @@ public static class Browsing
             await Task.Delay(Random.Shared.Next(600, 900));
         }
         
+        BotCore.Nlog.Info("waiting for token");
+
         await WaitUntil(() => haveIntegrity && haveDeviceID, TimeSpan.FromSeconds(5));
         
         await driver.Manage().Network.StopMonitoring();
