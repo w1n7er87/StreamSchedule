@@ -4,6 +4,7 @@ using NLog;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using StreamSchedule.EmoteMonitors;
+using StreamSchedule.Export;
 
 namespace StreamSchedule;
 
@@ -26,18 +27,22 @@ public static class Program
 
         try
         {
+            string pagesDBLocation = Environment.GetEnvironmentVariable("STREAM_SCHEDULE_PAGES", EnvironmentVariableTarget.User) ?? "";
+            
             int[] channelIDs = [85498365, 78135490, 871501999];
 
-            DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>()
+            DatabaseContext dbContext = new DatabaseContext(new DbContextOptionsBuilder<DatabaseContext>()
                 .UseSqlite("Data Source=StreamSchedule.data").Options);
+            
             dbContext.Database.EnsureCreated();
+
+            PagesContext pagesContext = new PagesContext(new DbContextOptionsBuilder<PagesContext>()
+                .UseSqlite($"Data Source={pagesDBLocation}").Options);
             
             List<User> JoinedUsers = [];
             JoinedUsers.AddRange(channelIDs.Select(id => dbContext.Users.Find(id)!));
 
-            BotCore.Init(JoinedUsers, dbContext, logger);
-            Monitoring.Init();
-            Task.Run(Browsing.Browsing.Init);
+            BotCore.Init(JoinedUsers, dbContext, logger, pagesContext);
             Console.ReadLine();
         }
         catch (Exception e)

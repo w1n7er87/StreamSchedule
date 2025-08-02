@@ -4,6 +4,7 @@ using NLog;
 using StreamSchedule.Commands;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
+using StreamSchedule.Export;
 using StreamSchedule.Extensions;
 using StreamSchedule.GraphQL;
 using StreamSchedule.VedalPlush;
@@ -20,6 +21,7 @@ namespace StreamSchedule;
 internal static class BotCore
 {
     public static DatabaseContext DBContext { get; private set; } = null!;
+    public static PagesContext PagesDB { get; private set; } = null!;
     public static TwitchAPI API { get; private set; } = null!;
     public static TwitchClient ChatClient { get; private set; } = null!;
     public static Logger Nlog { get; private set; } = null!;
@@ -54,9 +56,10 @@ internal static class BotCore
         await Task.Delay(-1);
     }
 
-    public static void Init(List<User> joinedUsers, DatabaseContext dbContext, Logger logger)
+    public static void Init(List<User> joinedUsers, DatabaseContext dbContext, Logger logger, PagesContext pagesContext)
     {
         DBContext = dbContext;
+        PagesDB = pagesContext;
         Nlog = logger;
 
         API = new()
