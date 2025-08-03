@@ -22,8 +22,8 @@ public class Test : Command
 
         List<Task<GraphQL.Data.Emote?>> emoteTasks = [.. emoteIDs.Select(x => BotCore.GQLClient.GetEmote(x))];
         List<GraphQL.Data.Emote?> emotes = [.. (await Task.WhenAll(emoteTasks))];
- 
-        string slug = ExportUtils.GetSlug();
+        
+        string slug = ExportUtils.GetSlug(message.channelName);
         StringBuilder html = new();
 
         int count = emotes.Count - Random.Shared.Next(emotes.Count);
@@ -37,7 +37,7 @@ public class Test : Command
             string.Join("\n",
                 emotes.Take(new Range(count, emotes.Count)).Select(x => Conversions.EmoteToHtml(x) ?? ""))));
         
-        BotCore.PagesDB.PageContent.Add(new Content()
+        _ = await BotCore.PagesDB.PageContent.AddAsync(new Content()
         {
             EmbeddedStyleName = Templates.EmoteUpdatesStyleName,
             EmbeddedStyleVersion = Templates.EmoteUpdatesStyleVersion,
@@ -49,8 +49,9 @@ public class Test : Command
         });
         
         await BotCore.PagesDB.SaveChangesAsync();
-        BotCore.Nlog.Info(ExportUtils.EmotesUrlBase + slug);
         
+        BotCore.Nlog.Info(ExportUtils.EmotesUrlBase + slug);
+
         return new CommandResult("");
     }
 }

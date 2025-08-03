@@ -97,6 +97,9 @@ internal static class BotCore
         ChatClient.OnRateLimit += ChatClientOnRateLimit;
         ChatClient.OnGiftedSubscription += ChatClientOnGifted;
         ChatClient.Connect();
+
+        Nlog.Info(Environment.GetEnvironmentVariable("STREAM_SCHEDULE_PAGES", EnvironmentVariableTarget.User));
+        
         ExportUtils.UpdateStyles();
     }
 
