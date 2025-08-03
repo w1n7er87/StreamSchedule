@@ -11,4 +11,5 @@ public class PagesContext : DbContext
     }
     
     public DbSet<Content> PageContent => Set<Content>();
+    public DbSet<EmbeddedStyle> Styles => Set<EmbeddedStyle>();
 }

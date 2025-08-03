@@ -1,4 +1,5 @@
 using System.Text;
+using StreamSchedule.Export.Data;
 
 namespace StreamSchedule.Export;
 
@@ -6,6 +7,7 @@ public static class ExportUtils
 {
     private const string charset = "elivELIV1234567890";
     private static readonly int len = charset.Length;
+    public const string EmotesUrlBase = "https://w1n7er.win/ee/";
     
     public static string GetSlug(string data = "")
     {
@@ -28,5 +30,15 @@ public static class ExportUtils
             c++;
         }
         return sb.ToString();
+    }
+
+    public static void UpdateStyles()
+    {
+        List<EmbeddedStyle> styles = [.. BotCore.PagesDB.Styles.Where(x => Templates.Templates.EmoteUpdatesStyleName == x.Name)];
+        if (styles.Count == 0 || styles.FirstOrDefault(x => x.Version == Templates.Templates.EmoteUpdatesStyleVersion) is null)
+        {
+            BotCore.PagesDB.Styles.Add(Templates.Templates.EmoteUpdatesStyle);
+            BotCore.PagesDB.SaveChanges();
+        }
     }
 }

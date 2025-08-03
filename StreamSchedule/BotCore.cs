@@ -97,6 +97,7 @@ internal static class BotCore
         ChatClient.OnRateLimit += ChatClientOnRateLimit;
         ChatClient.OnGiftedSubscription += ChatClientOnGifted;
         ChatClient.Connect();
+        ExportUtils.UpdateStyles();
     }
 
     private static async void ChatClientOnMessageReceived(object? sender, OnMessageReceivedArgs e)

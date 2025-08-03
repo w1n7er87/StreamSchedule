@@ -43,6 +43,8 @@ public static class Program
             JoinedUsers.AddRange(channelIDs.Select(id => dbContext.Users.Find(id)!));
 
             BotCore.Init(JoinedUsers, dbContext, logger, pagesContext);
+            Monitoring.Init();
+            Task.Run(Browsing.Browsing.Init);
             Console.ReadLine();
         }
         catch (Exception e)

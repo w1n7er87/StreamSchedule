@@ -1,6 +1,11 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
+using StreamSchedule.Export;
+using StreamSchedule.Export.Conversions;
+using StreamSchedule.Export.Data;
+using StreamSchedule.Export.Templates;
 
 namespace StreamSchedule.EmoteMonitors;
 
@@ -23,7 +28,6 @@ public static class Monitoring
         {
             while (true)
             {
-                
                 int channelCount = 0;
 
                 foreach (EmoteMonitorChannel channel in Channels)
@@ -54,8 +58,8 @@ public static class Monitoring
         {
             if (!Emotes.TryGetValue(channel.ChannelID, out List<Emote>? oldEmotes))
             {
-                Emotes.Add(channel.ChannelID, new List<Emote>());
-                oldEmotes = new List<Emote>();
+                Emotes.Add(channel.ChannelID, []);
+                oldEmotes = [];
             }
             
             List<Emote> loadedEmotes =
@@ -74,9 +78,17 @@ public static class Monitoring
             List<Emote> added = [.. loadedEmotes.Except(oldEmotes)];
 
             if (added.Count == 0 && removed.Count == 0) return oldEmotes;
+            
             BotCore.Nlog.Info($"{channel.ChannelName} emotes updated !!! removed { removed.Count} added {added.Count}");
-
-            string result = $"{channel.ChannelName} emotes ";
+            
+            StringBuilder html = new();
+            bool export = false;
+            
+            string actualUsername =
+                (await BotCore.API.Helix.Users.GetUsersAsync(ids: [channel.ChannelID.ToString()])).Users
+                .FirstOrDefault()?.Login ?? channel.ChannelName;
+            
+            string result = $"{actualUsername} emotes ";
             
             if (removed.Count == loadedEmotes.Count && oldEmotes.Count == added.Count)
             {
@@ -87,13 +99,47 @@ public static class Monitoring
             }
             else
             {
-                if (removed.Count != 0) result += $"{removed.Count} removed 📤 : {string.Join(", ", removed)} ";
-                if (added.Count != 0) result += $"{added.Count} added 📥 : {string.Join(", ", added)} ";
-            }
-            
-            result += string.Join(" ", channel.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
+                if (removed.Count != 0)
+                {
+                    export = true;
+                    result += $"{removed.Count} removed 📤 : {string.Join(", ", removed)} ";
+                    html.Append(string.Format(Templates.EmotesBlock, "Removed",
+                        string.Join("\n", removed.Select(Conversions.EmoteToHtml))));
+                }
 
+                html.Append(Templates.Divider);
+
+                if (added.Count != 0)
+                {
+                    export = true;
+                    result += $"{added.Count} added 📥 : {string.Join(", ", added)} ";
+                    html.Append(string.Format(Templates.EmotesBlock, "Added",
+                        string.Join("\n", added.Select(Conversions.EmoteToHtml))));
+                }
+            }
+
+            string exportLink = "";
+            if(export){
+                string slug = ExportUtils.GetSlug(channel.ChannelName);
+                BotCore.PagesDB.PageContent.Add(new Content()
+                {
+                    EmbeddedStyleName = Templates.EmoteUpdatesStyleName,
+                    EmbeddedStyleVersion = Templates.EmoteUpdatesStyleVersion,
+                    CreatedAt = DateTime.UtcNow,
+                    HtmlContent = html.ToString(),
+                    Title = channel.ChannelName,
+                    Summary = string.Format(Templates.EmoteUpdatesSummary, actualUsername),
+                    Slug = slug
+                });
+                await BotCore.PagesDB.SaveChangesAsync();
+                exportLink = ExportUtils.EmotesUrlBase + slug;
+                BotCore.Nlog.Info(exportLink);
+            }
+
+            result += exportLink;
+            result += string.Join(" ", channel.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
             BotCore.OutQueuePerChannel[channel.OutputChannelName].Enqueue(new CommandResult(result, reply: false));
+            
             return loadedEmotes;
         }
         catch (Exception e)

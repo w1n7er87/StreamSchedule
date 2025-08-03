@@ -57,6 +57,7 @@ internal static class Queries
     private static readonly GraphQLQuery _emoteQuery = new GraphQLQuery("""
         query GetEmote($id: ID!) {
         	emote(id: $id) {
+        	    id
                 owner {
                     login
                 }

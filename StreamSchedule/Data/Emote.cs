@@ -26,42 +26,53 @@ public record EmoteCost(EmoteCostType Type, int Value)
     }
 }
 
-public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
+public record Emote(string ID, EmoteCost Cost, string Token, bool Animated, string ImageUrl)
 {
     public static implicit operator Emote(ChannelEmote channelEmote)
     {
-        return new Emote(ID: channelEmote.Id, Cost: new EmoteCost(
-            Type: channelEmote.EmoteType switch
-            {
-                "bitstier" => EmoteCostType.Bits, "subscriptions" => EmoteCostType.Subscription,
-                "follower" => EmoteCostType.Follow, _ => EmoteCostType.Unknown
-            },
-            Value: channelEmote.Tier switch { "1000" => 1, "2000" => 2, "3000" => 3, _ => 0}
-        ), Token: channelEmote.Name, channelEmote.Format.Contains("animated"));
+        return new Emote(
+            ID: channelEmote.Id,
+            Cost: new EmoteCost(
+                Type: channelEmote.EmoteType switch
+                {
+                    "bitstier" => EmoteCostType.Bits, "subscriptions" => EmoteCostType.Subscription,
+                    "follower" => EmoteCostType.Follow, _ => EmoteCostType.Unknown
+                },
+                Value: channelEmote.Tier switch { "1000" => 1, "2000" => 2, "3000" => 3, _ => 0}
+            ),
+            Token: channelEmote.Name,
+            channelEmote.Format.Contains("animated"),
+            channelEmote.Images.Url4X
+            );
     }
 
-    public static implicit operator Emote(GraphQL.Data.Emote gqlEmote)
+    public static implicit operator Emote(GraphQL.Data.Emote? gqlEmote)
     {
-        return new Emote(ID: gqlEmote.ID ?? "", new EmoteCost(
-            Type: gqlEmote.Type switch
-            {
-                EmoteType.BITS_BADGE_TIERS => EmoteCostType.Bits,
-                EmoteType.SUBSCRIPTIONS => EmoteCostType.Subscription,
-                EmoteType.FOLLOWER => EmoteCostType.Follow,
-                _ => EmoteCostType.Unknown,
-            } ,
-            Value: gqlEmote.Type switch
-            {
-                EmoteType.BITS_BADGE_TIERS => gqlEmote.BitsBadgeTierSummary?.Threshold ?? 0,
-                EmoteType.SUBSCRIPTIONS => gqlEmote.GetTier() switch {
-                    SubscriptionSummaryTier.TIER_1 => 1,
-                    SubscriptionSummaryTier.TIER_2 => 2,
-                    SubscriptionSummaryTier.TIER_3 => 3,
-                    _ => 0
-                },
-                EmoteType.FOLLOWER => 0,
-                _ => 0,
-            }), Token: gqlEmote.Token ?? "", gqlEmote.AssetType is EmoteAssetType.ANIMATED);
+        return new Emote(ID: gqlEmote.ID ?? "",
+            new EmoteCost(
+                Type: gqlEmote.Type switch
+                {
+                    EmoteType.BITS_BADGE_TIERS => EmoteCostType.Bits,
+                    EmoteType.SUBSCRIPTIONS => EmoteCostType.Subscription,
+                    EmoteType.FOLLOWER => EmoteCostType.Follow,
+                    _ => EmoteCostType.Unknown,
+                } ,
+                Value: gqlEmote.Type switch
+                {
+                    EmoteType.BITS_BADGE_TIERS => gqlEmote.BitsBadgeTierSummary?.Threshold ?? 0,
+                    EmoteType.SUBSCRIPTIONS => gqlEmote.GetTier() switch {
+                        SubscriptionSummaryTier.TIER_1 => 1,
+                        SubscriptionSummaryTier.TIER_2 => 2,
+                        SubscriptionSummaryTier.TIER_3 => 3,
+                        _ => 0
+                    },
+                    EmoteType.FOLLOWER => 0,
+                    _ => 0,
+                }
+            ),
+            Token: gqlEmote.Token ?? "",
+            gqlEmote.AssetType is EmoteAssetType.ANIMATED,
+            $"https://static-cdn.jtvnw.net/emoticons/v2/{gqlEmote.ID}/{gqlEmote.AssetType.ToString()?.ToLower()}/light/3.0");
     }
 
     public override string ToString() => $"{Token} ({Cost}{(Animated ? "A" : "")})";
