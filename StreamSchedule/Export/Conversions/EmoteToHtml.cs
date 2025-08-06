@@ -9,7 +9,7 @@ public static class Conversions
         return $"""
                <div class="emote">
                    <p class="emoteTier">{emote.Cost}</p>
-                   <img class="emoteImage" alt="{emote.Token}" src="{emote.ImageUrl}"/>
+                   <img class="emoteImage" alt="{emote.Token}" src="{emote.URL}"/>
                    <p class="emoteText">{emote.Token}</p>
                </div>
                """;

@@ -26,7 +26,7 @@ public record EmoteCost(EmoteCostType Type, int Value)
     }
 }
 
-public record Emote(string ID, EmoteCost Cost, string Token, bool Animated, string ImageUrl)
+public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
 {
     public static implicit operator Emote(ChannelEmote channelEmote)
     {
@@ -41,12 +41,11 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated, stri
                 Value: channelEmote.Tier switch { "1000" => 1, "2000" => 2, "3000" => 3, _ => 0}
             ),
             Token: channelEmote.Name,
-            channelEmote.Format.Contains("animated"),
-            channelEmote.Images.Url4X
+            channelEmote.Format.Contains("animated")
             );
     }
 
-    public static implicit operator Emote(GraphQL.Data.Emote? gqlEmote)
+    public static implicit operator Emote(GraphQL.Data.Emote gqlEmote)
     {
         return new Emote(ID: gqlEmote.ID ?? "",
             new EmoteCost(
@@ -71,9 +70,12 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated, stri
                 }
             ),
             Token: gqlEmote.Token ?? "",
-            gqlEmote.AssetType is EmoteAssetType.ANIMATED,
-            $"https://static-cdn.jtvnw.net/emoticons/v2/{gqlEmote.ID}/{gqlEmote.AssetType.ToString()?.ToLower()}/light/3.0");
+            gqlEmote.AssetType is EmoteAssetType.ANIMATED
+        );
     }
 
     public override string ToString() => $"{Token} ({Cost}{(Animated ? "A" : "")})";
+
+    public string URL =>
+        $"https://static-cdn.jtvnw.net/emoticons/v2/{ID}/{(Animated ? "animated" : "static")}/light/3.0";
 };

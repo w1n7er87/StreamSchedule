@@ -136,7 +136,7 @@ public static class Monitoring
                 BotCore.Nlog.Info(exportLink);
             }
 
-            result += exportLink;
+            result += $" {exportLink} ";
             result += string.Join(" ", channel.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
             BotCore.OutQueuePerChannel[channel.OutputChannelName].Enqueue(new CommandResult(result, reply: false));
             
