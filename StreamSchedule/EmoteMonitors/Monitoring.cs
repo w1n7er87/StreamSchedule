@@ -6,6 +6,7 @@ using StreamSchedule.Export;
 using StreamSchedule.Export.Conversions;
 using StreamSchedule.Export.Data;
 using StreamSchedule.Export.Templates;
+using StreamSchedule.GraphQL;
 
 namespace StreamSchedule.EmoteMonitors;
 
@@ -16,7 +17,9 @@ public static class Monitoring
     public static List<EmoteMonitorChannel> Channels {private get; set;} = [];
     private static List<string> GlobalEmoteTokens = [];
 
-    public static void Init()
+    public static bool Start => true;
+    
+    static Monitoring()
     {
         Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted).AsNoTracking()];
         Task.Run(Scheduler);
@@ -92,7 +95,7 @@ public static class Monitoring
             
             if (removed.Count == loadedEmotes.Count && oldEmotes.Count == added.Count)
             {
-                GraphQL.Data.Emote? newEmote = await BotCore.GQLClient.GetEmote(loadedEmotes[0].ID);
+                GraphQL.Data.Emote? newEmote = await GraphQLClient.GetEmote(loadedEmotes[0].ID);
                 string oldPrefix = oldEmotes[0].Token?[..^(newEmote?.Suffix?.Length ?? 0)] ?? "";
                 string newPrefix = newEmote?.Token?[..^(newEmote.Suffix?.Length ?? 0)] ?? "";
                 result += $"prefix changed \"{oldPrefix}\" > \"{newPrefix}\" ";

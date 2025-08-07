@@ -32,8 +32,8 @@ internal class UserInfo2 : Command
         }
 
         (User?, GetUserErrorReason?, bool?) userErrorAndNameAvailable;
-        if (idProvided) userErrorAndNameAvailable = await BotCore.GQLClient.GetUserByID(userIDNumber.ToString());
-        else userErrorAndNameAvailable = await BotCore.GQLClient.GetUserOrReasonByLogin(targetUsername);
+        if (idProvided) userErrorAndNameAvailable = await GraphQLClient.GetUserByID(userIDNumber.ToString());
+        else userErrorAndNameAvailable = await GraphQLClient.GetUserOrReasonByLogin(targetUsername);
 
         string usernameAvailable = userErrorAndNameAvailable.Item3 ?? false ? " yet" : "";
         if (userErrorAndNameAvailable.Item1 is null) return new CommandResult($"user does not exist{usernameAvailable}");
@@ -100,7 +100,7 @@ internal class UserInfo2 : Command
 
         if (emotes.Length <= 0) return result;
 
-        var firstEmote = await BotCore.GQLClient.GetEmote(emotes[0].Id);
+        var firstEmote = await GraphQLClient.GetEmote(emotes[0].Id);
         string prefix = firstEmote?.Token?[..^(firstEmote.Suffix?.Length ?? 0)] ?? "";
 
         result[1] = $"\"{prefix}\" {emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated)";
@@ -125,7 +125,7 @@ internal class UserInfo2 : Command
         if (bits > 0)
         {
             List<Task<GraphQL.Data.Emote?>> tasks = [];
-            tasks.AddRange(bitEmotes.Select(e => BotCore.GQLClient.GetEmote(e.Id)));
+            tasks.AddRange(bitEmotes.Select(e => GraphQLClient.GetEmote(e.Id)));
             await Task.WhenAll(tasks);
 
             List<string> bitemotes = [.. tasks.OrderBy(t => t.Result?.BitsBadgeTierSummary?.Threshold ?? 0).Select(emote => $"{emote.Result?.Token ?? ""} - {emote.Result?.BitsBadgeTierSummary?.Threshold ?? 0}")];

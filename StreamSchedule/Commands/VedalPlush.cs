@@ -1,11 +1,13 @@
 using StreamSchedule.Data;
+using StreamSchedule.VedalPlush;
+using StreamSchedule.VedalPlush.Data;
 
 namespace StreamSchedule.Commands;
 
 internal class VedalPlush : Command
 {
     internal override string Call => "plush";
-    internal override Privileges MinPrivilege => Privileges.None;
+    internal override Privileges MinPrivilege => Privileges.Mod;
     internal override string Help => "stayTuteled ";
     internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int) Cooldowns.Medium);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
@@ -13,7 +15,7 @@ internal class VedalPlush : Command
     
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        var count = await BotCore.VedalPlushClient.GetPlushCount();
+        Response? count = await VedalPlushClient.GetPlushCount();
         if (count is null) return new CommandResult("no data", false, false);
 
         if (!DateTime.TryParse(count.Node?.MetafieldsWithReference?.FirstOrDefault(x => x?.Type?.Equals("date_time") ?? false)?.Value ?? "", out DateTime endTime))

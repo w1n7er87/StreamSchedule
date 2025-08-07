@@ -5,9 +5,20 @@ namespace StreamSchedule.GraphQL;
 
 internal static class Queries
 {
+
+    internal static GraphQLRequest IsUsernameAvailable(string username) => new GraphQLRequest(_IsUsernameAvailableQuery, new {login = username});
+
+    private static readonly GraphQLQuery _IsUsernameAvailableQuery = new GraphQLQuery(
+        """
+        query UsernameValidator_User($login: String!) {
+        	isUsernameAvailable(username:$login)
+        }
+        """);
+    
     internal static GraphQLRequest RequestChattersByID(string userID) => new GraphQLRequest(_chattersByIDQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetChatters");
 
-    private static readonly GraphQLQuery _chattersByIDQuery = new GraphQLQuery("""
+    private static readonly GraphQLQuery _chattersByIDQuery = new GraphQLQuery(
+        """
         query GetChatters($id: ID, $type: UserLookupType) {
         	user(id: $id, lookupType: $type) {
         		channel {
@@ -24,7 +35,8 @@ internal static class Queries
 
     internal static GraphQLRequest RequestChattersByLogin(string userLogin) => new GraphQLRequest(_chattersByLoginQuery, new { login = userLogin, type = Enum.GetName(UserLookupType.ALL) }, "GetChatters");
 
-    private static readonly GraphQLQuery _chattersByLoginQuery = new GraphQLQuery("""
+    private static readonly GraphQLQuery _chattersByLoginQuery = new GraphQLQuery(
+        """
         query GetChatters($login: String, $type: UserLookupType) {
         	user(login: $login, lookupType: $type) {
         		channel {
@@ -41,7 +53,8 @@ internal static class Queries
 
     internal static GraphQLRequest RequestChatSettings(string userID) => new GraphQLRequest(_userRulesQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetRules");
 
-    private static readonly GraphQLQuery _userRulesQuery = new GraphQLQuery("""
+    private static readonly GraphQLQuery _userRulesQuery = new GraphQLQuery(
+        """
         query GetRules($id: ID, $type: UserLookupType) {
             user(id:$id, lookupType: $type) {
                 chatSettings{
@@ -54,7 +67,8 @@ internal static class Queries
 
     internal static GraphQLRequest RequestEmote(string emoteID) => new GraphQLRequest(_emoteQuery, new { id = emoteID }, "GetEmote");
 
-    private static readonly GraphQLQuery _emoteQuery = new GraphQLQuery("""
+    private static readonly GraphQLQuery _emoteQuery = new GraphQLQuery(
+        """
         query GetEmote($id: ID!) {
         	emote(id: $id) {
         	    id
@@ -80,7 +94,8 @@ internal static class Queries
 
     internal static GraphQLRequest RequestEmotesInMessage(string messageID) => new GraphQLRequest(_emotesInMessageQuery, new { id = messageID }, "GetEmotesInMessage");
 
-    private static readonly GraphQLQuery _emotesInMessageQuery = new GraphQLQuery("""
+    private static readonly GraphQLQuery _emotesInMessageQuery = new GraphQLQuery(
+        """
         query GetEmotesInMessage($id: ID!) {
             message(id: $id) {
                 content {
@@ -98,7 +113,8 @@ internal static class Queries
 
     internal static GraphQLRequest RequestUserByID(string userID) => new GraphQLRequest(_userByIDQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetUser");
 
-    private static readonly GraphQLQuery _userByIDQuery = new GraphQLQuery("""
+    private static readonly GraphQLQuery _userByIDQuery = new GraphQLQuery(
+        """
         query GetUser($id:ID!, $type: UserLookupType) {
             userResultByID(id: $id) {
         	    ... on UserDoesNotExist {
@@ -221,7 +237,8 @@ internal static class Queries
 
     internal static GraphQLRequest RequestUserByLogin(string userLogin) => new GraphQLRequest(_userByLoginQuery, new { login = userLogin, type = Enum.GetName(UserLookupType.ALL) }, "GetUser");
 
-    private static readonly GraphQLQuery _userByLoginQuery = new GraphQLQuery("""
+    private static readonly GraphQLQuery _userByLoginQuery = new GraphQLQuery(
+        """
         query GetUser($login:String!, $type: UserLookupType) {
             isUsernameAvailable(username: $login)
             userResultByLogin(login: $login) {

@@ -29,7 +29,7 @@ internal class GetEmotesFromMessage : Command
         {
             if (!string.IsNullOrEmpty(message.replyID)) reply = BotCore.MessageCache.Find(x => x.Id == message.replyID);
             
-            if (reply is null)emoteIDs = await BotCore.GQLClient.GetEmoteIDsFromMessage(usedArgs.TryGetValue("messageid", out string? passedMessageID) ? passedMessageID : message.replyID ?? message.ID);
+            if (reply is null)emoteIDs = await GraphQLClient.GetEmoteIDsFromMessage(usedArgs.TryGetValue("messageid", out string? passedMessageID) ? passedMessageID : message.replyID ?? message.ID);
             else emoteIDs = [.. reply.EmoteSet.Emotes.Select(e => e.Id)];
             
             if (emoteIDs.Count == 0) { return "no emotes found"; }
@@ -42,7 +42,7 @@ internal class GetEmotesFromMessage : Command
         foreach (string? emoteID in emoteIDs.Distinct())
         {
             if (emoteID is null) continue;
-            tasks.Add(BotCore.GQLClient.GetEmote(emoteID));
+            tasks.Add(GraphQLClient.GetEmote(emoteID));
         }
 
         await Task.WhenAll(tasks);

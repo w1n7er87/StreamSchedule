@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using NLog;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
-using StreamSchedule.EmoteMonitors;
 using StreamSchedule.Export;
 
 namespace StreamSchedule;
@@ -41,10 +40,7 @@ public static class Program
             
             List<User> JoinedUsers = [];
             JoinedUsers.AddRange(channelIDs.Select(id => dbContext.Users.Find(id)!));
-
             BotCore.Init(JoinedUsers, dbContext, logger, pagesContext);
-            Monitoring.Init();
-            Task.Run(Browsing.Browsing.Init);
             Console.ReadLine();
         }
         catch (Exception e)

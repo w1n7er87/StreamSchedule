@@ -5,23 +5,23 @@ using StreamSchedule.VedalPlush.Data;
 
 namespace StreamSchedule.VedalPlush;
 
-public class VedalPlushClient
+public static class VedalPlushClient
 {
     private const string Endpoint = "https://junipersales.myshopify.com/api/2025-01/graphql";
-    private static readonly HttpClient _httpClient = new(new SocketsHttpHandler() { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
-    private readonly GraphQLHttpClient _client;
+    private static readonly HttpClient httpClient = new(new SocketsHttpHandler() { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
+    private static readonly GraphQLHttpClient client;
 
-    public VedalPlushClient()
+    static VedalPlushClient()
     {
-        _httpClient.DefaultRequestHeaders.Add("x-shopify-storefront-access-token", Credentials.shopifyAccessToken);
-        _client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer(), _httpClient);
+        httpClient.DefaultRequestHeaders.Add("x-shopify-storefront-access-token", Credentials.shopifyAccessToken);
+        client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer(), httpClient);
     }
     
-    internal async Task<Response?> GetPlushCount()
+    internal static async Task<Response?> GetPlushCount()
     {
         try
         {
-            GraphQLResponse<Response?> result = await _client.SendQueryAsync<Response?>(GetPlushCountRequest());
+            GraphQLResponse<Response?> result = await client.SendQueryAsync<Response?>(GetPlushCountRequest());
             return result.Data;
         }
         catch (Exception e)

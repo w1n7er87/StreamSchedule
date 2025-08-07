@@ -4,6 +4,7 @@ using StreamSchedule.Export;
 using StreamSchedule.Export.Conversions;
 using StreamSchedule.Export.Data;
 using StreamSchedule.Export.Templates;
+using StreamSchedule.GraphQL;
 
 namespace StreamSchedule.Commands;
 
@@ -20,7 +21,7 @@ public class Test : Command
         List<string> emoteIDs = BotCore.MessageCache.FirstOrDefault(x => x.Id == message.ID)?.EmoteSet.Emotes
             .Select(x => x.Id).ToList() ?? [];
 
-        List<Task<GraphQL.Data.Emote?>> emoteTasks = [.. emoteIDs.Select(x => BotCore.GQLClient.GetEmote(x))];
+        List<Task<GraphQL.Data.Emote?>> emoteTasks = [.. emoteIDs.Select(GraphQLClient.GetEmote)];
         List<GraphQL.Data.Emote?> emotes = [.. (await Task.WhenAll(emoteTasks))];
         
         string slug = ExportUtils.GetSlug(message.channelName);

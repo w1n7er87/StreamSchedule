@@ -4,9 +4,9 @@ using NLog;
 using StreamSchedule.Commands;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
+using StreamSchedule.EmoteMonitors;
 using StreamSchedule.Export;
 using StreamSchedule.Extensions;
-using StreamSchedule.GraphQL;
 using StreamSchedule.VedalPlush;
 using TwitchLib.Api;
 using TwitchLib.Api.Services;
@@ -25,8 +25,6 @@ internal static class BotCore
     public static TwitchAPI API { get; private set; } = null!;
     public static TwitchClient ChatClient { get; private set; } = null!;
     public static Logger Nlog { get; private set; } = null!;
-    public static GraphQLClient GQLClient { get; private set; } = null!;
-    public static VedalPlushClient VedalPlushClient { get; private set; } = null!;
 
     public static bool Silent { get; set; }
 
@@ -84,9 +82,6 @@ internal static class BotCore
         }
 
         Commands.Commands.InitializeCommands([.. joinedUsers.Select(u => u.Username!)], DBContext);
-
-        GQLClient = new GraphQLClient();
-        VedalPlushClient = new VedalPlushClient();
         
         ChatClient = new TwitchClient();
         ChatClient.Initialize(new(Credentials.username, Credentials.oauth), [.. joinedUsers.Select(u => u.Username!)]);
@@ -99,6 +94,9 @@ internal static class BotCore
         ChatClient.Connect();
 
         Nlog.Info(Environment.GetEnvironmentVariable("STREAM_SCHEDULE_PAGES", EnvironmentVariableTarget.User));
+
+        _ = Monitoring.Start;
+        _ = Browsing.Browsing.Start;
         
         ExportUtils.UpdateStyles();
     }

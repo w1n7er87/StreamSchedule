@@ -1,4 +1,5 @@
 ﻿using StreamSchedule.Data;
+using StreamSchedule.GraphQL;
 using StreamSchedule.GraphQL.Data;
 
 namespace StreamSchedule.Commands;
@@ -14,7 +15,7 @@ internal class Lurkers : Command
 
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        (int, Chatter?[]?) count = await BotCore.GQLClient.GetChattersCount(message.channelID);
+        (int, Chatter?[]?) count = await GraphQLClient.GetChattersCount(message.channelID);
 
         string chatter = (count.Item2 is not null && count.Item2.Length != 0)
             ? $", and @{count.Item2[Random.Shared.Next(count.Item2.Length)]?.Login ?? BotCore.ChatClient.TwitchUsername} is one of them"

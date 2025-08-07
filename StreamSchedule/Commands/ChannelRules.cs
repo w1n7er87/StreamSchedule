@@ -1,4 +1,5 @@
 ﻿using StreamSchedule.Data;
+using StreamSchedule.GraphQL;
 using StreamSchedule.GraphQL.Data;
 
 namespace StreamSchedule.Commands;
@@ -13,7 +14,7 @@ internal class ChannelRules : Command
     internal override string[]? Arguments => null;
     internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        ChatSettings? settings = await BotCore.GQLClient.GetChatSettings(message.channelID);
+        ChatSettings? settings = await GraphQLClient.GetChatSettings(message.channelID);
         string links = settings?.BlockLinks switch
         {
             true => "links are not allowed, ",
