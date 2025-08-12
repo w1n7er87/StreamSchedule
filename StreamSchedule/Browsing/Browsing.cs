@@ -28,18 +28,18 @@ public static class Browsing
                 if (await GraphQLClient.VerifyIntegrity(i))
                 {
                     GraphQLClient.SetIntegrity(i);
-                    TimeSpan nextUpdate = new TimeSpan(Random.Shared.Next(12, 18), Random.Shared.Next(14, 23), 0);
+                    TimeSpan nextUpdate = new TimeSpan(Random.Shared.Next(12, 16), Random.Shared.Next(0, 45), 0);
                     NextUpdate = DateTime.Now + nextUpdate;
                     BotCore.Nlog.Info($"next planned update is in {nextUpdate:h'h 'm'm '} ");
                 }
                 else
                 {
-                    BotCore.Nlog.Info("the token was bad, retrying in 1m ... ");
-                    await Task.Delay(TimeSpan.FromSeconds(60));
+                    BotCore.Nlog.Info("the token was bad, retrying in 5m ... ");
+                    await Task.Delay(TimeSpan.FromMinutes(5));
                     continue;
                 }
             }
-            await Task.Delay(TimeSpan.FromSeconds(180));
+            await Task.Delay(TimeSpan.FromMinutes(3));
         }
     }
     
@@ -73,6 +73,8 @@ public static class Browsing
         
         options.PageLoadStrategy = PageLoadStrategy.Normal;
         
+        options.BrowserVersion = "137";
+        
         BotCore.Nlog.Info("ceating driver");
 
         ChromeDriver driver = new(options);
@@ -82,15 +84,13 @@ public static class Browsing
             RequestMatcher = (data) => data.Headers?.TryGetValue("user-agent", out _) ?? false,
             RequestTransformer = (data) =>
             {
-                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(115, 120)}.0.0.0 (Edition Yx 05)";
+                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{Random.Shared.Next(130, 138)}.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(115, 120)}.0.0.0 (Edition Yx 05)";
                 return data;
             }
         };
         
         BotCore.Nlog.Info("starting navigation");
         
-        WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(20));
-
         await driver.Navigate().GoToUrlAsync("https://www.google.com/");
         
         _ = driver.ExecuteScript("open(\"https://www.twitch.tv/signup/\")");
@@ -131,7 +131,6 @@ public static class Browsing
         pass.Click();
         await Task.Delay(900);
         
-        pass.SendKeys("forsen123");
         await Task.Delay(900);
         
         login.Click();
