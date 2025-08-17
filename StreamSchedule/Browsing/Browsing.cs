@@ -67,6 +67,7 @@ public static class Browsing
         
         options.AddArguments(
         [
+            "--disk-cache-size=100000000",
             "disable-blink-features=AutomationControlled",
             //"headless"
         ]);
