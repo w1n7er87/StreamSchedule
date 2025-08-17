@@ -77,8 +77,8 @@ public static class Monitoring
                 return loadedEmotes;
             }
             
-            List<Emote> removed = [.. oldEmotes.Except(loadedEmotes)];
-            List<Emote> added = [.. loadedEmotes.Except(oldEmotes)];
+            List<Emote> removed = [.. oldEmotes.Except(loadedEmotes).OrderBy(x => x.Token)];
+            List<Emote> added = [.. loadedEmotes.Except(oldEmotes).OrderBy(x => x.Token)];
 
             if (added.Count == 0 && removed.Count == 0) return oldEmotes;
             
