@@ -18,7 +18,7 @@ public static class Templates
                                       """;
 
     public const string EmoteUpdatesSummary = """
-                                              <a class="header" href="https://twitch.tv/{0}/"> {0} </a> 's emotes updated
+                                              <a class="header" href="https://twitch.tv/{0}"> {0} </a> 's emotes updated
                                               """;
     
     public const string EmoteUpdatesStyleName = "EmoteUpdates";

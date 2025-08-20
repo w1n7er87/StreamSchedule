@@ -7,7 +7,6 @@ using StreamSchedule.Data.Models;
 using StreamSchedule.EmoteMonitors;
 using StreamSchedule.Export;
 using StreamSchedule.Extensions;
-using StreamSchedule.VedalPlush;
 using TwitchLib.Api;
 using TwitchLib.Api.Services;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
@@ -82,7 +81,7 @@ internal static class BotCore
         }
 
         Commands.Commands.InitializeCommands([.. joinedUsers.Select(u => u.Username!)], DBContext);
-        
+
         ChatClient = new TwitchClient();
         ChatClient.Initialize(new(Credentials.username, Credentials.oauth), [.. joinedUsers.Select(u => u.Username!)]);
         ChatClient.OnUnaccountedFor += ChatClientOnUnaccounted;
@@ -113,7 +112,7 @@ internal static class BotCore
 
         User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType >= TwitchLib.Client.Enums.UserType.Moderator, e.ChatMessage.IsVip, DBContext);
         
-        if (e.ChatMessage.Channel.Equals("vedal987"))
+        if (e.ChatMessage.RoomId.Equals("85498365"))
         {
             if (ChannelLiveState[e.ChatMessage.Channel])
                 User.AddMessagesCounter(userSent, online: 1);
@@ -152,12 +151,9 @@ internal static class BotCore
         string trimmedMessage = messageAsCodepoints.ToStringRepresentation();
         string requestedCommand = trimmedMessage.Split(' ')[0];
         
-
-        List<TextCommand> textCommands = Commands.Commands.CurrentTextCommands;
-
-        if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds((int)Cooldowns.Long) && !Silent && textCommands.Count > 0)
+        if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds((int)Cooldowns.Long) && !Silent && Commands.Commands.CurrentTextCommands.Count > 0)
         {
-            foreach (TextCommand command in textCommands)
+            foreach (TextCommand command in Commands.Commands.CurrentTextCommands)
             {
                 if (!requestedCommand.Equals(command.Name, StringComparison.OrdinalIgnoreCase))
                 {
@@ -188,19 +184,23 @@ internal static class BotCore
             if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now && userSent.Privileges < Privileges.Mod) return;
 
             if (userSent.Privileges < c.MinPrivilege) return;
+            
             trimmedMessage = trimmedMessage[usedCall.Length..].Replace("\U000e0000", "").Trim();
             
-            Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalMilliseconds}ms) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}]");
+            if (userSent.Privileges < Privileges.Mod) c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
+            
+            Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalNanoseconds}ns) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}]");
+            
+            start = Stopwatch.GetTimestamp();
             
             CommandResult response = await c.Handle(new(userSent, trimmedMessage, e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
-
+            
+            Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalNanoseconds}ns) [{response}]");
+            
             if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
-
-            Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds}ms) [{response}]");
             
             OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new OutgoingMessage(response, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id));
 
-            if (userSent.Privileges < Privileges.Mod) c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
             return;
         }
     }
