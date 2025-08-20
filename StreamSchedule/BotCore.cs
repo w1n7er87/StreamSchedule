@@ -163,7 +163,7 @@ internal static class BotCore
 
                 if (userSent.Privileges < command.Privileges) return;
 
-                Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds}ms) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
+                Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
                 OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new CommandResult(command.Content, reply: false));
                 _textCommandLastUsed = DateTime.Now;
                 return;
@@ -189,13 +189,13 @@ internal static class BotCore
             
             if (userSent.Privileges < Privileges.Mod) c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
             
-            Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalNanoseconds}ns) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}]");
+            Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}]");
             
             start = Stopwatch.GetTimestamp();
             
             CommandResult response = await c.Handle(new(userSent, trimmedMessage, e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
             
-            Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalNanoseconds}ns) [{response}]");
+            Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{response}]");
             
             if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
             
