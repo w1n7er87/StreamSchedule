@@ -31,13 +31,13 @@ internal class UserInfo2 : Command
             if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
         }
 
-        (User?, GetUserErrorReason?, bool?) userErrorAndNameAvailable;
+        GetUserResult userErrorAndNameAvailable;
         if (idProvided) userErrorAndNameAvailable = await GraphQLClient.GetUserByID(userIDNumber.ToString());
         else userErrorAndNameAvailable = await GraphQLClient.GetUserOrReasonByLogin(targetUsername);
 
-        string usernameAvailable = userErrorAndNameAvailable.Item3 ?? false ? " yet" : "";
-        if (userErrorAndNameAvailable.Item1 is null) return new CommandResult($"user does not exist{usernameAvailable}");
-        User user = userErrorAndNameAvailable.Item1;
+        string usernameAvailable = userErrorAndNameAvailable.IsUsernameAvailable ?? false ? " yet" : "";
+        if (userErrorAndNameAvailable.User is null) return new CommandResult($"user does not exist{usernameAvailable}");
+        User user = userErrorAndNameAvailable.User;
 
         string generalInfo = GetGeneralInfo(userErrorAndNameAvailable);
 
@@ -158,7 +158,7 @@ internal class UserInfo2 : Command
         else
             creatorColor = "not set";
 
-        return $"chat color: {color} accent color: {creatorColor}";
+        return $"chat color: {color}, accent color: {creatorColor}";
     }
 
     private static string[] GetLiveStatus(User user)
@@ -198,8 +198,16 @@ internal class UserInfo2 : Command
         return [$"live{mature} {game}", $"live{mature} ({duration}) : {game} - \" {title} \" for {viewcount} viewers.{mature} {streamStatus} {clips} {hypeTrain}"];
     }
 
-    private static string GetGeneralInfo((User?, GetUserErrorReason?, bool?) userReason) =>
-        $"{Helpers.UserErrorReasonToString(userReason.Item2)} {Helpers.UserRolesIsStaff(userReason.Item1!.Roles)} {Helpers.UserRolesIsPartnerOrAffiliate(userReason.Item1!.Roles)} {userReason.Item1.Login} (id:{userReason.Item1.Id}) created: {userReason.Item1.CreatedAt:dd/MMM/yyyy} {(userReason.Item1.DeletedAt is null ? "" : $"deleted: {userReason.Item1.DeletedAt:dd/MMM/yyyy} {userReason.Item1.Channel?.FounderBadgeAvailability switch { (> 0) => $" {userReason.Item1.Channel.FounderBadgeAvailability} founder slots available", _ => "" }}")}";
+    private static string GetGeneralInfo(GetUserResult userReason) =>
+        $"{Helpers.UserErrorReasonToString(userReason.Reason)} " +
+        $"{Helpers.UserRolesIsStaff(userReason.User?.Roles)} " +
+        $"{Helpers.UserRolesIsPartnerOrAffiliate(userReason.User?.Roles)} " +
+        $"{userReason.User?.Login} " +
+        $"(id:{userReason.User?.Id}) " +
+        $"created: {userReason.User?.CreatedAt:dd/MMM/yyyy} " +
+        $"{(userReason.User?.DeletedAt is null ? "" : $"deleted: {userReason.User.DeletedAt:dd/MMM/yyyy}")} " +
+        $"{userReason.User?.Channel?.FounderBadgeAvailability switch { >0 => $" {userReason.User.Channel.FounderBadgeAvailability} founder slots available", _ => "" }} " +
+        $"updated: {userReason.User?.UpdatedAt:dd/MMM/yyyy} ";
     
     private static string PreviousUsernames(string userID)
     {

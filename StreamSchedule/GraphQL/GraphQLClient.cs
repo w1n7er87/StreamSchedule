@@ -79,19 +79,19 @@ public static class GraphQLClient
         if (result.Data?.Message?.Content?.Fragments is null) return [];
         return [.. result.Data.Message.Content.Fragments.Where(x => x?.Content is not null).Select(e => e!.Content!.ID)];
     }
-
-    public static async Task<(User?, GetUserErrorReason?, bool?)> GetUserByID(string userID)
+    
+    public static async Task<GetUserResult> GetUserByID(string userID)
     {
         GraphQLResponse<QueryResponse?> result = await client.SendQueryAsync<QueryResponse?>(Queries.RequestUserByID(userID));
         HandleErrors(result.Errors);
-        return (result.Data?.User, result.Data?.UserResultByID?.Reason, false);
+        return new (result.Data?.User, result.Data?.UserResultByID?.Reason, false);
     }
 
-    public static async Task<(User?, GetUserErrorReason?, bool?)> GetUserOrReasonByLogin(string userLogin)
+    public static async Task<GetUserResult> GetUserOrReasonByLogin(string userLogin)
     {
         GraphQLResponse<QueryResponse?> result = await client.SendQueryAsync<QueryResponse?>(Queries.RequestUserByLogin(userLogin));
         HandleErrors(result.Errors);
-        return (result.Data?.User, result.Data?.UserResultByLogin?.Reason, result.Data?.IsUsernameAvailable);
+        return new (result.Data?.User, result.Data?.UserResultByLogin?.Reason, result.Data?.IsUsernameAvailable);
     }
 
     public static async Task<ChatSettings?> GetChatSettings(string userID)

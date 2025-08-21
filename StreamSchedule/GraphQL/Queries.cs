@@ -356,6 +356,7 @@ internal static class Queries
                 }
                 createdAt
                 deletedAt
+                updatedAt
             }
         }
         """);
