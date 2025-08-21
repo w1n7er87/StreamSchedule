@@ -14,9 +14,8 @@ public static class Monitoring
 {
     private static readonly TimeSpan monitorCycleTimeout = TimeSpan.FromSeconds(180);
     private static readonly Dictionary<int, List<Emote>> Emotes = [];
-    public static List<EmoteMonitorChannel> Channels {private get; set;} = [];
+    public static List<EmoteMonitorChannel> Channels {private get; set;}
     private static List<string> GlobalEmoteTokens = [];
-
     public static bool Start => true;
     
     static Monitoring()
@@ -31,15 +30,12 @@ public static class Monitoring
         {
             while (true)
             {
-                int channelCount = 0;
+                List<Task<(int, List<Emote>)>> emonTasks = [.. Channels.Select(UpdateEmotes)];
 
-                foreach (EmoteMonitorChannel channel in Channels)
-                {
-                    channelCount++;
-                    Emotes[channel.ChannelID] = await UpdateEmotes(channel);
-                }
+                foreach ((int, List<Emote>) result in await Task.WhenAll(emonTasks))
+                    Emotes[result.Item1] = result.Item2;
 
-                BotCore.Nlog.Info($"Emon cycle {channelCount} channels");
+                BotCore.Nlog.Info($"Emon cycle {Channels.Count} channels");
 
                 await UpdateGlobalEmotes();
                 await Task.Delay(monitorCycleTimeout);
@@ -55,7 +51,7 @@ public static class Monitoring
         }
     }
 
-    private static async Task<List<Emote>> UpdateEmotes(EmoteMonitorChannel channel)
+    private static async Task<(int ,List<Emote>)> UpdateEmotes(EmoteMonitorChannel channel)
     {
         try
         {
@@ -74,13 +70,13 @@ public static class Monitoring
             if (oldEmotes.Count == 0)
             {
                 BotCore.Nlog.Info($"first run for {channel.ChannelName} emote monitor, {channel.UpdateSubscribersUsers.Count} subs");
-                return loadedEmotes;
+                return (channel.ChannelID, loadedEmotes);
             }
             
             List<Emote> removed = [.. oldEmotes.Except(loadedEmotes).OrderBy(x => x.Token)];
             List<Emote> added = [.. loadedEmotes.Except(oldEmotes).OrderBy(x => x.Token)];
 
-            if (added.Count == 0 && removed.Count == 0) return oldEmotes;
+            if (added.Count == 0 && removed.Count == 0) return (channel.ChannelID, oldEmotes);
             
             BotCore.Nlog.Info($"{channel.ChannelName} emotes updated !!! removed { removed.Count} added {added.Count}");
             
@@ -143,7 +139,7 @@ public static class Monitoring
             result += string.Join(" ", channel.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
             BotCore.OutQueuePerChannel[channel.OutputChannelName].Enqueue(new CommandResult(result, reply: false));
             
-            return loadedEmotes;
+            return (channel.ChannelID, loadedEmotes);
         }
         catch (Exception e)
         {
