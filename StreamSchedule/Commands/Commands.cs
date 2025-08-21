@@ -35,19 +35,19 @@ internal static class Commands
         List<CommandAlias> aliases = [.. context.CommandAliases];
         List<TextCommand> textCommands = [.. context.TextCommands];
 
-        foreach (var alias in aliases)
+        foreach (CommandAlias alias in aliases)
         {
-            if (alias?.Aliases is null) continue;
+            if (alias.Aliases is null) continue;
             _allCurrentAliasStrings.AddRange(alias.Aliases);
         }
 
-        foreach (var cmd in textCommands)
+        foreach (TextCommand cmd in textCommands)
         {
-            if (cmd?.Aliases is null) continue;
+            if (cmd.Aliases is null) continue;
             _allCurrentAliasStrings.AddRange(cmd.Aliases);
         }
 
-        foreach (var c in KnownCommands)
+        foreach (Type c in KnownCommands)
         {
             CurrentCommands.Add((Command)Activator.CreateInstance(c)!);
 

@@ -26,7 +26,7 @@ internal class Roll : Command
 
             if (split.Length < 2) continue;
 
-            int sides = 0;
+            int sides;
 
             if (split.Length < 3)
             {

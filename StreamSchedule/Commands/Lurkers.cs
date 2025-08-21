@@ -9,7 +9,7 @@ internal class Lurkers : Command
     internal override string Call => "lurkers";
     internal override Privileges MinPrivilege => Privileges.None;
     internal override string Help => "get channel lurkers";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Minute);
+    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.ThreeMinutes);
     internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
     internal override string[]? Arguments => null;
 

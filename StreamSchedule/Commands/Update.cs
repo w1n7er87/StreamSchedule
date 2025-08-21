@@ -17,7 +17,6 @@ internal class Update : Command
         BotCore.OutQueuePerChannel[message.channelName].Enqueue(new CommandResult("📆 🛠️ ", reply: false));
 
         await BotCore.DBContext.SaveChangesAsync();
-
         Process.Start(new ProcessStartInfo
         {
             FileName = "cmd.exe",
