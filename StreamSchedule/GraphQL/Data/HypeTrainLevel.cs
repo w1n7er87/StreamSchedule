@@ -1,6 +1,3 @@
 ﻿namespace StreamSchedule.GraphQL.Data;
 
-public class HypeTrainLevel
-{
-    public int? Value { get; set; }
-}
+public record HypeTrainLevel(int? Value);

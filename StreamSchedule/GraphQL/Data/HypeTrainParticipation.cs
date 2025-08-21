@@ -1,11 +1,7 @@
 namespace StreamSchedule.GraphQL.Data;
 
-public class HypeTrainParticipation
+public record HypeTrainParticipation(HypeTrainAction? Action, HypeTrainActionSource? Source, int? Quantity)
 {
-    public HypeTrainAction? Action { get; set; }
-    public HypeTrainActionSource? Source { get; set; }
-    public int? Quantity { get; set; }
-
     public override string ToString()
     {
         string action = Action switch

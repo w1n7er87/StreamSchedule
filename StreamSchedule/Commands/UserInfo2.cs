@@ -244,7 +244,7 @@ internal class UserInfo2 : Command
         {
             shared = "shared contribution: ";
             shared += string.Join(", ", user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedProgress?.Select(x => $"{x?.User?.Login} - {GetPercentage(x?.ChannelProgress?.Total, user.Channel.HypeTrain.Execution.Progress?.Total)}%") ?? []);
-            shared += $". ( shared record: lvl {user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0].ChannelAllTimeHigh?.Level?.Value ?? 0} {GetPercentage(user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0].ChannelAllTimeHigh?.Progression, user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0].ChannelAllTimeHigh?.Goal)}% ) ";
+            shared += $". ( shared record: lvl {user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0]?.ChannelAllTimeHigh?.Level?.Value ?? 0} {GetPercentage(user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0]?.ChannelAllTimeHigh?.Progression, user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0]?.ChannelAllTimeHigh?.Goal)}% ) ";
         }
         
         string treasureDetails = "";

@@ -1,6 +1,3 @@
 ﻿namespace StreamSchedule.GraphQL.Data;
 
-public class Message
-{
-    public MessageContent? Content { get; set; }
-}
+public record Message(MessageContent? Content);

@@ -1,7 +1,3 @@
 ﻿namespace StreamSchedule.GraphQL.Data;
 
-public class ChattersInfo
-{
-    public int? Count { get; set; }
-    public Chatter?[]? Viewers { get; set; }
-}
+public record ChattersInfo(int? Count, Chatter?[]? Viewers);

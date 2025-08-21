@@ -1,8 +1,7 @@
 namespace StreamSchedule.GraphQL.Data;
 
-public class HypeTrainCompleted
-{
-    public HypeTrainLevel? Level { get; set; }
-    public int? Goal { get; set; }
-    public int? Progression { get; set; }
-}
+public record HypeTrainCompleted(
+    HypeTrainLevel? Level,
+    int? Goal,
+    int? Progression
+);

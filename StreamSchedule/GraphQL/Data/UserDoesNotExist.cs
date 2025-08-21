@@ -1,6 +1,3 @@
 ﻿namespace StreamSchedule.GraphQL.Data;
 
-public class UserDoesNotExist
-{
-    public GetUserErrorReason? Reason { get; set; }
-}
+public record UserDoesNotExist(GetUserErrorReason? Reason);
