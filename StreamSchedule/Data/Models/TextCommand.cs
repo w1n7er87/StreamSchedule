@@ -33,6 +33,20 @@ internal class TextCommand : ICommand
 
     public Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        return Task.FromResult(new CommandResult(Content, reply:false));
+        string[] replacement = message.content.Split(' ', StringSplitOptions.TrimEntries);
+        int targetIndex = 0;
+        
+        Span<string> split = Content.Split('`').AsSpan();
+        for (int i = 0; i < split.Length; i++)
+        {
+            if (!split[i].StartsWith('/')) continue;
+            
+            split[i] = replacement.Length == 0 || replacement.Length - 1 < targetIndex || string.IsNullOrWhiteSpace(replacement[targetIndex])
+                ? split[i].Replace("/", "")
+                : replacement[targetIndex][..Math.Min(replacement[targetIndex].Length, 50)];
+            
+            targetIndex = Math.Min(replacement.Length - 1, targetIndex + 1);
+        }
+        return Task.FromResult(new CommandResult(string.Join(null, split), reply:false, requiresFilter:true));
     }
 }
