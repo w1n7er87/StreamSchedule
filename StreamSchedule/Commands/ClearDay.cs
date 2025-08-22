@@ -4,16 +4,17 @@ namespace StreamSchedule.Commands;
 
 internal class ClearDay : Command
 {
-    internal override string Call => "clearday";
-    internal override Privileges MinPrivilege => Privileges.Mod;
-    internal override string Help => "clear schedule for the given day: [date] (d-M-yy or dd-MM-yy)";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    public override string Call => "clearday";
+    public override Privileges Privileges => Privileges.Mod;
+    public override string Help => "clear schedule for the given day: [date] (d-M-yy or dd-MM-yy)";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
 
     private readonly string[] _inputPatterns = ["d-M-yy", "dd-MM-yy", "d-M-yyyy", "dd-MM-yyyy"];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.content.Split(' ');
 

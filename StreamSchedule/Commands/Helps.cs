@@ -1,52 +1,30 @@
 ﻿using StreamSchedule.Data;
-using StreamSchedule.Data.Models;
 
 namespace StreamSchedule.Commands;
 
 internal class Helps : Command
 {
-    internal override string Call => "helps";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "show command help: [command name]";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    public override string Call => "helps";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "show command help: [command name]";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.content.Split(' ');
         if (split.Length < 1) { return Task.FromResult(new CommandResult(this.Help)); }
 
         string requestedCommand = split[0].ToLower();
 
-        foreach (Command c in Commands.CurrentCommands)
-        {
-            var cmdAliases = BotCore.DBContext.CommandAliases.Find(c.Call.ToLower());
-
-            if ((cmdAliases?.Aliases is null || !cmdAliases.Aliases.Contains(requestedCommand)) && !requestedCommand.Equals(c.Call)) continue;
-
-            string aliases = "";
-            if (cmdAliases?.Aliases is not null && cmdAliases.Aliases.Count != 0) aliases = $"( {string.Join(" , ", cmdAliases.Aliases)} ) ";
-
-            string args = "";
-            if (c.Arguments is not null) args = $". args: {string.Join(", ", c.Arguments)}";
-
-            string cd = $". cooldown: {c.Cooldown.TotalSeconds}s";
-
-            return Task.FromResult(new CommandResult(aliases + c.Help + args + cd));
-        }
-
-        List<TextCommand> textCommands = Commands.CurrentTextCommands;
-        foreach (TextCommand c in textCommands)
-        {
-            if ((c.Aliases is null || !c.Aliases.Contains(requestedCommand)) && !requestedCommand.Equals(c.Name)) continue;
-
-            string aliases = "";
-            if (c.Aliases is not null && c.Aliases.Count != 0) aliases = $"( {string.Join(" , ", c.Aliases)} ) ";
-
-            return Task.FromResult(new CommandResult($"{aliases}simple text command mhm . "));
-        }
-
-        return Task.FromResult(new CommandResult(this.Help));
+        ICommand? c = Commands.AllCommands.FirstOrDefault(x => x.Call.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase) || x.Aliases.Contains(requestedCommand));
+        if(c is null) return Task.FromResult(new CommandResult(this.Help));
+        
+        string aliases = c.Aliases.Count != 0 ? $"( {string.Join(" , ", c.Aliases)} )" : "";
+        string args = c.Arguments is not null ? $"args: {string.Join(", ", c.Arguments)}" : "";
+        string cd = $"cooldown: {c.Cooldown.TotalSeconds}s";
+        return Task.FromResult(new CommandResult($"{c.Call} {aliases} {c.Help}.{args} {cd} "));
     }
 }

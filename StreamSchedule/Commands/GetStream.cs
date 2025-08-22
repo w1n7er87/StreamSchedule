@@ -5,14 +5,15 @@ namespace StreamSchedule.Commands;
 
 internal class GetStream : Command
 {
-    internal override string Call => "stream";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "time until next stream on the schedule";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["h", "min", "s", "mic", "ms", "ns", "d", "y"];
+    public override string Call => "stream";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "time until next stream on the schedule";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["h", "min", "s", "mic", "ms", "ns", "d", "y"];
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 

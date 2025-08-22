@@ -1,10 +1,24 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace StreamSchedule.Data.Models;
 
-[PrimaryKey("CommandName")]
+[PrimaryKey(nameof(CommandName))]
 public class CommandAlias
 {
     public string CommandName { get; set; }
-    public List<string>? Aliases { get; set; }
+    
+    [Column("Aliases")]
+    public List<string>? StoredAliases { get; set; }
+
+    [NotMapped]
+    public List<string> Aliases
+    {
+        get {
+            if (StoredAliases is not null) return StoredAliases;
+            StoredAliases = new List<string>();
+            return StoredAliases;
+        }
+        set => StoredAliases = value;
+    }
 }

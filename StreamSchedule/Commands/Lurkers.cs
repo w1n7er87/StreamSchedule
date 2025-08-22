@@ -6,14 +6,15 @@ namespace StreamSchedule.Commands;
 
 internal class Lurkers : Command
 {
-    internal override string Call => "lurkers";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get channel lurkers";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.ThreeMinutes);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    public override string Call => "lurkers";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "get channel lurkers";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.ThreeMinutes);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         (int, Chatter?[]?) count = await GraphQLClient.GetChattersCount(message.channelID);
 

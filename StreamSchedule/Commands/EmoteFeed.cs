@@ -8,14 +8,15 @@ namespace StreamSchedule.Commands;
 
 internal class EmoteFeed : Command
 {
-    internal override string Call => "emon";
-    internal override Privileges MinPrivilege => Privileges.Trusted;
-    internal override string Help => "add channel to monitor emote changes in my chat";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["rm", "channel"];
+    public override string Call => "emon";
+    public override Privileges Privileges => Privileges.Trusted;
+    public override string Help => "add channel to monitor emote changes in my chat";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["rm", "channel"];
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArs);
         string[] split = text.Split(' ');

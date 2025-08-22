@@ -5,21 +5,20 @@ namespace StreamSchedule.Commands;
 
 internal class GetCommands : Command
 {
-    internal override string Call => "commands";
-    internal override Privileges MinPrivilege => Privileges.Banned;
-    internal override string Help => "show list of commands available to you";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["q"];
+    public override string Call => "commands";
+    public override Privileges Privileges => Privileges.Banned;
+    public override string Help => "show list of commands available to you";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["q"];
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 
         StringBuilder response = new();
-        response.Append(usedArgs.TryGetValue("q", out _)
-            ? string.Join(", ", BotCore.DBContext.TextCommands.Where(c => c.Privileges <= message.sender.Privileges).Select(c => c.Name))
-            : string.Join(", ", Commands.CurrentCommands.Where(c => c.MinPrivilege <= message.sender.Privileges).Select(c => c.Call)));
+        response.Append(string.Join(", ", Commands.AllCommands.Where(c => c.Privileges <= message.sender.Privileges).Select(c => c.Call)));
         return Task.FromResult(new CommandResult(response + ". "));
     }
 }

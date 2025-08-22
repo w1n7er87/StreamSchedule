@@ -7,14 +7,15 @@ namespace StreamSchedule.Commands;
 
 internal class UserInfo2 : Command
 {
-    internal override string Call => "whois";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "user info: [username]";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n", "l", "h"];
+    public override string Call => "whois";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "user info: [username]";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n", "l", "h"];
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
         string[] split = text.Split(' ');

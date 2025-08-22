@@ -10,12 +10,12 @@ public class DatabaseContext : DbContext
     {
     }
 
-    public DbSet<User> Users => Set<User>();
-    public DbSet<Models.Stream> Streams => Set<Models.Stream>();
-    public DbSet<TextCommand> TextCommands => Set<TextCommand>();
-    public DbSet<CommandAlias> CommandAliases => Set<CommandAlias>();
-    public DbSet<EmoteMonitorChannel> EmoteMonitorChannels => Set<EmoteMonitorChannel>();
-    public DbSet<PermittedTerm> PermittedTerms => Set<PermittedTerm>();
+    internal DbSet<User> Users => Set<User>();
+    internal DbSet<Models.Stream> Streams => Set<Models.Stream>();
+    internal DbSet<TextCommand> TextCommands => Set<TextCommand>();
+    internal DbSet<CommandAlias> CommandAliases => Set<CommandAlias>();
+    internal DbSet<EmoteMonitorChannel> EmoteMonitorChannels => Set<EmoteMonitorChannel>();
+    internal DbSet<PermittedTerm> PermittedTerms => Set<PermittedTerm>();
 }
 
 public class DatabaseContextFactory : IDesignTimeDbContextFactory<DatabaseContext>

@@ -6,13 +6,10 @@ namespace StreamSchedule.Commands;
 
 internal static class Commands
 {
-    private static List<Type> KnownCommands => [.. Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(Command)))];
+    private static List<Type> CommandClasses => [.. Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(Command)))];
 
-    public static List<Command> CurrentCommands { get; private set; } = [];
-    public static List<TextCommand> CurrentTextCommands { get; private set; } = [];
-
-    private static readonly List<string> _allCurrentAliasStrings = [];
-
+    public static readonly List<ICommand> AllCommands = [];
+    
     internal static string RetrieveArguments(string[] args, string input, out Dictionary<string, string> usedArgs)
     {
         usedArgs = [];
@@ -32,46 +29,39 @@ internal static class Commands
 
     internal static void InitializeCommands(List<string> channels, DatabaseContext context)
     {
-        List<CommandAlias> aliases = [.. context.CommandAliases];
-        List<TextCommand> textCommands = [.. context.TextCommands];
-
-        foreach (CommandAlias alias in aliases)
+        foreach (Type c in CommandClasses)
         {
-            if (alias.Aliases is null) continue;
-            _allCurrentAliasStrings.AddRange(alias.Aliases);
-        }
+            Command currentCommandInstance = (Command)Activator.CreateInstance(c)!;
+            
+            channels.ForEach(x => currentCommandInstance.LastUsedOnChannel.Add(x, DateTime.MinValue));
 
-        foreach (TextCommand cmd in textCommands)
-        {
-            if (cmd.Aliases is null) continue;
-            _allCurrentAliasStrings.AddRange(cmd.Aliases);
-        }
-
-        foreach (Type c in KnownCommands)
-        {
-            CurrentCommands.Add((Command)Activator.CreateInstance(c)!);
-
-            channels.ForEach(x => CurrentCommands[^1].LastUsedOnChannel.Add(x, DateTime.Now));
-
-            if (!aliases.Any(x => x.CommandName.Equals(CurrentCommands[^1].Call, StringComparison.OrdinalIgnoreCase)))
+            CommandAlias? alias = context.CommandAliases.FirstOrDefault(x => x.CommandName == currentCommandInstance.Call);
+            
+            if (alias is null)
             {
-                context.Add(new CommandAlias() { CommandName = CurrentCommands[^1].Call.ToLower() });
+                alias = new CommandAlias() { CommandName = currentCommandInstance.Call.ToLower() , Aliases = [] };
+                context.Add(alias);
+                context.SaveChanges();
             }
+            currentCommandInstance.Aliases = alias.Aliases;
+            
+            AllCommands.Add(currentCommandInstance);
         }
-        context.SaveChanges();
-        CurrentTextCommands = textCommands;
+        
+        foreach (TextCommand tc in context.TextCommands.ToList())
+        {
+            channels.ForEach(x => tc.LastUsedOnChannel.Add(x, DateTime.MinValue));
+            AllCommands.Add(tc);
+        }
     }
 
     internal static bool IsNameAvailable(string alias)
     {
-        List<string> commandNames = [];
-        CurrentCommands.ForEach(x => commandNames.Add(x.Call));
-        CurrentTextCommands.ForEach(x => commandNames.Add(x.Name));
-
-        return !commandNames.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase)) && !_allCurrentAliasStrings.Any(x => x.Equals(alias, StringComparison.OrdinalIgnoreCase));
+        foreach (ICommand c in AllCommands)
+        {
+            if (c.Call.Equals(alias, StringComparison.OrdinalIgnoreCase)) return false;
+            if (c.Aliases.Contains(alias)) return false;
+        }
+        return true;
     }
-
-    internal static void AddAlias(string alias) => _allCurrentAliasStrings.Add(alias);
-
-    internal static void RemoveAlias(string alias) => _allCurrentAliasStrings.Remove(alias);
 }

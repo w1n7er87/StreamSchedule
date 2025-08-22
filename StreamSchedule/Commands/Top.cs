@@ -7,16 +7,17 @@ namespace StreamSchedule.Commands;
 
 internal class Top : Command
 {
-    internal override string Call => "top";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get top chatters by messages sent offline(default)/online or by score/ratio";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["online", "offline", "score", "ratio", "p", "d"];
-    
+    public override string Call => "top";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "get top chatters by messages sent offline(default)/online or by score/ratio";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["online", "offline", "score", "ratio", "p", "d"];
+    public override List<string> Aliases { get; set; } = [];
+
     private const int PageSize = 10;
     
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> args);
         int page = args.TryGetValue("p", out string? p) ? int.TryParse(p, out int pp) ? Math.Max(pp - 1, 0) : 0 : 0;

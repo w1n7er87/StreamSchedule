@@ -5,14 +5,15 @@ namespace StreamSchedule.Commands;
 
 internal class Update : Command
 {
-    internal override string Call => "updates";
-    internal override Privileges MinPrivilege => Privileges.Uuh;
-    internal override string Help => "update the bot and restart";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    public override string Call => "updates";
+    public override Privileges Privileges => Privileges.Uuh;
+    public override string Help => "update the bot and restart";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         BotCore.OutQueuePerChannel[message.channelName].Enqueue(new CommandResult("📆 🛠️ ", reply: false));
 

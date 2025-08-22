@@ -4,16 +4,17 @@ namespace StreamSchedule.Commands;
 
 internal class AddStream : Command
 {
-    internal override string Call => "sets";
-    internal override Privileges MinPrivilege => Privileges.Mod;
-    internal override string Help => "set new stream time or update given day: [date-time] (d-M-H-mm dd-MM-H-mm d-M-yy-H-mm dd-MM-yy-H-mm d-M-yyyy-H-mm dd-MM-yyyy-H-mm) [stream title] (required)";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    public override string Call => "sets";
+    public override Privileges Privileges => Privileges.Mod;
+    public override string Help => "set new stream time or update given day: [date-time] (d-M-H-mm dd-MM-H-mm d-M-yy-H-mm dd-MM-yy-H-mm d-M-yyyy-H-mm dd-MM-yyyy-H-mm) [stream title] (required)";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
 
     private readonly string[] _inputPatterns = ["d-M-H-mm", "dd-MM-H-mm", "d-M-yy-H-mm", "dd-MM-yy-H-mm", "d-M-yyyy-H-mm", "dd-MM-yyyy-H-mm"];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.content.Split(" ");
         if (split.Length < 2) { return Task.FromResult(Utils.Responses.Fail); }

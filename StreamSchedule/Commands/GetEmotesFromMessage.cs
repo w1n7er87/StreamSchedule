@@ -7,14 +7,15 @@ namespace StreamSchedule.Commands;
 
 internal class GetEmotesFromMessage : Command
 {
-    internal override string Call => "emot";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get emote owners from a reply, your message, message by messageID, or by emote id";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["messageid", "emoteid"];
+    public override string Call => "emot";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "get emote owners from a reply, your message, message by messageID, or by emote id";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["messageid", "emoteid"];
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 

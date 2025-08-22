@@ -2,14 +2,15 @@
 
 namespace StreamSchedule.Commands;
 
-public abstract class Command
+internal abstract class Command : ICommand
 {
-    internal abstract string Call { get; }
-    internal abstract Privileges MinPrivilege { get; }
-    internal abstract string Help { get; }
-    internal abstract TimeSpan Cooldown { get; }
-    internal abstract Dictionary<string, DateTime> LastUsedOnChannel { get; set; }
-    internal abstract string[]? Arguments { get; }
+    public abstract string Call { get; }
+    public abstract Privileges Privileges { get; }
+    public abstract string Help { get; }
+    public abstract TimeSpan Cooldown { get; }
+    public abstract Dictionary<string, DateTime> LastUsedOnChannel { get; }
+    public abstract string[]? Arguments { get; }
+    public abstract List<string> Aliases { get; set; }
 
-    internal abstract Task<CommandResult> Handle(UniversalMessageInfo message);
+    public abstract Task<CommandResult> Handle(UniversalMessageInfo message);
 }

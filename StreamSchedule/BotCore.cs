@@ -24,14 +24,10 @@ internal static class BotCore
     public static TwitchAPI API { get; private set; } = null!;
     public static TwitchClient ChatClient { get; private set; } = null!;
     public static Logger Nlog { get; private set; } = null!;
-
     public static bool Silent { get; set; }
-
     private static LiveStreamMonitorService Monitor { get; set; } = null!;
     private static Dictionary<string, bool> ChannelLiveState { get; set; } = null!;
-
-    private static DateTime _textCommandLastUsed = DateTime.MinValue;
-
+    
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
     public static int MessageLengthLimit = 270;
@@ -145,64 +141,31 @@ internal static class BotCore
         }
 
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints)) return;
-
         if (messageAsCodepoints.Length < 2) return;
 
         string trimmedMessage = messageAsCodepoints.ToStringRepresentation();
-        string requestedCommand = trimmedMessage.Split(' ')[0];
+        string requestedCommand = trimmedMessage.Split(' ')[0].ToLower();
         
-        if (DateTime.Now >= _textCommandLastUsed + TimeSpan.FromSeconds((int)Cooldowns.Long) && !Silent && Commands.Commands.CurrentTextCommands.Count > 0)
-        {
-            foreach (TextCommand command in Commands.Commands.CurrentTextCommands)
-            {
-                if (!requestedCommand.Equals(command.Name, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (command.Aliases is null) continue;
-                    if (!command.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
-                }
-
-                if (userSent.Privileges < command.Privileges) return;
-
-                Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{command.Name}]:[{command.Content}] ");
-                OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new CommandResult(command.Content, reply: false));
-                _textCommandLastUsed = DateTime.Now;
-                return;
-            }
-        }
+        ICommand? cc = Commands.Commands.AllCommands.FirstOrDefault(x => x.Call == requestedCommand || x.Aliases.Contains(requestedCommand));
+        if (cc is null) return;
+        if (cc.LastUsedOnChannel[e.ChatMessage.Channel] + cc.Cooldown > DateTime.Now && userSent.Privileges < Privileges.Mod) return;
+        if (userSent.Privileges < cc.Privileges) return;
         
-        foreach (Command c in Commands.Commands.CurrentCommands)
-        {
-            ReadOnlySpan<char> usedCall = c.Call;
-            if (!requestedCommand.Equals(c.Call, StringComparison.OrdinalIgnoreCase))
-            {
-                CommandAlias? aliases = DBContext.CommandAliases.Find(c.Call.ToLower());
-                if (aliases?.Aliases is null || aliases.Aliases.Count == 0) continue;
-                if (!aliases.Aliases.Any(x => x.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase))) continue;
-                usedCall = requestedCommand;
-            }
-
-            if (c.LastUsedOnChannel[e.ChatMessage.Channel] + c.Cooldown > DateTime.Now && userSent.Privileges < Privileges.Mod) return;
-
-            if (userSent.Privileges < c.MinPrivilege) return;
-            
-            trimmedMessage = trimmedMessage[usedCall.Length..].Replace("\U000e0000", "").Trim();
-            
-            if (userSent.Privileges < Privileges.Mod) c.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
-            
-            Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{c.Call}]:[{trimmedMessage}]");
-            
-            start = Stopwatch.GetTimestamp();
-            
-            CommandResult response = await c.Handle(new(userSent, trimmedMessage, e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
-            
-            Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{response}]");
-            
-            if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
-            
-            OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new OutgoingMessage(response, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id));
-
-            return;
-        }
+        trimmedMessage = trimmedMessage[requestedCommand.Length..].Replace("\U000e0000", "").Trim();
+        
+        if (userSent.Privileges < Privileges.Mod) cc.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
+        
+        Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{cc.Call}]:[{trimmedMessage}]");
+        
+        start = Stopwatch.GetTimestamp();
+        
+        CommandResult response = await cc.Handle(new(userSent, trimmedMessage, e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
+        
+        Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{response}]");
+        
+        if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
+        
+        OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new OutgoingMessage(response, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id));
     }
 
     #region EVENTS
@@ -261,7 +224,7 @@ internal static class BotCore
 
         while (true)
         {
-            if (OutQueuePerChannel[channel.Username!].Count <= 0) { await Task.Delay(50); continue; }
+            if (OutQueuePerChannel[channel.Username!].Count <= 0) { await Task.Delay(25); continue; }
 
             OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
             _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass, response.Result.requiresFilter);

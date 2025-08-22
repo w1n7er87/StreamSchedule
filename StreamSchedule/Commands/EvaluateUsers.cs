@@ -5,16 +5,17 @@ namespace StreamSchedule.Commands;
 
 internal class EvaluateUsers : Command
 {
-    internal override string Call => "evaluate";
-    internal override Privileges MinPrivilege => Privileges.Uuh;
-    internal override string Help => "evaluate user's scores and assign privileges accordingly: [username](optional)";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["s"];
+    public override string Call => "evaluate";
+    public override Privileges Privileges => Privileges.Uuh;
+    public override string Help => "evaluate user's scores and assign privileges accordingly: [username](optional)";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["s"];
+    public override List<string> Aliases { get; set; } = [];
 
     private static float DefaultCutoffScore => 3.2f;
 
-    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
 

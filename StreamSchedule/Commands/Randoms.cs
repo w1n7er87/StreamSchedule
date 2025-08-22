@@ -4,16 +4,17 @@ namespace StreamSchedule.Commands;
 
 internal class Randoms : Command
 {
-    internal override string Call => "random";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "get random number [0 - n( = 100)]; -flip for 50/50";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["flip"];
+    public override string Call => "random";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "get random number [0 - n( = 100)]; -flip for 50/50";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["flip"];
+    public override List<string> Aliases { get; set; } = [];
 
     private static readonly string[] neuros = ["nwero", "hiyori", "eliv", "nuero", "newero", "wuero", "cleliv", "cluero", "weliv", "newliv"];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         CommandResult result = new($"{(Random.Shared.Next(100) < 50 ? neuros[Random.Shared.Next(neuros.Length)] : BotCore.MessageCache[Random.Shared.Next(BotCore.MessageCache.Count)].Username)} says: ");
 

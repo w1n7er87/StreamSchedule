@@ -8,15 +8,17 @@ using StreamSchedule.GraphQL;
 
 namespace StreamSchedule.Commands;
 
-public class Test : Command
+internal class Test : Command
 {
-    internal override string Call => "test";
-    internal override Privileges MinPrivilege => Privileges.Uuh;
-    internal override string Help => "Erm";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
-    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override string Call => "test";
+    public override Privileges Privileges => Privileges.Uuh;
+    public override string Help => "Erm";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
+
+    public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         List<string> emoteIDs = BotCore.MessageCache.FirstOrDefault(x => x.Id == message.ID)?.EmoteSet.Emotes
             .Select(x => x.Id).ToList() ?? [];

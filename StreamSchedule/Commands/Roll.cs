@@ -4,14 +4,15 @@ namespace StreamSchedule.Commands;
 
 internal class Roll : Command
 {
-    internal override string Call => "roll";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "roll a die [amount(max 100_000)]d[sides(max 100_000)], -v for details (up to 50 results)";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["v"];
+    public override string Call => "roll";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "roll a die [amount(max 100_000)]d[sides(max 100_000)], -v for details (up to 50 results)";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["v"];
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string content = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
             

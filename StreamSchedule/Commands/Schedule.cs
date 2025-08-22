@@ -7,14 +7,15 @@ namespace StreamSchedule.Commands;
 
 internal class Schedule : Command
 {
-    internal override string Call => "schedule";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "show streams for the next week per day";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    public override string Call => "schedule";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "show streams for the next week per day";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         IQueryable<Stream> streams = BotCore.DBContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(DateTime.Now)).AsNoTracking();
 

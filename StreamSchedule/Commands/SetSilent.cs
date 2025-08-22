@@ -4,14 +4,15 @@ namespace StreamSchedule.Commands;
 
 internal class SetSilent : Command
 {
-    internal override string Call => "silent";
-    internal override Privileges MinPrivilege => Privileges.Mod;
-    internal override string Help => "toggle silent mode";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    public override string Call => "silent";
+    public override Privileges Privileges => Privileges.Mod;
+    public override string Help => "toggle silent mode";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         BotCore.Silent = !BotCore.Silent;
         return Task.FromResult(new CommandResult());

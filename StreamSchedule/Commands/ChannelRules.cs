@@ -6,13 +6,15 @@ namespace StreamSchedule.Commands;
 
 internal class ChannelRules : Command
 {
-    internal override string Call => "rules";
-    internal override Privileges MinPrivilege => Privileges.Banned;
-    internal override string Help => "channel rules";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
-    internal override async Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override string Call => "rules";
+    public override Privileges Privileges => Privileges.Banned;
+    public override string Help => "channel rules";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
+
+    public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         ChatSettings? settings = await GraphQLClient.GetChatSettings(message.channelID);
         string links = settings?.BlockLinks switch

@@ -5,14 +5,15 @@ namespace StreamSchedule.Commands;
 
 internal class Permit : Command
 {
-    internal override string Call => "permit";
-    internal override Privileges MinPrivilege => Privileges.Mod;
-    internal override string Help => "block term, or replace it with another term";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[] Arguments => ["as", "remove", "noreplace", "anycase"];
+    public override string Call => "permit";
+    public override Privileges Privileges => Privileges.Mod;
+    public override string Help => "block term, or replace it with another term";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[] Arguments => ["as", "remove", "noreplace", "anycase"];
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs).Split(" ", StringSplitOptions.TrimEntries);
         CommandResult result = new("");

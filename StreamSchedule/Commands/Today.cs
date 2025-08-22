@@ -4,14 +4,15 @@ namespace StreamSchedule.Commands;
 
 internal class Today : Command
 {
-    internal override string Call => "today";
-    internal override Privileges MinPrivilege => Privileges.None;
-    internal override string Help => "check if there is a stream today";
-    internal override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    internal override Dictionary<string, DateTime> LastUsedOnChannel { get; set; } = [];
-    internal override string[]? Arguments => null;
+    public override string Call => "today";
+    public override Privileges Privileges => Privileges.None;
+    public override string Help => "check if there is a stream today";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    public override string[]? Arguments => null;
+    public override List<string> Aliases { get; set; } = [];
 
-    internal override Task<CommandResult> Handle(UniversalMessageInfo message)
+    public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         Data.Models.Stream? today = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.UtcNow));
         if (today == null || new DateTime(today.StreamDate, today.StreamTime) < DateTime.UtcNow) return Task.FromResult(new CommandResult("There is no stream today DinkDonk "));
