@@ -1,7 +1,7 @@
 using System.Text;
-using StreamSchedule.Export.Data;
+using StreamSchedule.WebExport.Data;
 
-namespace StreamSchedule.Export;
+namespace StreamSchedule.WebExport;
 
 public static class ExportUtils
 {

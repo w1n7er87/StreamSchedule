@@ -1,6 +1,6 @@
-using StreamSchedule.Export.Data;
+using StreamSchedule.WebExport.Data;
 
-namespace StreamSchedule.Export.Templates;
+namespace StreamSchedule.WebExport.Templates;
 
 public static class Templates
 {

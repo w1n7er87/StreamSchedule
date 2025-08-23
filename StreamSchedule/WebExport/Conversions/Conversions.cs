@@ -1,6 +1,6 @@
 using StreamSchedule.Data;
 
-namespace StreamSchedule.Export.Conversions;
+namespace StreamSchedule.WebExport.Conversions;
 
 public static class Conversions
 {

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using StreamSchedule.Export.Data;
+using StreamSchedule.WebExport.Data;
 
-namespace StreamSchedule.Export;
+namespace StreamSchedule.WebExport;
 
 public class PagesContext : DbContext
 {

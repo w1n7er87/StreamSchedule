@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 using NLog;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
-using StreamSchedule.Export;
+using StreamSchedule.WebExport;
 
 namespace StreamSchedule;
 

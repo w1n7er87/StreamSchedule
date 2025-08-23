@@ -1,4 +1,4 @@
-namespace StreamSchedule.Export.Data;
+namespace StreamSchedule.WebExport.Data;
 
 public class Content
 {
