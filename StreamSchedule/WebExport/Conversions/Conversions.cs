@@ -4,7 +4,7 @@ namespace StreamSchedule.WebExport.Conversions;
 
 public static class Conversions
 {
-    public static string EmoteCostToHtmlRarityClass(EmoteCost cost)
+    private static string EmoteCostToHtmlRarityClass(EmoteCost cost)
     {
         return cost.Type switch
         {

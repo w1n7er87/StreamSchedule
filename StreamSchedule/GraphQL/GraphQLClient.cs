@@ -26,15 +26,6 @@ public static class GraphQLClient
         testHttpClient.DefaultRequestHeaders.Add("Host", "gql.twitch.tv");
     }
 
-    public static void UpdateHeaders(Dictionary<string, string> headers)
-    {
-        foreach (KeyValuePair<string, string> h in headers)
-        {
-            httpClient.DefaultRequestHeaders.Remove(h.Key);
-            httpClient.DefaultRequestHeaders.Add(h.Key, h.Value);
-        }
-    }
-
     public static void SetIntegrity(Integrity integrity)
     {
         httpClient.DefaultRequestHeaders.Remove("Client-Integrity");
@@ -98,7 +89,7 @@ public static class GraphQLClient
     {
         GraphQLResponse<QueryResponse?> result = await client.SendQueryAsync<QueryResponse?>(Queries.RequestChatSettings(userID));
         HandleErrors(result.Errors);
-        return result?.Data?.User?.ChatSettings ?? null;
+        return result.Data?.User?.ChatSettings ?? null;
     }
 
     private static void HandleErrors(GraphQLError[]? errors)

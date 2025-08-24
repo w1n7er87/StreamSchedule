@@ -24,7 +24,6 @@ public static class Monitoring
             while (true)
             {
                 List<Task<(int, List<Emote>)>> emonTasks = [.. Channels.Select(UpdateEmotes)];
-
                 foreach ((int, List<Emote>) result in await Task.WhenAll(emonTasks))
                     Emotes[result.Item1] = result.Item2;
 
@@ -36,7 +35,7 @@ public static class Monitoring
         }
         catch (Exception e)
         {
-            BotCore.Nlog.Error($"emon died lol");
+            BotCore.Nlog.Error($"emon died lol" + e);
             await Task.Delay(monitorCycleTimeout);
             Task.Run(Scheduler);
         }
