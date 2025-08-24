@@ -88,6 +88,7 @@ internal static class Queries
                 assetType
                 suffix
                 token
+                createdAt
         	}
         }
         """);
@@ -231,6 +232,7 @@ internal static class Queries
                 }
                 createdAt
                 deletedAt
+                updatedAt
             }
         }
         """);

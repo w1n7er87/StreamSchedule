@@ -1,6 +1,6 @@
 ﻿namespace StreamSchedule.GraphQL.Data;
 
-public record Emote( 
+public record Emote(
     string? ID,
     User? Owner,
     User? Artist,
@@ -10,7 +10,8 @@ public record Emote(
     EmoteAssetType? AssetType,
     string? Suffix,
     string? Token,
-    string? Text)
+    DateTime? CreatedAt
+    )
 {
     public SubscriptionSummaryTier GetTier()
     {
@@ -22,4 +23,7 @@ public record Emote(
         }
         return SubscriptionSummaryTier.TIER_1;
     }
+
+    public string Prefix => Token?[..^(Suffix?.Length ?? 0)] ?? "";
+
 }

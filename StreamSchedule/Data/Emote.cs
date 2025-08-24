@@ -45,18 +45,18 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
             );
     }
 
-    public static implicit operator Emote(GraphQL.Data.Emote gqlEmote)
+    public static implicit operator Emote(GraphQL.Data.Emote? gqlEmote)
     {
-        return new Emote(ID: gqlEmote.ID ?? "",
+        return new Emote(ID: gqlEmote?.ID ?? "",
             new EmoteCost(
-                Type: gqlEmote.Type switch
+                Type: gqlEmote?.Type switch
                 {
                     EmoteType.BITS_BADGE_TIERS => EmoteCostType.Bits,
                     EmoteType.SUBSCRIPTIONS => EmoteCostType.Subscription,
                     EmoteType.FOLLOWER => EmoteCostType.Follow,
                     _ => EmoteCostType.Unknown,
                 } ,
-                Value: gqlEmote.Type switch
+                Value: gqlEmote?.Type switch
                 {
                     EmoteType.BITS_BADGE_TIERS => gqlEmote.BitsBadgeTierSummary?.Threshold ?? 0,
                     EmoteType.SUBSCRIPTIONS => gqlEmote.GetTier() switch {
@@ -69,8 +69,8 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
                     _ => 0,
                 }
             ),
-            Token: gqlEmote.Token ?? "",
-            gqlEmote.AssetType is EmoteAssetType.ANIMATED
+            Token: gqlEmote?.Token ?? "",
+            (gqlEmote?.AssetType ?? EmoteAssetType.STATIC) is EmoteAssetType.ANIMATED
         );
     }
 
