@@ -4,8 +4,7 @@ namespace StreamSchedule;
 
 internal static class ColorInfo
 {
-    private static readonly HttpClient _colorClient = new(new SocketsHttpHandler()
-        { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
+    private static readonly HttpClient _colorClient = new(new SocketsHttpHandler() { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
 
     internal class Name
     {
@@ -20,8 +19,7 @@ internal static class ColorInfo
     public static async Task<string> GetColor(string colorHex)
     {
         colorHex = colorHex.Replace("#", "");
-        string rgb =
-            $" ({Convert.ToInt32(colorHex[..2], 16)}R {Convert.ToInt32(colorHex[2..4], 16)}G {Convert.ToInt32(colorHex[4..6], 16)}B) ";
+        string rgb = $" ({Convert.ToInt32(colorHex[..2], 16)}R {Convert.ToInt32(colorHex[2..4], 16)}G {Convert.ToInt32(colorHex[4..6], 16)}B) ";
         try
         {
             string response =

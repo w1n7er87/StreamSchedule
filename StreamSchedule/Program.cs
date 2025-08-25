@@ -11,7 +11,7 @@ public static class Program
 {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-    private static void Main(string[] args)
+    private static void Main()
     {
         AppDomain.CurrentDomain.UnhandledException += (sender, e) => logger.Fatal(e.ExceptionObject.ToString());
 

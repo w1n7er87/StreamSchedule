@@ -4,7 +4,6 @@ using NLog;
 using StreamSchedule.Commands;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
-using StreamSchedule.EmoteMonitors;
 using StreamSchedule.Extensions;
 using StreamSchedule.WebExport;
 using TwitchLib.Api;
@@ -41,7 +40,6 @@ internal static class BotCore
     private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
     {
         Monitor.SetChannelsByName(channelNames);
-
         Monitor.OnStreamOnline += MonitorOnLive;
         Monitor.OnStreamOffline += MonitorOnOffline;
         Monitor.Start();
@@ -90,7 +88,7 @@ internal static class BotCore
 
         Nlog.Info(Environment.GetEnvironmentVariable("STREAM_SCHEDULE_PAGES", EnvironmentVariableTarget.User));
 
-        _ = Monitoring.Start;
+        _ = EmoteMonitors.Monitoring.Start;
         _ = Browsing.Browsing.Start;
 
         ExportUtils.UpdateStyles();
