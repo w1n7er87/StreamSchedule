@@ -7,5 +7,4 @@ public record QueryResponse(
     Emote? Emote,
     Message? Message,
     User? User,
-    bool? IsUsernameAvailable
-);
+    bool? IsUsernameAvailable);

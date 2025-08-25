@@ -15,7 +15,7 @@ internal class Update : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        BotCore.OutQueuePerChannel[message.channelName].Enqueue(new CommandResult("📆 🛠️ ", reply: false));
+        BotCore.OutQueuePerChannel[message.ChannelName].Enqueue(new CommandResult("📆 🛠️ ", false));
 
         await BotCore.DBContext.SaveChangesAsync();
         Process.Start(new ProcessStartInfo
@@ -27,6 +27,6 @@ internal class Update : Command
 
         Environment.Exit(0);
 
-        return new CommandResult("you are not supposed to read this MyHonestReaction ");
+        return new("you are not supposed to read this MyHonestReaction ");
     }
 }

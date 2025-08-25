@@ -18,19 +18,21 @@ internal class EmoteFeed : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArs);
+        string text = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArs);
         string[] split = text.Split(' ');
 
         int userIDNumber = 0;
         bool idProvided = false;
-        string targetUsername = message.sender.Username!;
+        string targetUsername = message.Sender.Username!;
 
-        string targetOutputChannelName = message.sender.Privileges == Privileges.Uuh ? usedArs.TryGetValue("channel", out string? channelName) ? channelName.ToLower() : "w1n7er" : "w1n7er";
+        string targetOutputChannelName = message.Sender.Privileges == Privileges.Uuh
+            ? usedArs.TryGetValue("channel", out string? channelName) ? channelName.ToLower() : "w1n7er"
+            : "w1n7er";
 
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
             if (split[0].StartsWith('#')) idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
-            if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
+            if (!idProvided) targetUsername = split[0].Replace("#", "").Replace("@", "");
         }
 
         targetUsername = targetUsername.ToLower();
@@ -42,7 +44,7 @@ internal class EmoteFeed : Command
                 EmoteMonitorChannel? toDelete = BotCore.DBContext.EmoteMonitorChannels.SingleOrDefault(x => x.ChannelName == targetUsername);
                 if (toDelete is null) return Utils.Responses.Fail + $"not monitoring {targetUsername}";
 
-                if (message.sender.Privileges == Privileges.Uuh)
+                if (message.Sender.Privileges == Privileges.Uuh)
                 {
                     toDelete.Deleted = true;
                     await BotCore.DBContext.SaveChangesAsync();
@@ -50,42 +52,49 @@ internal class EmoteFeed : Command
                     return Utils.Responses.Ok + $"removed emote monitor for {toDelete.ChannelName}";
                 }
 
-                if (!toDelete.UpdateSubscribersUsers.Contains(message.sender.Id)) return Utils.Responses.Fail + $"you are not in the ping list for {toDelete.ChannelName}";
-                
-                toDelete.UpdateSubscribersUsers.Remove(message.sender.Id);
+                if (!toDelete.UpdateSubscribersUsers.Contains(message.Sender.Id))
+                    return Utils.Responses.Fail + $"you are not in the ping list for {toDelete.ChannelName}";
+
+                toDelete.UpdateSubscribersUsers.Remove(message.Sender.Id);
                 await BotCore.DBContext.SaveChangesAsync();
                 Monitoring.Channels = [.. BotCore.DBContext.EmoteMonitorChannels.Where(x => !x.Deleted).AsNoTracking()];
                 return Utils.Responses.Ok + $"removed you from the ping list for {toDelete.ChannelName}";
             }
 
             GetUsersResponse? a = idProvided
-                ? await BotCore.API.Helix.Users.GetUsersAsync(ids: [userIDNumber.ToString()])
+                ? await BotCore.API.Helix.Users.GetUsersAsync([userIDNumber.ToString()])
                 : await BotCore.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
             TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users[0];
 
-            if (u.BroadcasterType is not ("partner" or "affiliate")) return Utils.Responses.Surprise + "user is not a partner or affiliate";
+            if (u.BroadcasterType is not ("partner" or "affiliate"))
+                return Utils.Responses.Surprise + "user is not a partner or affiliate";
 
             EmoteMonitorChannel emc = new()
             {
                 ChannelID = int.Parse(u.Id),
                 ChannelName = u.Login,
                 OutputChannelName = targetOutputChannelName,
-                UpdateSubscribersUsers = [message.sender.Id]
+                UpdateSubscribersUsers = [message.Sender.Id]
             };
 
             EmoteMonitorChannel? existing = BotCore.DBContext.EmoteMonitorChannels.SingleOrDefault(x => x.ChannelID == emc.ChannelID);
             if (existing is not null)
             {
                 CommandResult res = Utils.Responses.Ok + $"already monitoring {emc.ChannelName}";
-                if (existing.Deleted) { res += " (restored)"; existing.Deleted = false; }
-                if (existing.UpdateSubscribersUsers.Contains(message.sender.Id))
+                if (existing.Deleted)
+                {
+                    res += " (restored)";
+                    existing.Deleted = false;
+                }
+
+                if (existing.UpdateSubscribersUsers.Contains(message.Sender.Id))
                 {
                     res += " you are in the ping list.";
                 }
                 else
                 {
                     res += " added you to the ping list.";
-                    existing.UpdateSubscribersUsers.Add(message.sender.Id);
+                    existing.UpdateSubscribersUsers.Add(message.Sender.Id);
                 }
 
                 await BotCore.DBContext.SaveChangesAsync();

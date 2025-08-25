@@ -19,14 +19,14 @@ internal class Schedule : Command
     {
         IQueryable<Stream> streams = BotCore.DBContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(DateTime.Now)).AsNoTracking();
 
-        if (!streams.Any()) { return Task.FromResult(new CommandResult("The schedule is empty. SadCat ")); }
+        if (!streams.Any()) return Task.FromResult(new CommandResult("The schedule is empty. SadCat "));
 
         DateOnly inAWeek = DateOnly.FromDateTime(DateTime.Now + TimeSpan.FromDays(7));
         StringBuilder sb = new();
 
         string currentOrLatestTZ = DateTime.Now.ToString("zzz");
 
-        foreach (var stream in streams)
+        foreach (Stream stream in streams)
         {
             DateTime streamDate = new DateTime(stream.StreamDate, stream.StreamTime).ToLocalTime();
 

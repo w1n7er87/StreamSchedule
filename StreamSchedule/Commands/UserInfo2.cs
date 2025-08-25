@@ -2,6 +2,7 @@
 using StreamSchedule.GraphQL;
 using StreamSchedule.GraphQL.Data;
 using TwitchLib.Api.Helix.Models.Chat.Emotes;
+using Emote = StreamSchedule.GraphQL.Data.Emote;
 
 namespace StreamSchedule.Commands;
 
@@ -17,19 +18,20 @@ internal class UserInfo2 : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
         string[] split = text.Split(' ');
         CommandResult response = new() { requiresFilter = true };
 
-        string targetUsername = message.sender.Username!;
+        string targetUsername = message.Sender.Username!;
 
         bool idProvided = false;
         int userIDNumber = 0;
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
-            if (split[0].StartsWith('#')) idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
+            if (split[0].StartsWith('#'))
+                idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
 
-            if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
+            if (!idProvided) targetUsername = split[0].Replace("#", "").Replace("@", "");
         }
 
         GetUserResult userErrorAndNameAvailable;
@@ -37,12 +39,12 @@ internal class UserInfo2 : Command
         else userErrorAndNameAvailable = await GraphQLClient.GetUserOrReasonByLogin(targetUsername);
 
         string usernameAvailable = userErrorAndNameAvailable.IsUsernameAvailable ?? false ? " yet" : "";
-        if (userErrorAndNameAvailable.User is null) return new CommandResult($"user does not exist{usernameAvailable}");
+        if (userErrorAndNameAvailable.User is null) return new($"user does not exist{usernameAvailable}");
         User user = userErrorAndNameAvailable.User;
 
         string generalInfo = GetGeneralInfo(userErrorAndNameAvailable);
 
-        if (usedArgs.Count == 0) { return new(generalInfo, requiresFilter:true); }
+        if (usedArgs.Count == 0) return new(generalInfo, requiresFilter: true);
 
         string color = "";
         string followers = "";
@@ -52,13 +54,13 @@ internal class UserInfo2 : Command
 
         bool all = usedArgs.TryGetValue("a", out _);
 
-        if (usedArgs.TryGetValue("g", out _) || all) response += generalInfo + " "; 
+        if (usedArgs.TryGetValue("g", out _) || all) response += generalInfo + " ";
 
         if (usedArgs.TryGetValue("n", out _)) response += PreviousUsernames(user.Id!) + " ";
 
         if (usedArgs.TryGetValue("c", out _) || all)
         {
-            color = await GetColor(user, detailedInfo: !all);
+            color = await GetColor(user, !all);
             response += color + " ";
         }
 
@@ -77,31 +79,34 @@ internal class UserInfo2 : Command
         if (usedArgs.TryGetValue("s", out _) || all)
         {
             liveInfo = GetLiveStatus(user);
-            response += (message.sender.Privileges < Privileges.Trusted ? liveInfo[0] : liveInfo[1]) + " ";
+            response += (message.Sender.Privileges < Privileges.Trusted ? liveInfo[0] : liveInfo[1]) + " ";
         }
 
         if (usedArgs.TryGetValue("l", out _) || all)
         {
-            lurkers = (user!.Channel?.Chatters?.Count) switch { >0 => user.Channel.Chatters.Count + " lurkers", _ => "no lurkers"};
+            lurkers = user!.Channel?.Chatters?.Count switch
+            {
+                > 0 => user.Channel.Chatters.Count + " lurkers", 
+                _ => "no lurkers"
+            };
             response += lurkers + " ";
         }
 
-        if (usedArgs.TryGetValue("h", out _) || all)
-        {
-            response += GetHypeTran(user);
-        }
+        if (usedArgs.TryGetValue("h", out _) || all) response += GetHypeTran(user);
 
-        return all ? new($"{generalInfo} | {color} | {followers} | {lurkers} | {emotes[0]} | {liveInfo[0]}", requiresFilter: true) : response;
+        return all
+            ? new($"{generalInfo} | {color} | {followers} | {lurkers} | {emotes[0]} | {liveInfo[0]}", requiresFilter: true)
+            : response;
     }
 
     private static async Task<string[]> GetEmotes(string userID)
     {
-        var emotes = (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(userID)).ChannelEmotes;
+        ChannelEmote[]? emotes = (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(userID)).ChannelEmotes;
         string[] result = ["no emotes", "no emotes"];
 
         if (emotes.Length <= 0) return result;
 
-        var firstEmote = await GraphQLClient.GetEmote(emotes[0].Id);
+        Emote? firstEmote = await GraphQLClient.GetEmote(emotes[0].Id);
         string prefix = firstEmote?.Token?[..^(firstEmote.Suffix?.Length ?? 0)] ?? "";
 
         result[1] = $"\"{prefix}\" {emotes.Length} emotes ({emotes.Count(e => e.Format.Contains("animated"))} animated)";
@@ -125,7 +130,7 @@ internal class UserInfo2 : Command
         string B;
         if (bits > 0)
         {
-            List<Task<GraphQL.Data.Emote?>> tasks = [];
+            List<Task<Emote?>> tasks = [];
             tasks.AddRange(bitEmotes.Select(e => GraphQLClient.GetEmote(e.Id)));
             await Task.WhenAll(tasks);
 
@@ -155,7 +160,9 @@ internal class UserInfo2 : Command
             color = "not set";
 
         if (creatorColor is not null)
-            creatorColor = detailedInfo ? $"#{creatorColor} {await ColorInfo.GetColor(creatorColor)}" : $"#{creatorColor}";
+            creatorColor = detailedInfo
+                ? $"#{creatorColor} {await ColorInfo.GetColor(creatorColor)}"
+                : $"#{creatorColor}";
         else
             creatorColor = "not set";
 
@@ -167,7 +174,7 @@ internal class UserInfo2 : Command
         string hypeTrain = "";
         if (user.Channel?.HypeTrain?.Execution is not null)
         {
-            float progress = MathF.Round(((user.Channel.HypeTrain.Execution.Progress?.Progression ?? 1.0f) / (user.Channel.HypeTrain.Execution.Progress?.Goal ?? 1.0f)) * 100.0f, 4);
+            float progress = GetPercentage(user.Channel.HypeTrain.Execution.Progress?.Progression, user.Channel.HypeTrain.Execution.Progress?.Goal);
             hypeTrain = $"lvl {user.Channel.HypeTrain.Execution.Progress?.Level?.Value ?? 0} {Helpers.HypeTrainDifficultyToString(user.Channel.HypeTrain.Execution.Config?.Difficulty)} hype train - {progress}%";
         }
 
@@ -180,7 +187,7 @@ internal class UserInfo2 : Command
             }
             else
             {
-                TimeSpan sincePastStream = (user.LastBroadcast.StartedAt is null)
+                TimeSpan sincePastStream = user.LastBroadcast.StartedAt is null
                     ? TimeSpan.Zero
                     : DateTime.Now - TimeZoneInfo.ConvertTimeFromUtc((DateTime)user.LastBroadcast.StartedAt, TimeZoneInfo.Local);
                 a = $"offline, last stream: {user.LastBroadcast.Game?.DisplayName ?? ""} - \" {user.LastBroadcast.Title} \" ({(sincePastStream.Days != 0 ? sincePastStream.Days + "d " : "")}{(sincePastStream.Hours != 0 ? sincePastStream.Hours + "h " : "")}{sincePastStream:m'm 's's '} ago). {hypeTrain}";
@@ -190,7 +197,9 @@ internal class UserInfo2 : Command
 
         string mature = user.BroadcastSettings?.IsMature ?? false ? " 🔞" : "";
         TimeSpan durationSpan = DateTime.Now - (user.Stream.CreatedAt?.ToLocalTime() ?? DateTime.MinValue);
-        string duration = durationSpan.Days > 0 ? durationSpan.ToString(@"d\:hh\:mm\:ss") : durationSpan.ToString(@"hh\:mm\:ss");
+        string duration = durationSpan.Days > 0
+            ? durationSpan.ToString(@"d\:hh\:mm\:ss")
+            : durationSpan.ToString(@"hh\:mm\:ss");
         string viewcount = user.Stream.ViewersCount?.ToString() ?? "";
         string game = user.Stream.Game?.DisplayName ?? "";
         string title = user.BroadcastSettings?.Title ?? "";
@@ -199,20 +208,22 @@ internal class UserInfo2 : Command
         return [$"live{mature} {game}", $"live{mature} ({duration}) : {game} - \" {title} \" for {viewcount} viewers.{mature} {streamStatus} {clips} {hypeTrain}"];
     }
 
-    private static string GetGeneralInfo(GetUserResult userReason) =>
-        $"{Helpers.UserErrorReasonToString(userReason.Reason)} " +
-        $"{Helpers.UserRolesIsStaff(userReason.User?.Roles)} " +
-        $"{Helpers.UserRolesIsPartnerOrAffiliate(userReason.User?.Roles)} " +
-        $"{userReason.User?.Login} " +
-        $"(id:{userReason.User?.Id}) " +
-        $"created: {userReason.User?.CreatedAt:dd/MMM/yyyy} " +
-        $"{(userReason.User?.DeletedAt is null ? "" : $"deleted: {userReason.User.DeletedAt:dd/MMM/yyyy}")} " +
-        $"{userReason.User?.Channel?.FounderBadgeAvailability switch { >0 => $" {userReason.User.Channel.FounderBadgeAvailability} founder slots available", _ => "" }} " +
-        $"updated: {userReason.User?.UpdatedAt:dd/MMM/yyyy} ";
-    
+    private static string GetGeneralInfo(GetUserResult userReason)
+    {
+        return $"{Helpers.UserErrorReasonToString(userReason.Reason)} " +
+               $"{Helpers.UserRolesIsStaff(userReason.User?.Roles)} " +
+               $"{Helpers.UserRolesIsPartnerOrAffiliate(userReason.User?.Roles)} " +
+               $"{userReason.User?.Login} " +
+               $"(id:{userReason.User?.Id}) " +
+               $"created: {userReason.User?.CreatedAt:dd/MMM/yyyy} " +
+               $"{(userReason.User?.DeletedAt is null ? "" : $"deleted: {userReason.User.DeletedAt:dd/MMM/yyyy}")} " +
+               $"{userReason.User?.Channel?.FounderBadgeAvailability switch { > 0 => $" {userReason.User.Channel.FounderBadgeAvailability} founder slots available", _ => "" }} " +
+               $"updated: {userReason.User?.UpdatedAt:dd/MMM/yyyy} ";
+    }
+
     private static string PreviousUsernames(string userID)
     {
-        if (!Data.Models.User.TryGetUser("" , out Data.Models.User dbData, userID)) return "Unknown user";
+        if (!Data.Models.User.TryGetUser("", out Data.Models.User dbData, userID)) return "Unknown user";
 
         List<string>? previousUsernames = dbData.PreviousUsernames;
         if (previousUsernames is null || previousUsernames.Count == 0) return "Nothing recorded so far";
@@ -224,18 +235,19 @@ internal class UserInfo2 : Command
     {
         if (user.Channel?.HypeTrain?.Approaching is not null)
         {
-            string events = user.Channel.HypeTrain.Approaching.EventsRemaining?.FirstOrDefault()?.Events.ToString() ?? "0";
+            string events = user.Channel.HypeTrain.Approaching.EventsRemaining?.FirstOrDefault()?.Events.ToString() ??
+                            "0";
             string isKappaApproaching = user.Channel.HypeTrain.Approaching.IsGoldenKappaTrain ?? false ? "golden Kappa" : "";
             string isTreasureApproaching = user.Channel.HypeTrain.Approaching.IsTreasureTrain ?? false ? "treasure" : "";
             string secondsLeft = ((user.Channel.HypeTrain.Approaching.ExpiresAt ?? DateTime.UtcNow) - DateTime.UtcNow).Seconds.ToString();
             return $"{isKappaApproaching} {isTreasureApproaching} hype train is approaching ({events} more events) {secondsLeft}s";
         }
-        
+
         if (user.Channel?.HypeTrain?.Execution is null) return "no active hype trains";
 
         string isKappa = user.Channel.HypeTrain.Execution.IsGoldenKappaTrain ?? false ? "golden Kappa " : "";
         string isTreasure = user.Channel.HypeTrain.Execution.IsTreasureTrain ?? false ? "treasure " : "";
-        
+
         float progress = GetPercentage(user.Channel.HypeTrain.Execution.Progress?.Progression, user.Channel.HypeTrain.Execution.Progress?.Goal);
         string hypeTrain = $"lvl {user.Channel.HypeTrain.Execution.Progress?.Level?.Value ?? 0} {Helpers.HypeTrainDifficultyToString(user.Channel.HypeTrain.Execution.Config?.Difficulty)} {isTreasure}{isKappa}hype train - {progress}%";
         hypeTrain += $" ( record: lvl {user.Channel.HypeTrain.Execution.AllTimeHigh?.Level?.Value ?? 0} {GetPercentage(user.Channel.HypeTrain.Execution.AllTimeHigh?.Progression, user.Channel.HypeTrain.Execution.AllTimeHigh?.Goal)}% ) ";
@@ -247,22 +259,16 @@ internal class UserInfo2 : Command
             shared += string.Join(", ", user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedProgress?.Select(x => $"{x?.User?.Login} - {GetPercentage(x?.ChannelProgress?.Total, user.Channel.HypeTrain.Execution.Progress?.Total)}%") ?? []);
             shared += $". ( shared record: lvl {user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0]?.ChannelAllTimeHigh?.Level?.Value ?? 0} {GetPercentage(user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0]?.ChannelAllTimeHigh?.Progression, user.Channel.HypeTrain.Execution.SharedHypeTrainDetails.SharedAllTimeHighRecords?[0]?.ChannelAllTimeHigh?.Goal)}% ) ";
         }
-        
+
         string treasureDetails = "";
         if (user.Channel.HypeTrain.Execution.TreasureTrainDetails is not null)
-        {
             treasureDetails = $" ( discount {user.Channel.HypeTrain.Execution.TreasureTrainDetails.DiscountPercentage}%, starts at lvl{user.Channel.HypeTrain.Execution.TreasureTrainDetails.DiscountLevelThreshold} ) ";
-        }
 
         hypeTrain += treasureDetails;
         hypeTrain += shared;
         hypeTrain += string.Join("; ", user.Channel.HypeTrain.Execution.Participations?.Select(x => x?.ToString() ?? "") ?? []);
-
         return hypeTrain;
         
-        static float GetPercentage(int? currentProgress, int? goal)
-        {
-            return MathF.Round((currentProgress ?? 1.0f) / (goal ?? 1.0f) * 100.0f, 4);
-        }
-    } 
+    }
+    private static float GetPercentage(int? currentProgress, int? goal) => MathF.Round((currentProgress ?? 1.0f) / (goal ?? 1.0f) * 100.0f, 4);
 }

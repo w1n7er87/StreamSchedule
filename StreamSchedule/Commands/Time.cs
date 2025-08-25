@@ -12,8 +12,5 @@ internal class Time : Command
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
 
-    public override Task<CommandResult> Handle(UniversalMessageInfo message)
-    {
-        return Task.FromResult(new CommandResult($" British {DateTime.Now:ddd HH:mm:ss} Latege ", false));
-    }
+    public override Task<CommandResult> Handle(UniversalMessageInfo message) => Task.FromResult(new CommandResult($" British {DateTime.Now:ddd HH:mm:ss} Latege ", false));
 }

@@ -4,5 +4,4 @@ public record HypeTrainProgress(
     HypeTrainLevel? Level,
     int? Goal,
     int? Progression,
-    int? Total
-);
+    int? Total);

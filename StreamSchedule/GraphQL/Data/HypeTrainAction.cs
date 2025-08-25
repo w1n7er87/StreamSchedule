@@ -11,5 +11,5 @@ public enum HypeTrainAction
     CHEER,
     POLLS,
     BITS_ON_EXTENSION,
-    UNKNOWN,
+    UNKNOWN
 }

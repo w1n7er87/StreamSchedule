@@ -16,7 +16,7 @@ internal class ChannelRules : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        ChatSettings? settings = await GraphQLClient.GetChatSettings(message.channelID);
+        ChatSettings? settings = await GraphQLClient.GetChatSettings(message.ChannelID);
         string links = settings?.BlockLinks switch
         {
             true => "links are not allowed, ",

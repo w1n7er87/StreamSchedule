@@ -2,4 +2,10 @@
 
 namespace StreamSchedule.Data;
 
-public record UniversalMessageInfo(User sender, string content, string ID, string? replyID, string channelID, string channelName);
+public record UniversalMessageInfo(
+    User Sender,
+    string Content,
+    string ID,
+    string? ReplyID,
+    string ChannelID,
+    string ChannelName);

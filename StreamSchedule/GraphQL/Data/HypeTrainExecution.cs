@@ -1,7 +1,6 @@
 ﻿namespace StreamSchedule.GraphQL.Data;
 
-public record HypeTrainExecution
-(
+public record HypeTrainExecution(
     HypeTrainConfig? Config,
     HypeTrainProgress? Progress,
     DateTime? StartedAt,
@@ -12,5 +11,4 @@ public record HypeTrainExecution
     TreasureTrainDetails? TreasureTrainDetails,
     HypeTrainCompleted? AllTimeHigh,
     HypeTrainParticipation?[]? Participations,
-    SharedHypeTrainDetails? SharedHypeTrainDetails
-);
+    SharedHypeTrainDetails? SharedHypeTrainDetails);

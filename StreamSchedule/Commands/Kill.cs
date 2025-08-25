@@ -14,19 +14,19 @@ internal class Kill : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
 
-        if (message.sender.Privileges == Privileges.Uuh && usedArgs.TryGetValue("fr", out _))
+        if (message.Sender.Privileges == Privileges.Uuh && usedArgs.TryGetValue("fr", out _))
         {
             await BotCore.DBContext.SaveChangesAsync();
-
             Environment.Exit(0);
-
-            return new CommandResult("buhbye ", false);
+            return new("buhbye ", false);
         }
 
         string target = text.Split(' ')[0];
 
-        return Random.Shared.Next(100) > 25 ? new CommandResult("✋ unauthorized action. ", false) : new CommandResult($"MEGALUL 🔪 {target}", false, true);
+        return Random.Shared.Next(100) > 25
+            ? new("✋ unauthorized action. ", false)
+            : new($"MEGALUL 🔪 {target}", false, true);
     }
 }

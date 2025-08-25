@@ -11,5 +11,5 @@ internal enum Cooldowns
     ThreeMinutes = 180,
     FiveMinutes = 300,
     TenMinutes = 600,
-    Hour = 3600,
+    Hour = 3600
 }

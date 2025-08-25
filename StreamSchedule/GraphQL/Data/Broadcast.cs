@@ -4,5 +4,4 @@ public record Broadcast(
     Game? Game,
     string? ID,
     DateTime? StartedAt,
-    string? Title
-);
+    string? Title);

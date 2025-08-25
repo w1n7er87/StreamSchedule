@@ -5,5 +5,4 @@ public record HypeTrainApproaching(
     int? Goal,
     bool? IsGoldenKappaTrain,
     bool? IsTreasureTrain,
-    HypeTrainApproachingEventsRemaining?[]? EventsRemaining
-);
+    HypeTrainApproachingEventsRemaining?[]? EventsRemaining);

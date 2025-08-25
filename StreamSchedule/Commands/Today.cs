@@ -15,7 +15,8 @@ internal class Today : Command
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         Data.Models.Stream? today = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.UtcNow));
-        if (today == null || new DateTime(today.StreamDate, today.StreamTime) < DateTime.UtcNow) return Task.FromResult(new CommandResult("There is no stream today DinkDonk "));
+        if (today == null || new DateTime(today.StreamDate, today.StreamTime) < DateTime.UtcNow)
+            return Task.FromResult(new CommandResult("There is no stream today DinkDonk "));
 
         DateTime fullDate = new DateTime(today.StreamDate, today.StreamTime).ToLocalTime();
         TimeSpan span = fullDate - DateTime.Now;

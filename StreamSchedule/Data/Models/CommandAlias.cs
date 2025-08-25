@@ -7,16 +7,16 @@ namespace StreamSchedule.Data.Models;
 public class CommandAlias
 {
     public string CommandName { get; set; }
-    
-    [Column("Aliases")]
-    public List<string>? StoredAliases { get; set; }
+
+    [Column("Aliases")] public List<string>? StoredAliases { get; set; }
 
     [NotMapped]
     public List<string> Aliases
     {
-        get {
+        get
+        {
             if (StoredAliases is not null) return StoredAliases;
-            StoredAliases = new List<string>();
+            StoredAliases = new();
             return StoredAliases;
         }
         set => StoredAliases = value;

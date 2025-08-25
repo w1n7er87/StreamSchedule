@@ -6,9 +6,7 @@ namespace StreamSchedule.Data;
 
 public class DatabaseContext : DbContext
 {
-    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
-    {
-    }
+    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
 
     internal DbSet<User> Users => Set<User>();
     internal DbSet<Models.Stream> Streams => Set<Models.Stream>();
@@ -24,6 +22,6 @@ public class DatabaseContextFactory : IDesignTimeDbContextFactory<DatabaseContex
     {
         DbContextOptionsBuilder dbContextOptionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
         dbContextOptionsBuilder.UseSqlite("Data Source=bin/Release/net9.0/StreamSchedule.data");
-        return new DatabaseContext((DbContextOptions<DatabaseContext>)dbContextOptionsBuilder.Options);
+        return new((DbContextOptions<DatabaseContext>)dbContextOptionsBuilder.Options);
     }
 }

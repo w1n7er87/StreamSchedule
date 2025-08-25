@@ -6,7 +6,7 @@ public enum Privileges
     None = 0,
     Trusted = 1,
     Mod = 2,
-    Uuh = 3,
+    Uuh = 3
 }
 
 internal static class PrivilegeUtils

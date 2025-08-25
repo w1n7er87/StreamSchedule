@@ -8,10 +8,7 @@ internal class CommandResult
     public bool requiresFilter = false;
     private readonly StringBuilder _stringBuilder;
 
-    public CommandResult()
-    {
-        _stringBuilder = new();
-    }
+    public CommandResult() { _stringBuilder = new(); }
 
     public CommandResult(string content, bool reply = true, bool requiresFilter = false)
     {
@@ -40,7 +37,8 @@ internal class CommandResult
     }
 
     public override string ToString() => _stringBuilder.ToString();
-    public static implicit operator CommandResult(string s) => new(s);
-    public static implicit operator CommandResult(StringBuilder sb) => new(sb);
 
+    public static implicit operator CommandResult(string s) => new(s);
+
+    public static implicit operator CommandResult(StringBuilder sb) => new(sb);
 }

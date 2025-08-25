@@ -1,5 +1,9 @@
 ﻿using StreamSchedule.Data;
-using StreamSchedule.Data.Models;
+using TwitchLib.Api.Helix.Models.Chat.Emotes;
+using TwitchLib.Api.Helix.Models.Chat.GetUserChatColor;
+using TwitchLib.Api.Helix.Models.Streams.GetStreams;
+using TwitchLib.Api.Helix.Models.Users.GetUsers;
+using User = StreamSchedule.Data.Models.User;
 
 namespace StreamSchedule.Commands;
 
@@ -15,24 +19,23 @@ internal class UserInfo : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
         string[] split = text.Split(' ');
         CommandResult response = new();
 
         int userIDNumber = 0;
         bool idProvided = false;
-        string targetUsername = message.sender.Username!;
+        string targetUsername = message.Sender.Username!;
 
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
             if (split[0].StartsWith('#')) idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
-
-            if (!idProvided) { targetUsername = split[0].Replace("#", "").Replace("@", ""); }
+            if (!idProvided) targetUsername = split[0].Replace("#", "").Replace("@", "");
         }
 
-        var a = idProvided ?
-            await BotCore.API.Helix.Users.GetUsersAsync(ids: [userIDNumber.ToString()]) :
-            await BotCore.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
+        GetUsersResponse? a = idProvided
+            ? await BotCore.API.Helix.Users.GetUsersAsync([userIDNumber.ToString()])
+            : await BotCore.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
 
         TwitchLib.Api.Helix.Models.Users.GetUsers.User? u = a.Users.FirstOrDefault();
 
@@ -40,7 +43,7 @@ internal class UserInfo : Command
 
         string generalInfo = GetGeneralInfo(u);
 
-        if (usedArgs.Count == 0) { return generalInfo; }
+        if (usedArgs.Count == 0) return generalInfo;
 
         string color = "";
         string followers = "";
@@ -49,17 +52,13 @@ internal class UserInfo : Command
 
         bool all = usedArgs.TryGetValue("a", out _);
 
-        if (usedArgs.TryGetValue("g", out _) || all)
-        { response += generalInfo + " "; }
+        if (usedArgs.TryGetValue("g", out _) || all) response += generalInfo + " ";
 
-        if (usedArgs.TryGetValue("n", out _))
-        {
-            response += PreviousUsernames(u.Login) + " ";
-        }
+        if (usedArgs.TryGetValue("n", out _)) response += PreviousUsernames(u.Login) + " ";
 
         if (usedArgs.TryGetValue("c", out _) || all)
         {
-            color = await GetColor(u.Id, detailedInfo: !all);
+            color = await GetColor(u.Id, !all);
             response += color + " ";
         }
 
@@ -78,7 +77,7 @@ internal class UserInfo : Command
         if (usedArgs.TryGetValue("s", out _) || all)
         {
             liveInfo = await GetLiveStatus(u.Id);
-            response += (message.sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
+            response += (message.Sender.Privileges >= Privileges.Trusted ? liveInfo[1] : liveInfo[0]) + " ";
         }
 
         return all ? new($"{generalInfo} | {color} | {followers} | {emotes[0]} | {liveInfo[0]}") : response;
@@ -88,7 +87,7 @@ internal class UserInfo : Command
     {
         try
         {
-            var emotes = (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(userID)).ChannelEmotes;
+            ChannelEmote[]? emotes = (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(userID)).ChannelEmotes;
             string[] result = ["no emotes", "no emotes"];
 
             if (emotes.Length <= 0) return result;
@@ -104,12 +103,13 @@ internal class UserInfo : Command
                 string p = emotes.First().Name;
                 int prefixLength = p.Length;
 
-                foreach (var emote in emotes)
+                foreach (ChannelEmote? emote in emotes)
                 {
                     int i = 0;
-                    while (i < prefixLength && i < emote.Name.Length && emote.Name[i] == p[i]) { i++; }
+                    while (i < prefixLength && i < emote.Name.Length && emote.Name[i] == p[i]) i++;
                     prefixLength = i;
                 }
+
                 prefix = p[..prefixLength];
             }
 
@@ -148,7 +148,7 @@ internal class UserInfo : Command
     {
         try
         {
-            var color = await BotCore.API.Helix.Chat.GetUserChatColorAsync([userID]);
+            GetUserChatColorResponse? color = await BotCore.API.Helix.Chat.GetUserChatColorAsync([userID]);
 
             if (color.Data.First().Color.Equals("")) return "color not set";
             string value = color.Data.First().Color;
@@ -167,20 +167,24 @@ internal class UserInfo : Command
         {
             string[] result;
 
-            var liveStatus = await BotCore.API.Helix.Streams.GetStreamsAsync(userIds: [userID]);
+            GetStreamsResponse? liveStatus = await BotCore.API.Helix.Streams.GetStreamsAsync(userIds: [userID]);
 
             TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream? s = liveStatus.Streams.FirstOrDefault();
             if (s != null)
             {
                 string mature = s.IsMature ? " 🔞" : "";
                 TimeSpan durationSpan = DateTime.Now - s.StartedAt.ToLocalTime();
-                string duration = durationSpan.Days > 0 ? durationSpan.ToString(@"d\:hh\:mm\:ss") : durationSpan.ToString(@"hh\:mm\:ss");
-                result = [$"live{mature} {s.GameName}", $"Now {s.Type}{mature} ({duration}) : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers.{mature}"];
+                string duration = durationSpan.Days > 0
+                    ? durationSpan.ToString(@"d\:hh\:mm\:ss")
+                    : durationSpan.ToString(@"hh\:mm\:ss");
+                result =
+                [
+                    $"live{mature} {s.GameName}",
+                    $"Now {s.Type}{mature} ({duration}) : {s.GameName} - \" {s.Title} \" for {s.ViewerCount} viewers.{mature}"
+                ];
             }
-            else
-            {
-                result = ["offline", "offline"];
-            }
+            else result = ["offline", "offline"];
+
             return result;
         }
         catch (Exception ex)

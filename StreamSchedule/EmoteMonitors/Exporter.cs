@@ -13,22 +13,23 @@ internal class Exporter
 {
     private const int maxAttempts = 5;
     private int attempts = 0;
-    
-    internal async Task ExportEmotes(List<Emote> removed, List<Emote> added, int totalCount, EmoteMonitorChannel channel)
+
+    internal async Task ExportEmotes(List<Emote> removed, List<Emote> added, int totalCount,
+        EmoteMonitorChannel channel
+    )
     {
         try
         {
             BotCore.Nlog.Info($"{channel.ChannelName} emotes updated ( {added.Count} added, {removed.Count} removed ) ");
-            
-            channel.ChannelName = (await BotCore.API.Helix.Users.GetUsersAsync(ids: [channel.ChannelID.ToString()])).Users
-                .FirstOrDefault()?.Login ?? channel.ChannelName;
-        
+
+            channel.ChannelName = (await BotCore.API.Helix.Users.GetUsersAsync([channel.ChannelID.ToString()])).Users.FirstOrDefault()?.Login ?? channel.ChannelName;
+
             StringBuilder html = new();
             string chatResult = $"{channel.ChannelName} emotes ";
 
             List<GraphQL.Data.Emote?> removedEmoteDetails = [.. await Task.WhenAll(removed.Select(x => GraphQLClient.GetEmote(x.ID)))];
             List<GraphQL.Data.Emote?> addedEmoteDetails = [.. await Task.WhenAll(added.Select(x => GraphQLClient.GetEmote(x.ID)))];
-        
+
             if (removed.Count == totalCount && added.Count == totalCount)
             {
                 string oldPrefix = removedEmoteDetails[0]?.Prefix ?? "";
@@ -38,10 +39,10 @@ internal class Exporter
                 ExportToChat(channel, chatResult);
                 return;
             }
-        
-            List<Emote> removedDetails = [.. removedEmoteDetails.Select(x => (Emote)x).OrderBy(x =>x.Token)];
-            List<Emote> addedDetails = [.. addedEmoteDetails.Select(x => (Emote)x).OrderBy(x =>x.Token)];
-        
+
+            List<Emote> removedDetails = [.. removedEmoteDetails.Select(x => (Emote)x).OrderBy(x => x.Token)];
+            List<Emote> addedDetails = [.. addedEmoteDetails.Select(x => (Emote)x).OrderBy(x => x.Token)];
+
             if (removedDetails.Count != 0)
             {
                 chatResult += $"{removedDetails.Count} removed 📤 : {string.Join(", ", removedDetails)} ";
@@ -55,7 +56,7 @@ internal class Exporter
                 chatResult += $"{addedDetails.Count} added 📥 : {string.Join(", ", addedDetails)} ";
                 html.Append(string.Format(Templates.EmotesBlock, "Added", string.Join("\n", addedDetails.Select(Conversions.EmoteToHtml))));
             }
-        
+
             chatResult += $" {await ExportToWeb(channel, html.ToString())} ";
             ExportToChat(channel, chatResult);
         }
@@ -66,6 +67,7 @@ internal class Exporter
                 BotCore.Nlog.Error($"emon export for {channel.ChannelName} failed ");
                 return;
             }
+
             BotCore.Nlog.Error($"emon export for {channel.ChannelName} failed {attempts}" + e);
 
             await Task.Delay(25 + attempts * 500);
@@ -76,16 +78,14 @@ internal class Exporter
 
     private static void ExportToChat(EmoteMonitorChannel channelSettings, string content)
     {
-        content += string.Join(" ",
-            channelSettings.UpdateSubscribersUsers.Select(x =>
-                "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
-        BotCore.OutQueuePerChannel[channelSettings.OutputChannelName].Enqueue(new CommandResult(content, reply: false));
+        content += string.Join(" ", channelSettings.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
+        BotCore.OutQueuePerChannel[channelSettings.OutputChannelName].Enqueue(new CommandResult(content, false));
     }
 
     private static async Task<string> ExportToWeb(EmoteMonitorChannel channelSettings, string content)
     {
         string slug = ExportUtils.GetSlug(channelSettings.ChannelName);
-        BotCore.PagesDB.PageContent.Add(new Content()
+        BotCore.PagesDB.PageContent.Add(new()
         {
             EmbeddedStyleName = Templates.EmoteUpdatesStyleName,
             EmbeddedStyleVersion = Templates.EmoteUpdatesStyleVersion,

@@ -15,10 +15,10 @@ internal class GetCommands : Command
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        _ = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
 
         StringBuilder response = new();
-        response.Append(string.Join(", ", Commands.AllCommands.Where(c => c.Privileges <= message.sender.Privileges).Select(c => c.Call)));
+        response.Append(string.Join(", ", Commands.AllCommands.Where(c => c.Privileges <= message.Sender.Privileges).Select(c => c.Call)));
         return Task.FromResult(new CommandResult(response + ". "));
     }
 }

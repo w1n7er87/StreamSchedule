@@ -16,20 +16,18 @@ internal class AddStream : Command
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = message.content.Split(" ");
-        if (split.Length < 2) { return Task.FromResult(Utils.Responses.Fail); }
+        string[] split = message.Content.Split(" ");
+        if (split.Length < 2) return Task.FromResult(Utils.Responses.Fail);
 
-        if (!DateTime.TryParseExact(split[0], _inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out var temp))
-        {
-            return Task.FromResult(Utils.Responses.Fail + "bad date ");
-        }
+        if (!DateTime.TryParseExact(split[0], _inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out DateTime temp)) return Task.FromResult(Utils.Responses.Fail + "bad date ");
+        
         temp = temp.ToUniversalTime();
 
         Data.Models.Stream stream = new()
         {
             StreamDate = DateOnly.FromDateTime(temp),
             StreamTime = TimeOnly.FromDateTime(temp),
-            StreamTitle = message.content[(split[0].Length + 1)..]
+            StreamTitle = message.Content[(split[0].Length + 1)..]
         };
 
         Data.Models.Stream? s = BotCore.DBContext.Streams.FirstOrDefault(x => x.StreamDate == stream.StreamDate);
@@ -43,6 +41,7 @@ internal class AddStream : Command
             s.StreamTime = stream.StreamTime;
             s.StreamTitle = stream.StreamTitle;
         }
+
         BotCore.DBContext.SaveChanges();
 
         return Task.FromResult(Utils.Responses.Ok);

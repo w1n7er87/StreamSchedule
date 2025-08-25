@@ -20,7 +20,10 @@ public class User
             {
                 Id = userIDNumber,
                 Username = username,
-                Privileges = (isVip, isMod) switch { (true, _) => Privileges.Trusted, (_ , true) => Privileges.Mod, _ => Privileges.None},
+                Privileges = (isVip, isMod) switch
+                {
+                    (true, _) => Privileges.Trusted, (_, true) => Privileges.Mod, _ => Privileges.None
+                }
             };
 
             context.Users.Add(u);
@@ -42,6 +45,7 @@ public class User
             uDb.PreviousUsernames.Add(uDb.Username!);
             uDb.Username = username;
         }
+
         return uDb;
     }
 
@@ -57,11 +61,12 @@ public class User
 
         if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(id))
         {
-            user = new User();
+            user = new();
             return false;
         }
 
-        User? u = BotCore.DBContext.Users.FirstOrDefault(x => id == null ? x.Username == username : x.Id == int.Parse(id));
+        User? u = BotCore.DBContext.Users.FirstOrDefault(x =>
+            id == null ? x.Username == username : x.Id == int.Parse(id));
 
         if (u is not null)
         {
@@ -79,7 +84,7 @@ public class User
             return true;
         }
 
-        user = new User();
+        user = new();
         return false;
     }
 }

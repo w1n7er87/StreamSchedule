@@ -6,7 +6,7 @@ public static class Templates
 {
     public const string Divider = """
                                   <div class="verticalBar"></div>
-                                  
+
                                   """;
 
     public const string EmotesBlock = """
@@ -14,17 +14,17 @@ public static class Templates
                                         <p class="emoteGroupName"> {0} </p>
                                         {1}
                                       </div>
-                                      
+
                                       """;
 
     public const string EmoteUpdatesSummary = """
                                               <a class="header" href="https://twitch.tv/{0}"> {0} </a> 's emotes updated
                                               """;
-    
+
     public const string EmoteUpdatesStyleName = "EmoteUpdates";
     public const int EmoteUpdatesStyleVersion = 2;
-    
-    public  static readonly EmbeddedStyle EmoteUpdatesStyle = new()
+
+    public static readonly EmbeddedStyle EmoteUpdatesStyle = new()
     {
         Style = """
                 

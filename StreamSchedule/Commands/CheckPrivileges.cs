@@ -15,13 +15,13 @@ internal class CheckPrivileges : Command
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = message.content.Split(' ');
-        User target = message.sender;
+        string[] split = message.Content.Split(' ');
+        User target = message.Sender;
 
-        if (!string.IsNullOrWhiteSpace(split[0]) && message.sender.Privileges >= Privileges.Trusted)
-        {
+        if (!string.IsNullOrWhiteSpace(split[0]) && message.Sender.Privileges >= Privileges.Trusted)
             target = User.TryGetUser(split[0], out User t) ? t : target;
-        }
-        return Task.FromResult(new CommandResult($"{target.Username} is {PrivilegeUtils.PrivilegeToString(target.Privileges)}", false));
+        
+        return Task.FromResult(
+            new CommandResult($"{target.Username} is {PrivilegeUtils.PrivilegeToString(target.Privileges)}", false));
     }
 }

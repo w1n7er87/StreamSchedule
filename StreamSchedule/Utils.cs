@@ -9,7 +9,8 @@ internal static class Utils
 {
     private const string _commandPrefixes = "!$?@#%^&`~><¡¿*-+_=;:'\"\\|/,.？！[]{}()";
 
-    private static readonly List<Codepoint> _emojiSpecialCharacters = [Emoji.ZeroWidthJoiner, Emoji.ObjectReplacementCharacter, Emoji.Keycap, Emoji.VariationSelector];
+    private static readonly List<Codepoint> _emojiSpecialCharacters =
+        [Emoji.ZeroWidthJoiner, Emoji.ObjectReplacementCharacter, Emoji.Keycap, Emoji.VariationSelector];
 
     internal static bool ContainsPrefix(ReadOnlySpan<Codepoint> input, out ReadOnlySpan<Codepoint> prefixTrimmedInput)
     {
@@ -47,8 +48,10 @@ internal static class Utils
         {
             string tt = term.Term;
             if (!term.Noreplace) tt = tt.Replace("_", " ");
-            result = result.Replace(tt, term.Alternative, term.Anycase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+            result = result.Replace(tt, term.Alternative,
+                term.Anycase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
+
         return result;
     }
 

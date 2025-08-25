@@ -2,6 +2,7 @@
 using StreamSchedule.GraphQL;
 using StreamSchedule.GraphQL.Data;
 using TwitchLib.Client.Models;
+using Emote = StreamSchedule.GraphQL.Data.Emote;
 
 namespace StreamSchedule.Commands;
 
@@ -17,7 +18,7 @@ internal class GetEmotesFromMessage : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        _ = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        _ = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
 
         List<string?> emoteIDs;
         ChatMessage? reply = null;
@@ -28,17 +29,19 @@ internal class GetEmotesFromMessage : Command
         }
         else
         {
-            if (!string.IsNullOrEmpty(message.replyID)) reply = BotCore.MessageCache.Find(x => x.Id == message.replyID);
-            
-            if (reply is null)emoteIDs = await GraphQLClient.GetEmoteIDsFromMessage(usedArgs.TryGetValue("messageid", out string? passedMessageID) ? passedMessageID : message.replyID ?? message.ID);
+            if (!string.IsNullOrEmpty(message.ReplyID)) reply = BotCore.MessageCache.Find(x => x.Id == message.ReplyID);
+
+            if (reply is null)
+                emoteIDs = await GraphQLClient.GetEmoteIDsFromMessage(usedArgs.TryGetValue("messageid", out string? passedMessageID)
+                        ? passedMessageID
+                        : message.ReplyID ?? message.ID);
             else emoteIDs = [.. reply.EmoteSet.Emotes.Select(e => e.Id)];
-            
-            if (emoteIDs.Count == 0) { return "no emotes found"; }
+            if (emoteIDs.Count == 0) return "no emotes found";
         }
 
         List<string> channels = [];
 
-        List<Task<GraphQL.Data.Emote?>> tasks = [];
+        List<Task<Emote?>> tasks = [];
 
         foreach (string? emoteID in emoteIDs.Distinct())
         {
@@ -47,7 +50,7 @@ internal class GetEmotesFromMessage : Command
         }
 
         await Task.WhenAll(tasks);
-        foreach (var task in tasks)
+        foreach (Task<Emote?> task in tasks)
         {
             if (task.Result is null) { channels.Add("Erm"); continue; }
 
@@ -64,7 +67,7 @@ internal class GetEmotesFromMessage : Command
 
             channels.Add($"( {task.Result.Token} @{task.Result.Owner.Login} {subTierOrBitPrice} {Helpers.EmoteTypeToString(task.Result.Type)} {artist} )");
         }
-        
+
         return string.Join(" ", channels);
     }
 }

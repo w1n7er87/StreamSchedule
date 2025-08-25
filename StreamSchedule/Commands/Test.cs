@@ -20,41 +20,37 @@ internal class Test : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        List<string> emoteIDs = BotCore.MessageCache.FirstOrDefault(x => x.Id == message.ID)?.EmoteSet.Emotes
-            .Select(x => x.Id).ToList() ?? [];
+        List<string> emoteIDs = BotCore.MessageCache.FirstOrDefault(x => x.Id == message.ID)?.EmoteSet.Emotes.Select(x => x.Id).ToList() ?? [];
 
         List<Task<GraphQL.Data.Emote?>> emoteTasks = [.. emoteIDs.Select(GraphQLClient.GetEmote)];
-        List<GraphQL.Data.Emote?> emotes = [.. (await Task.WhenAll(emoteTasks))];
-        
-        string slug = ExportUtils.GetSlug(message.channelName);
+        List<GraphQL.Data.Emote?> emotes = [.. await Task.WhenAll(emoteTasks)];
+
+        string slug = ExportUtils.GetSlug(message.ChannelName);
         StringBuilder html = new();
 
         int count = emotes.Count - Random.Shared.Next(emotes.Count);
-        
-        html.Append(string.Format(Templates.EmotesBlock, "Added",
-            string.Join("\n", emotes.Take(count).Select(x => Conversions.EmoteToHtml(x) ?? ""))));
-        
+
+        html.Append(string.Format(Templates.EmotesBlock, "Added", string.Join("\n", emotes.Take(count).Select(x => Conversions.EmoteToHtml(x) ?? ""))));
+
         html.Append(Templates.Divider);
-        
-        html.Append(string.Format(Templates.EmotesBlock, "Removed",
-            string.Join("\n",
-                emotes.Take(new Range(count, emotes.Count)).Select(x => Conversions.EmoteToHtml(x) ?? ""))));
-        
-        _ = await BotCore.PagesDB.PageContent.AddAsync(new Content()
+
+        html.Append(string.Format(Templates.EmotesBlock, "Removed", string.Join("\n", emotes.Take(new Range(count, emotes.Count)).Select(x => Conversions.EmoteToHtml(x) ?? ""))));
+
+        _ = await BotCore.PagesDB.PageContent.AddAsync(new()
         {
             EmbeddedStyleName = Templates.EmoteUpdatesStyleName,
             EmbeddedStyleVersion = Templates.EmoteUpdatesStyleVersion,
             CreatedAt = DateTime.UtcNow,
             HtmlContent = html.ToString(),
             Slug = slug,
-            Summary = string.Format(Templates.EmoteUpdatesSummary, message.sender.Username),
-            Title = message.sender.Username
+            Summary = string.Format(Templates.EmoteUpdatesSummary, message.Sender.Username),
+            Title = message.Sender.Username
         });
-        
+
         await BotCore.PagesDB.SaveChangesAsync();
-        
+
         BotCore.Nlog.Info(ExportUtils.EmotesUrlBase + slug);
 
-        return new CommandResult("");
+        return new("");
     }
 }

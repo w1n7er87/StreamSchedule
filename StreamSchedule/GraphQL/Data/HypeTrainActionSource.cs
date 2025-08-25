@@ -4,5 +4,5 @@ public enum HypeTrainActionSource
 {
     UNKNOWN,
     BITS,
-    SUBS,
+    SUBS
 }

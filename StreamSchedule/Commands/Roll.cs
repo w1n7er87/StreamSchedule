@@ -14,8 +14,8 @@ internal class Roll : Command
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string content = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
-            
+        string content = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
+
         bool verbose = usedArgs.TryGetValue("v", out _);
 
         List<long> results = [];

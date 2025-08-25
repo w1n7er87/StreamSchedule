@@ -17,11 +17,13 @@ internal class EvaluateUsers : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string text = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        string text = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
 
         string[] split = text.Split(' ');
 
-        float scoreCutoff = usedArgs.TryGetValue("s", out string? cutoff) ? float.TryParse(cutoff, out scoreCutoff) ? scoreCutoff : DefaultCutoffScore : DefaultCutoffScore;
+        float scoreCutoff = usedArgs.TryGetValue("s", out string? cutoff)
+            ? float.TryParse(cutoff, out scoreCutoff) ? scoreCutoff : DefaultCutoffScore
+            : DefaultCutoffScore;
 
         CommandResult result = new();
 
@@ -33,7 +35,9 @@ internal class EvaluateUsers : Command
         else
         {
             string targetUsername = split[0];
-            result += await TryUpdateSingle(targetUsername, scoreCutoff) ? $"{targetUsername}'s privileges have been updated ({scoreCutoff})" : $"{targetUsername}'s privileges nave not been updated ({scoreCutoff})";
+            result += await TryUpdateSingle(targetUsername, scoreCutoff)
+                ? $"{targetUsername}'s privileges have been updated ({scoreCutoff})"
+                : $"{targetUsername}'s privileges nave not been updated ({scoreCutoff})";
         }
         return result;
     }
@@ -42,8 +46,8 @@ internal class EvaluateUsers : Command
     {
         int promoted = 0;
         int demoted = 0;
-        
-        await foreach (var user in BotCore.DBContext.Users.AsAsyncEnumerable())
+
+        await foreach (User? user in BotCore.DBContext.Users.AsAsyncEnumerable())
         {
             if (user.Privileges == Privileges.Banned) continue;
 
@@ -61,6 +65,7 @@ internal class EvaluateUsers : Command
                     break;
             }
         }
+
         await BotCore.DBContext.SaveChangesAsync();
         return (promoted, demoted);
     }

@@ -5,19 +5,18 @@ namespace StreamSchedule.GraphQL;
 
 internal static class Queries
 {
+    internal static GraphQLRequest IsUsernameAvailable(string username) => new(_IsUsernameAvailableQuery, new { login = username });
 
-    internal static GraphQLRequest IsUsernameAvailable(string username) => new GraphQLRequest(_IsUsernameAvailableQuery, new {login = username});
-
-    private static readonly GraphQLQuery _IsUsernameAvailableQuery = new GraphQLQuery(
+    private static readonly GraphQLQuery _IsUsernameAvailableQuery = new(
         """
         query UsernameValidator_User($login: String!) {
         	isUsernameAvailable(username:$login)
         }
         """);
-    
-    internal static GraphQLRequest RequestChattersByID(string userID) => new GraphQLRequest(_chattersByIDQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetChatters");
 
-    private static readonly GraphQLQuery _chattersByIDQuery = new GraphQLQuery(
+    internal static GraphQLRequest RequestChattersByID(string userID) => new(_chattersByIDQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetChatters");
+
+    private static readonly GraphQLQuery _chattersByIDQuery = new(
         """
         query GetChatters($id: ID, $type: UserLookupType) {
         	user(id: $id, lookupType: $type) {
@@ -33,9 +32,9 @@ internal static class Queries
         }
         """);
 
-    internal static GraphQLRequest RequestChattersByLogin(string userLogin) => new GraphQLRequest(_chattersByLoginQuery, new { login = userLogin, type = Enum.GetName(UserLookupType.ALL) }, "GetChatters");
+    internal static GraphQLRequest RequestChattersByLogin(string userLogin) => new(_chattersByLoginQuery, new { login = userLogin, type = Enum.GetName(UserLookupType.ALL) }, "GetChatters");
 
-    private static readonly GraphQLQuery _chattersByLoginQuery = new GraphQLQuery(
+    private static readonly GraphQLQuery _chattersByLoginQuery = new(
         """
         query GetChatters($login: String, $type: UserLookupType) {
         	user(login: $login, lookupType: $type) {
@@ -51,9 +50,9 @@ internal static class Queries
         }
         """);
 
-    internal static GraphQLRequest RequestChatSettings(string userID) => new GraphQLRequest(_userRulesQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetRules");
+    internal static GraphQLRequest RequestChatSettings(string userID) => new(_userRulesQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetRules");
 
-    private static readonly GraphQLQuery _userRulesQuery = new GraphQLQuery(
+    private static readonly GraphQLQuery _userRulesQuery = new(
         """
         query GetRules($id: ID, $type: UserLookupType) {
             user(id:$id, lookupType: $type) {
@@ -65,9 +64,9 @@ internal static class Queries
         }
         """);
 
-    internal static GraphQLRequest RequestEmote(string emoteID) => new GraphQLRequest(_emoteQuery, new { id = emoteID }, "GetEmote");
+    internal static GraphQLRequest RequestEmote(string emoteID) => new(_emoteQuery, new { id = emoteID }, "GetEmote");
 
-    private static readonly GraphQLQuery _emoteQuery = new GraphQLQuery(
+    private static readonly GraphQLQuery _emoteQuery = new(
         """
         query GetEmote($id: ID!) {
         	emote(id: $id) {
@@ -93,9 +92,9 @@ internal static class Queries
         }
         """);
 
-    internal static GraphQLRequest RequestEmotesInMessage(string messageID) => new GraphQLRequest(_emotesInMessageQuery, new { id = messageID }, "GetEmotesInMessage");
+    internal static GraphQLRequest RequestEmotesInMessage(string messageID) => new(_emotesInMessageQuery, new { id = messageID }, "GetEmotesInMessage");
 
-    private static readonly GraphQLQuery _emotesInMessageQuery = new GraphQLQuery(
+    private static readonly GraphQLQuery _emotesInMessageQuery = new(
         """
         query GetEmotesInMessage($id: ID!) {
             message(id: $id) {
@@ -112,9 +111,9 @@ internal static class Queries
         }
         """);
 
-    internal static GraphQLRequest RequestUserByID(string userID) => new GraphQLRequest(_userByIDQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetUser");
+    internal static GraphQLRequest RequestUserByID(string userID) => new(_userByIDQuery, new { id = userID, type = Enum.GetName(UserLookupType.ALL) }, "GetUser");
 
-    private static readonly GraphQLQuery _userByIDQuery = new GraphQLQuery(
+    private static readonly GraphQLQuery _userByIDQuery = new(
         """
         query GetUser($id:ID!, $type: UserLookupType) {
             userResultByID(id: $id) {
@@ -237,9 +236,9 @@ internal static class Queries
         }
         """);
 
-    internal static GraphQLRequest RequestUserByLogin(string userLogin) => new GraphQLRequest(_userByLoginQuery, new { login = userLogin, type = Enum.GetName(UserLookupType.ALL) }, "GetUser");
+    internal static GraphQLRequest RequestUserByLogin(string userLogin) => new(_userByLoginQuery, new { login = userLogin, type = Enum.GetName(UserLookupType.ALL) }, "GetUser");
 
-    private static readonly GraphQLQuery _userByLoginQuery = new GraphQLQuery(
+    private static readonly GraphQLQuery _userByLoginQuery = new(
         """
         query GetUser($login:String!, $type: UserLookupType) {
             isUsernameAvailable(username: $login)

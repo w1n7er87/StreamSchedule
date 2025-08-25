@@ -29,16 +29,16 @@ public static class Conversions
             _ => "rarity0"
         };
     }
-    
+
     public static string EmoteToHtml(Emote emote)
     {
         string rarity = EmoteCostToHtmlRarityClass(emote.Cost);
         return $"""
-               <div class="emote">
-                   <p class="emoteTier {rarity}">{emote.Cost}</p>
-                   <img class="emoteImage {rarity}" alt="{emote.Token}" src="{emote.URL}"/>
-                   <p class="emoteText">{emote.Token}</p>
-               </div>
-               """;
+                <div class="emote">
+                    <p class="emoteTier {rarity}">{emote.Cost}</p>
+                    <img class="emoteImage {rarity}" alt="{emote.Token}" src="{emote.URL}"/>
+                    <p class="emoteText">{emote.Token}</p>
+                </div>
+                """;
     }
 }

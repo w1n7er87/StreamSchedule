@@ -10,16 +10,16 @@ internal class TextCommand : ICommand
     public string Name { get; set; }
     public string Content { get; set; }
     public Privileges Privileges { get; set; }
-    
-    [Column("Aliases")]
-    public List<string>? StoredAliases { get; set; }
+
+    [Column("Aliases")] public List<string>? StoredAliases { get; set; }
 
     [NotMapped]
     public List<string> Aliases
     {
-        get {
+        get
+        {
             if (StoredAliases is not null) return StoredAliases;
-            StoredAliases = new List<string>();
+            StoredAliases = new();
             return StoredAliases;
         }
         set => StoredAliases = value;
@@ -33,20 +33,22 @@ internal class TextCommand : ICommand
 
     public Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] replacement = message.content.Split(' ', StringSplitOptions.TrimEntries);
+        string[] replacement = message.Content.Split(' ', StringSplitOptions.TrimEntries);
         int targetIndex = 0;
-        
+
         Span<string> split = Content.Split('`').AsSpan();
         for (int i = 0; i < split.Length; i++)
         {
             if (!split[i].StartsWith('/')) continue;
-            
-            split[i] = replacement.Length == 0 || replacement.Length - 1 < targetIndex || string.IsNullOrWhiteSpace(replacement[targetIndex])
+
+            split[i] = replacement.Length == 0 || replacement.Length - 1 < targetIndex ||
+                       string.IsNullOrWhiteSpace(replacement[targetIndex])
                 ? split[i].Replace("/", "")
                 : replacement[targetIndex][..Math.Min(replacement[targetIndex].Length, 50)];
-            
+
             targetIndex = Math.Min(replacement.Length - 1, targetIndex + 1);
         }
-        return Task.FromResult(new CommandResult(string.Join(null, split), reply:false, requiresFilter:true));
+
+        return Task.FromResult(new CommandResult(string.Join(null, split), false, true));
     }
 }

@@ -15,5 +15,5 @@ public enum EmoteType
     MEGA_COMMERCE,
     ARCHIVE,
     FOLLOWER,
-    UNKNOWN,
+    UNKNOWN
 }

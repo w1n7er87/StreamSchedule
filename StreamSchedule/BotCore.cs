@@ -27,7 +27,7 @@ internal static class BotCore
     public static bool Silent { get; set; }
     private static LiveStreamMonitorService Monitor { get; set; } = null!;
     private static Dictionary<string, bool> ChannelLiveState { get; set; } = null!;
-    
+
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
     public static int MessageLengthLimit = 270;
@@ -35,7 +35,7 @@ internal static class BotCore
     private static long _lastSave;
 
     public const string BotID = "871501999";
-    
+
     public static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
 
     private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
@@ -69,7 +69,7 @@ internal static class BotCore
         Task.Run(() => ConfigLiveMonitorAsync(joinedUsers.Select(u => u.Username).ToList()!));
 
         ChannelLiveState = [];
-        foreach (User user in joinedUsers) 
+        foreach (User user in joinedUsers)
         {
             OutQueuePerChannel.Add(user.Username!, []);
             ChannelLiveState.Add(user.Username!, false);
@@ -78,7 +78,7 @@ internal static class BotCore
 
         Commands.Commands.InitializeCommands([.. joinedUsers.Select(u => u.Username!)], DBContext);
 
-        ChatClient = new TwitchClient();
+        ChatClient = new();
         ChatClient.Initialize(new(Credentials.username, Credentials.oauth), [.. joinedUsers.Select(u => u.Username!)]);
         ChatClient.OnUnaccountedFor += ChatClientOnUnaccounted;
         ChatClient.OnJoinedChannel += ChatClientOnJoinedChannel;
@@ -92,7 +92,7 @@ internal static class BotCore
 
         _ = Monitoring.Start;
         _ = Browsing.Browsing.Start;
-        
+
         ExportUtils.UpdateStyles();
     }
 
@@ -100,14 +100,14 @@ internal static class BotCore
     {
         long start = Stopwatch.GetTimestamp();
 
-        if(Stopwatch.GetElapsedTime(_lastSave).TotalSeconds >= 10)
+        if (Stopwatch.GetElapsedTime(_lastSave).TotalSeconds >= 10)
         {
             _lastSave = start;
             await DBContext.SaveChangesAsync();
         }
 
         User userSent = User.SyncToDb(e.ChatMessage.UserId, e.ChatMessage.Username, e.ChatMessage.UserType >= TwitchLib.Client.Enums.UserType.Moderator, e.ChatMessage.IsVip, DBContext);
-        
+
         if (e.ChatMessage.RoomId.Equals("85498365"))
         {
             if (ChannelLiveState[e.ChatMessage.Channel])
@@ -120,7 +120,7 @@ internal static class BotCore
         if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
 
         if (ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges < Privileges.Mod) return;
-        
+
         ReadOnlySpan<Codepoint> messageAsCodepoints = [.. e.ChatMessage.Message.Codepoints()];
 
         string? replyID = null;
@@ -145,27 +145,27 @@ internal static class BotCore
 
         string trimmedMessage = messageAsCodepoints.ToStringRepresentation();
         string requestedCommand = trimmedMessage.Split(' ')[0].ToLower();
-        
+
         ICommand? cc = Commands.Commands.AllCommands.FirstOrDefault(x => x.Call == requestedCommand || x.Aliases.Contains(requestedCommand));
         if (cc is null) return;
         if (cc.LastUsedOnChannel[e.ChatMessage.Channel] + cc.Cooldown > DateTime.Now && userSent.Privileges < Privileges.Mod) return;
         if (userSent.Privileges < cc.Privileges) return;
-        
+
         trimmedMessage = trimmedMessage[requestedCommand.Length..].Replace("\U000e0000", "").Trim();
-        
+
         if (userSent.Privileges < Privileges.Mod) cc.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
-        
+
         Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{cc.Call}]:[{trimmedMessage}]");
-        
+
         start = Stopwatch.GetTimestamp();
-        
+
         CommandResult response = await cc.Handle(new(userSent, trimmedMessage, e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
-        
+
         Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{response}]");
-        
+
         if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
-        
-        OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new OutgoingMessage(response, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id));
+
+        OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new(response, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id));
     }
 
     #region EVENTS
@@ -182,41 +182,32 @@ internal static class BotCore
         Nlog.Info($"{args.Channel} went offline");
     }
 
-    private static void ChatClientOnConnected(object? sender, OnConnectedArgs e)
-    {
-        Nlog.Info($"{e.BotUsername} Connected ");
-    }
+    private static void ChatClientOnConnected(object? sender, OnConnectedArgs e) { Nlog.Info($"{e.BotUsername} Connected "); }
 
     private static void ChatClientOnGifted(object? sender, OnGiftedSubscriptionArgs e)
     {
         if (e.GiftedSubscription.MsgParamRecipientUserName.Equals(ChatClient.TwitchUsername.ToLower()))
-            OutQueuePerChannel[e.Channel].Enqueue(new CommandResult($"Thanks for the sub, {e.GiftedSubscription.Login} PogChamp", reply: false));
+            OutQueuePerChannel[e.Channel].Enqueue(new CommandResult($"Thanks for the sub, {e.GiftedSubscription.Login} PogChamp", false));
     }
 
-    private static void ChatClientOnJoinedChannel(object? sender, OnJoinedChannelArgs e)
-    {
-        Nlog.Info($"Joined {e.Channel}");
-    }
+    private static void ChatClientOnJoinedChannel(object? sender, OnJoinedChannelArgs e) { Nlog.Info($"Joined {e.Channel}"); }
 
-    private static void ChatClientOnRateLimit(object? sender, OnRateLimitArgs e)
-    {
-        Nlog.Info($"rate limited {e.Message}");
-    }
+    private static void ChatClientOnRateLimit(object? sender, OnRateLimitArgs e) { Nlog.Info($"rate limited {e.Message}"); }
 
     private static void ChatClientOnUnaccounted(object? sender, OnUnaccountedForArgs e)
     {
         if (e.RawIRC.Contains("automod", StringComparison.InvariantCultureIgnoreCase) || e.RawIRC.Contains("moderation", StringComparison.InvariantCultureIgnoreCase))
         {
             Nlog.Info($"{e.RawIRC} {e.Channel} {e.Location}");
-            OutQueuePerChannel[e.Channel].Enqueue(new CommandResult("moderation 1984 ", reply: false));
+            OutQueuePerChannel[e.Channel].Enqueue(new CommandResult("moderation 1984 ", false));
             return;
         }
+
         Nlog.Info($"[{e.Channel}] [{e.RawIRC}]");
     }
 
     #endregion EVENTS
-
-
+    
     private static async Task OutPump(User channel)
     {
         bool sameMessageFlip = false;
@@ -224,10 +215,15 @@ internal static class BotCore
 
         while (true)
         {
-            if (OutQueuePerChannel[channel.Username!].Count <= 0) { await Task.Delay(25); continue; }
+            if (OutQueuePerChannel[channel.Username!].Count <= 0)
+            {
+                await Task.Delay(25);
+                continue;
+            }
 
             OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
-            _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass, response.Result.requiresFilter);
+            _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass,
+                response.Result.requiresFilter);
             sameMessageFlip = !sameMessageFlip;
             await Task.Delay(1100);
             OutQueuePerChannel[channel.Username!].Dequeue();
@@ -239,7 +235,7 @@ internal static class BotCore
         string[] parts = requiresFilter
             ? Utils.Filter(message).Split(' ', StringSplitOptions.TrimEntries)
             : message.Split(' ', StringSplitOptions.TrimEntries);
-        
+
         string accumulatedBelowLimit = "";
 
         foreach (string part in parts)
@@ -258,6 +254,7 @@ internal static class BotCore
                     accumulatedBelowLimit = "";
                     await Task.Delay(1100);
                 }
+
                 SendShortMessage(part);
                 await Task.Delay(1100);
                 continue;

@@ -6,5 +6,5 @@ public enum GetUserErrorReason
     DMCA,
     TOS_INDEFINITE,
     TOS_TEMPORARY,
-    UNKNOWN,
+    UNKNOWN
 }

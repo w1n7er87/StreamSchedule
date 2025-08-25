@@ -8,15 +8,18 @@ namespace StreamSchedule.VedalPlush;
 public static class VedalPlushClient
 {
     private const string Endpoint = "https://junipersales.myshopify.com/api/2025-01/graphql";
-    private static readonly HttpClient httpClient = new(new SocketsHttpHandler() { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
+
+    private static readonly HttpClient httpClient = new(new SocketsHttpHandler()
+        { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
+
     private static readonly GraphQLHttpClient client;
 
     static VedalPlushClient()
     {
         httpClient.DefaultRequestHeaders.Add("x-shopify-storefront-access-token", Credentials.shopifyAccessToken);
-        client = new GraphQLHttpClient(Endpoint, new NewtonsoftJsonSerializer(), httpClient);
+        client = new(Endpoint, new NewtonsoftJsonSerializer(), httpClient);
     }
-    
+
     internal static async Task<Response?> GetPlushCount()
     {
         try
@@ -30,11 +33,14 @@ public static class VedalPlushClient
             return null;
         }
     }
-    
-    private static GraphQLRequest GetPlushCountRequest() => new GraphQLRequest(GetPlushCountQuery,
-        new { id = "gid://shopify/Product/8020222607551" }, operationName: "");
-    
-    private static readonly GraphQLQuery GetPlushCountQuery = new GraphQLQuery(
+
+    private static GraphQLRequest GetPlushCountRequest()
+    {
+        return new(GetPlushCountQuery,
+            new { id = "gid://shopify/Product/8020222607551" }, "");
+    }
+
+    private static readonly GraphQLQuery GetPlushCountQuery = new(
         """
             query ($id:ID!)  { node (id: $id) { __typename, ...ProductFragment } }
                 fragment MetafieldWithReferenceFragment on Metafield  {key,type,value},

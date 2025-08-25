@@ -1,7 +1,6 @@
 ﻿namespace StreamSchedule.GraphQL.Data;
 
-public record User
-(
+public record User(
     string? Login,
     string? Id,
     string? ChatColor,
@@ -15,5 +14,4 @@ public record User
     ChatSettings? ChatSettings,
     DateTime? CreatedAt,
     DateTime? DeletedAt,
-    DateTime? UpdatedAt
-);
+    DateTime? UpdatedAt);

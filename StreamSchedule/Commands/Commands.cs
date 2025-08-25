@@ -9,7 +9,7 @@ internal static class Commands
     private static List<Type> CommandClasses => [.. Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(Command)))];
 
     public static readonly List<ICommand> AllCommands = [];
-    
+
     internal static string RetrieveArguments(string[] args, string input, out Dictionary<string, string> usedArgs)
     {
         usedArgs = [];
@@ -24,6 +24,7 @@ internal static class Commands
                 input = input.Replace(ss, "", StringComparison.InvariantCultureIgnoreCase);
             }
         }
+
         return input.TrimStart();
     }
 
@@ -32,22 +33,23 @@ internal static class Commands
         foreach (Type c in CommandClasses)
         {
             Command currentCommandInstance = (Command)Activator.CreateInstance(c)!;
-            
+
             channels.ForEach(x => currentCommandInstance.LastUsedOnChannel.Add(x, DateTime.Now));
 
             CommandAlias? alias = context.CommandAliases.FirstOrDefault(x => x.CommandName == currentCommandInstance.Call);
-            
+
             if (alias is null)
             {
-                alias = new CommandAlias() { CommandName = currentCommandInstance.Call.ToLower() , Aliases = [] };
+                alias = new() { CommandName = currentCommandInstance.Call.ToLower(), Aliases = [] };
                 context.Add(alias);
                 context.SaveChanges();
             }
+
             currentCommandInstance.Aliases = alias.Aliases;
-            
+
             AllCommands.Add(currentCommandInstance);
         }
-        
+
         foreach (TextCommand tc in context.TextCommands.ToList())
         {
             channels.ForEach(x => tc.LastUsedOnChannel.Add(x, DateTime.UtcNow));
@@ -62,6 +64,7 @@ internal static class Commands
             if (c.Call.Equals(alias, StringComparison.OrdinalIgnoreCase)) return false;
             if (c.Aliases.Contains(alias)) return false;
         }
+
         return true;
     }
 }

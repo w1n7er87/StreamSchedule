@@ -7,5 +7,5 @@ public enum HypeTrainDifficulty
     HARD,
     SUPER_HARD,
     INSANE,
-    UNKNOWN,
+    UNKNOWN
 }

@@ -14,7 +14,7 @@ internal class Say : Command
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string content = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        string content = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
         return Task.FromResult(new CommandResult(content, false, usedArgs.TryGetValue("f", out _)));
     }
 }

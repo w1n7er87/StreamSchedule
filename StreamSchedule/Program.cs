@@ -13,10 +13,7 @@ public static class Program
 
     private static void Main(string[] args)
     {
-        AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
-        {
-            logger.Fatal(e.ExceptionObject.ToString());
-        };
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) => logger.Fatal(e.ExceptionObject.ToString());
 
         if (EF.IsDesignTime)
         {
@@ -27,17 +24,14 @@ public static class Program
         try
         {
             string pagesDBLocation = Environment.GetEnvironmentVariable("STREAM_SCHEDULE_PAGES", EnvironmentVariableTarget.User) ?? "";
-            
+
             int[] channelIDs = [85498365, 78135490, 871501999];
 
-            DatabaseContext dbContext = new DatabaseContext(new DbContextOptionsBuilder<DatabaseContext>()
-                .UseSqlite("Data Source=StreamSchedule.data").Options);
-            
+            DatabaseContext dbContext = new(new DbContextOptionsBuilder<DatabaseContext>().UseSqlite("Data Source=StreamSchedule.data").Options);
             dbContext.Database.EnsureCreated();
 
-            PagesContext pagesContext = new PagesContext(new DbContextOptionsBuilder<PagesContext>()
-                .UseSqlite($"Data Source={pagesDBLocation}").Options);
-            
+            PagesContext pagesContext = new(new DbContextOptionsBuilder<PagesContext>().UseSqlite($"Data Source={pagesDBLocation}").Options);
+
             List<User> JoinedUsers = [];
             JoinedUsers.AddRange(channelIDs.Select(id => dbContext.Users.Find(id)!));
             BotCore.Init(JoinedUsers, dbContext, logger, pagesContext);

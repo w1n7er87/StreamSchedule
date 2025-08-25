@@ -14,14 +14,17 @@ internal class Helps : Command
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = message.content.Split(' ');
-        if (split.Length < 1) { return Task.FromResult(new CommandResult(this.Help)); }
+        string[] split = message.Content.Split(' ');
+        if (split.Length < 1) return Task.FromResult(new CommandResult(Help));
 
         string requestedCommand = split[0].ToLower();
 
-        ICommand? c = Commands.AllCommands.FirstOrDefault(x => x.Call.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase) || x.Aliases.Contains(requestedCommand));
-        if(c is null) return Task.FromResult(new CommandResult(this.Help));
+        ICommand? c = Commands.AllCommands.FirstOrDefault(x =>
+            x.Call.Equals(requestedCommand, StringComparison.OrdinalIgnoreCase) ||
+            x.Aliases.Contains(requestedCommand));
         
+        if (c is null) return Task.FromResult(new CommandResult(Help));
+
         string aliases = c.Aliases.Count != 0 ? $"( {string.Join(" , ", c.Aliases)} )" : "";
         string args = c.Arguments is not null ? $"args: {string.Join(", ", c.Arguments)}" : "";
         string cd = $"cooldown: {c.Cooldown.TotalSeconds}s";

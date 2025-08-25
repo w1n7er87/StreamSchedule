@@ -15,7 +15,7 @@ internal class Permit : Command
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string[] split = Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs).Split(" ", StringSplitOptions.TrimEntries);
+        string[] split = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs).Split(" ", StringSplitOptions.TrimEntries);
         CommandResult result = new("");
 
         if (split.Length < 1) return Task.FromResult(result + "no term provided");

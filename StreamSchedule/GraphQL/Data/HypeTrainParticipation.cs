@@ -16,15 +16,15 @@ public record HypeTrainParticipation(HypeTrainAction? Action, HypeTrainActionSou
             HypeTrainAction.POLLS => "other bits",
             HypeTrainAction.BITS_ON_EXTENSION => "extensions",
             HypeTrainAction.UNKNOWN => "unknown",
-            _ or null => "",
+            _ or null => ""
         };
-        
+
         string source = Source switch
         {
             HypeTrainActionSource.UNKNOWN => "",
             HypeTrainActionSource.BITS => "bits",
             HypeTrainActionSource.SUBS => "subs",
-            _ or null => "",
+            _ or null => ""
         };
         return $"{action} - {Quantity}";
     }

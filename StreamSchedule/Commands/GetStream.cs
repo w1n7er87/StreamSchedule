@@ -1,5 +1,7 @@
 ﻿using StreamSchedule.Data;
 using System.Globalization;
+using Microsoft.EntityFrameworkCore;
+using Stream = StreamSchedule.Data.Models.Stream;
 
 namespace StreamSchedule.Commands;
 
@@ -15,10 +17,10 @@ internal class GetStream : Command
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        Commands.RetrieveArguments(Arguments, message.content, out Dictionary<string, string> usedArgs);
+        Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
 
-        var next = BotCore.DBContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.UtcNow))
-            .AsEnumerable()
+        Stream? next = BotCore.DBContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+            .AsNoTracking()
             .OrderBy(x => new DateTime(x.StreamDate, x.StreamTime))
             .FirstOrDefault(x => new DateTime(x.StreamDate, x.StreamTime) >= DateTime.UtcNow);
 

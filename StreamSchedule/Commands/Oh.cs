@@ -12,9 +12,5 @@ internal class Oh : Command
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
 
-    public override Task<CommandResult> Handle(UniversalMessageInfo message)
-    {
-        int a = new Random().Next(100);
-        return Task.FromResult(new CommandResult(a == 69 ? "Tutoh " : "oh ", false));
-    }
+    public override Task<CommandResult> Handle(UniversalMessageInfo message) => Task.FromResult(new CommandResult(Random.Shared.Next(100) == 69 ? "Tutoh " : "oh ", false));
 }

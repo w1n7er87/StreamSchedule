@@ -5,5 +5,4 @@ public record UserRoles(
     bool? IsPartner,
     bool? IsSiteAdmin,
     bool? IsGlobalMod,
-    bool? IsStaff
-);
+    bool? IsStaff);
