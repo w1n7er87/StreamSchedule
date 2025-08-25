@@ -206,11 +206,12 @@ internal static class BotCore
 
     #endregion EVENTS
     
+    
+    private static bool sameMessageFlip = false;
+    private static string sameMessageBypass => sameMessageFlip ? " \udb40\uddef " : "";
+    
     private static async Task OutPump(User channel)
     {
-        bool sameMessageFlip = false;
-        string sameMessageBypass = sameMessageFlip ? " \U000e0000" : "";
-
         while (true)
         {
             if (OutQueuePerChannel[channel.Username!].Count <= 0)
@@ -218,10 +219,8 @@ internal static class BotCore
                 await Task.Delay(25);
                 continue;
             }
-
             OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
-            _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass,
-                response.Result.requiresFilter);
+            _ = await SendLongMessage(channel, response.ReplyID, response.Result.ToString() + sameMessageBypass, response.Result.requiresFilter);
             sameMessageFlip = !sameMessageFlip;
             await Task.Delay(1100);
             OutQueuePerChannel[channel.Username!].Dequeue();
