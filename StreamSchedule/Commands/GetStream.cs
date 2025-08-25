@@ -21,6 +21,7 @@ internal class GetStream : Command
 
         Stream? next = BotCore.DBContext.Streams.Where(x => x.StreamDate >= DateOnly.FromDateTime(DateTime.UtcNow))
             .AsNoTracking()
+            .AsEnumerable()
             .OrderBy(x => new DateTime(x.StreamDate, x.StreamTime))
             .FirstOrDefault(x => new DateTime(x.StreamDate, x.StreamTime) >= DateTime.UtcNow);
 

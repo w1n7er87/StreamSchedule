@@ -36,24 +36,20 @@ internal class Top : Command
     {
         StringBuilder result = new();
 
-        List<User> topTen =
+        List<(User, float)> topTen =
         [
             .. BotCore.DBContext.Users
                 .AsNoTracking()
                 .AsEnumerable()
-                .Select(u => new { User = u, Ratio = Userscore.Ratio(u) })
-                .OrderByDescending(x => descending ? -x.Ratio : x.Ratio)
+                .Select(u => (u, Userscore.Ratio(u)) )
+                .OrderByDescending(x => descending ? -x.Item2 : x.Item2)
                 .Skip(skipToPage)
                 .Take(PageSize)
-                .Select(u => u.User)
         ];
 
         for (int i = 0; i < topTen.Count; i++)
-        {
-            User user = topTen[i];
-            result.Append($"{skipToPage + i + 1} {user.Username!.Insert(1, "󠀀")} {MathF.Round(Userscore.Ratio(user), 3)} er ");
-        }
-
+            result.Append($"{skipToPage + i + 1} {topTen[i].Item1.Username!.Insert(1, "󠀀")} {MathF.Round(topTen[i].Item2, 3)} er ");
+        
         return result;
     }
 
@@ -61,24 +57,20 @@ internal class Top : Command
     {
         StringBuilder result = new();
 
-        List<User> topTen =
+        List<(User,float)> topTen =
         [
             .. BotCore.DBContext.Users
                 .AsNoTracking()
                 .AsEnumerable()
-                .Select(u => new { User = u, Score = Userscore.Score(u) })
-                .OrderByDescending(x => descending ? -x.Score : x.Score)
+                .Select(u => (u, Userscore.Score(u)))
+                .OrderByDescending(x => descending ? -x.Item2 : x.Item2)
                 .Skip(skipToPage)
                 .Take(PageSize)
-                .Select(u => u.User)
         ];
 
         for (int i = 0; i < topTen.Count; i++)
-        {
-            User user = topTen[i];
-            result.Append($"{skipToPage + i + 1} {user.Username!.Insert(1, "󠀀")} {MathF.Round(Userscore.Score(user), 3)} er ");
-        }
-
+            result.Append($"{skipToPage + i + 1} {topTen[i].Item1.Username!.Insert(1, "󠀀")} {MathF.Round(topTen[i].Item2, 3)} er ");
+        
         return result;
     }
 
@@ -95,11 +87,8 @@ internal class Top : Command
         ];
 
         for (int i = 0; i < topTen.Count; i++)
-        {
-            User user = topTen[i];
-            result.Append($"{skipToPage + i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOnline} er ");
-        }
-
+            result.Append($"{skipToPage + i + 1} {topTen[i].Username!.Insert(1, "󠀀")} {topTen[i].MessagesOnline} er ");
+        
         return result;
     }
 
@@ -116,11 +105,8 @@ internal class Top : Command
         ];
 
         for (int i = 0; i < topTen.Count; i++)
-        {
-            User user = topTen[i];
-            result.Append($"{skipToPage + i + 1} {user.Username!.Insert(1, "󠀀")} {user.MessagesOffline} er ");
-        }
-
+            result.Append($"{skipToPage + i + 1} {topTen[i].Username!.Insert(1, "󠀀")} {topTen[i].MessagesOffline} er ");
+        
         return result;
     }
 }
