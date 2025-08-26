@@ -4,7 +4,6 @@ using StreamSchedule.Data.Models;
 using StreamSchedule.GraphQL;
 using StreamSchedule.WebExport;
 using StreamSchedule.WebExport.Conversions;
-using StreamSchedule.WebExport.Data;
 using StreamSchedule.WebExport.Templates;
 
 namespace StreamSchedule.EmoteMonitors;
@@ -14,9 +13,7 @@ internal class Exporter
     private const int maxAttempts = 5;
     private int attempts = 0;
 
-    internal async Task ExportEmotes(List<Emote> removed, List<Emote> added, int totalCount,
-        EmoteMonitorChannel channel
-    )
+    internal async Task ExportEmotes(List<Emote> removed, List<Emote> added, int totalCount, EmoteMonitorChannel channel)
     {
         try
         {
@@ -25,7 +22,7 @@ internal class Exporter
             channel.ChannelName = (await BotCore.API.Helix.Users.GetUsersAsync([channel.ChannelID.ToString()])).Users.FirstOrDefault()?.Login ?? channel.ChannelName;
 
             StringBuilder html = new();
-            string chatResult = $"{channel.ChannelName} emotes ";
+            StringBuilder chatResult = new($"{channel.ChannelName} emotes ");
 
             List<GraphQL.Data.Emote?> addedEmoteDetails = [.. await Task.WhenAll(added.Select(x => GraphQLClient.GetEmote(x.ID)))];
 
@@ -35,7 +32,7 @@ internal class Exporter
                 string oldPrefix = oldEmote?.Prefix ?? "";
                 string newPrefix = addedEmoteDetails.FirstOrDefault(x => x?.ID == oldEmote?.ID)?.Prefix ?? "";
 
-                chatResult += $"prefix changed \"{oldPrefix}\" > \"{newPrefix}\" ";
+                chatResult.Append($"prefix changed \"{oldPrefix}\" > \"{newPrefix}\" ");
                 ExportToChat(channel, chatResult);
                 return;
             }
@@ -44,19 +41,19 @@ internal class Exporter
 
             if (removed.Count != 0)
             {
-                chatResult += $"{removed.Count} removed 📤 : {string.Join(", ", removed)} ";
-                html.Append(string.Format(Templates.EmotesBlock, "Removed", string.Join("\n", removed.Select(Conversions.EmoteToHtml))));
+                chatResult.Append($"{removed.Count} removed 📤 : {string.Join(", ", removed)} ");
+                html.AppendFormat(Templates.EmotesBlock, "Removed", string.Join("\n", removed.Select(Conversions.EmoteToHtml)));
             }
 
             html.Append(Templates.Divider);
 
             if (addedDetails.Count != 0)
             {
-                chatResult += $"{addedDetails.Count} added 📥 : {string.Join(", ", addedDetails)} ";
-                html.Append(string.Format(Templates.EmotesBlock, "Added", string.Join("\n", addedDetails.Select(Conversions.EmoteToHtml))));
+                chatResult .Append($"{addedDetails.Count} added 📥 : {string.Join(", ", addedDetails)} ");
+                html.AppendFormat(Templates.EmotesBlock, "Added", string.Join("\n", addedDetails.Select(Conversions.EmoteToHtml)));
             }
 
-            chatResult += $" {await ExportToWeb(channel, html)} ";
+            chatResult.Append($" {await ExportToWeb(channel, html)} ");
             ExportToChat(channel, chatResult);
         }
         catch (Exception e)
@@ -75,9 +72,9 @@ internal class Exporter
         }
     }
 
-    private static void ExportToChat(EmoteMonitorChannel channelSettings, string content)
+    private static void ExportToChat(EmoteMonitorChannel channelSettings, StringBuilder content)
     {
-        content += string.Join(" ", channelSettings.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
+        content.AppendJoin(" ", channelSettings.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
         BotCore.OutQueuePerChannel[channelSettings.OutputChannelName].Enqueue(new CommandResult(content, false));
     }
 
