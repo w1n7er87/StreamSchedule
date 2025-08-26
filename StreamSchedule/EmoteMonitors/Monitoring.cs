@@ -24,6 +24,7 @@ public static class Monitoring
             while (true)
             {
                 List<Task<(int, List<Emote>)>> emonTasks = [.. Channels.Select(UpdateEmotes)];
+                
                 foreach ((int, List<Emote>) result in await Task.WhenAll(emonTasks))
                     Emotes[result.Item1] = result.Item2;
 
@@ -51,16 +52,11 @@ public static class Monitoring
                 oldEmotes = [];
             }
 
-            List<Emote> loadedEmotes =
-            [
-                .. (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(channel.ChannelID.ToString())).ChannelEmotes
-                .Select(x => (Emote)x)
-            ];
+            List<Emote> loadedEmotes = [.. (await BotCore.API.Helix.Chat.GetChannelEmotesAsync(channel.ChannelID.ToString())).ChannelEmotes.Select(x => (Emote)x)];
 
             if (oldEmotes.Count == 0)
             {
-                BotCore.Nlog.Info(
-                    $"first run for {channel.ChannelName} emote monitor, {channel.UpdateSubscribersUsers.Count} subs");
+                BotCore.Nlog.Info($"first run for {channel.ChannelName} emote monitor, {channel.UpdateSubscribersUsers.Count} subs");
                 return (channel.ChannelID, loadedEmotes);
             }
 
@@ -84,8 +80,7 @@ public static class Monitoring
     {
         try
         {
-            List<string> newGlobalEmoteTokens =
-                [.. (await BotCore.API.Helix.Chat.GetGlobalEmotesAsync()).GlobalEmotes.Select(x => x.Name)];
+            List<string> newGlobalEmoteTokens = [.. (await BotCore.API.Helix.Chat.GetGlobalEmotesAsync()).GlobalEmotes.Select(x => x.Name)];
             if (GlobalEmoteTokens.Count == 0)
             {
                 BotCore.Nlog.Info("first run for Twitch Global emotes");
