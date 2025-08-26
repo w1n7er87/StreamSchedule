@@ -27,26 +27,25 @@ internal class Exporter
             StringBuilder html = new();
             string chatResult = $"{channel.ChannelName} emotes ";
 
-            List<GraphQL.Data.Emote?> removedEmoteDetails = [.. await Task.WhenAll(removed.Select(x => GraphQLClient.GetEmote(x.ID)))];
             List<GraphQL.Data.Emote?> addedEmoteDetails = [.. await Task.WhenAll(added.Select(x => GraphQLClient.GetEmote(x.ID)))];
 
             if (removed.Count == totalCount && added.Count == totalCount)
             {
-                string oldPrefix = removedEmoteDetails[0]?.Prefix ?? "";
-                string newPrefix = addedEmoteDetails.FirstOrDefault(x => x?.ID == removedEmoteDetails[0]?.ID)?.Prefix ?? "";
+                GraphQL.Data.Emote? oldEmote = await GraphQLClient.GetEmote(removed.FirstOrDefault()?.ID ?? "");
+                string oldPrefix = oldEmote?.Prefix ?? "";
+                string newPrefix = addedEmoteDetails.FirstOrDefault(x => x?.ID == oldEmote?.ID)?.Prefix ?? "";
 
                 chatResult += $"prefix changed \"{oldPrefix}\" > \"{newPrefix}\" ";
                 ExportToChat(channel, chatResult);
                 return;
             }
 
-            List<Emote> removedDetails = [.. removedEmoteDetails.Select(x => (Emote)x).OrderBy(x => x.Token)];
             List<Emote> addedDetails = [.. addedEmoteDetails.Select(x => (Emote)x).OrderBy(x => x.Token)];
 
-            if (removedDetails.Count != 0)
+            if (removed.Count != 0)
             {
-                chatResult += $"{removedDetails.Count} removed 📤 : {string.Join(", ", removedDetails)} ";
-                html.Append(string.Format(Templates.EmotesBlock, "Removed", string.Join("\n", removedDetails.Select(Conversions.EmoteToHtml))));
+                chatResult += $"{removed.Count} removed 📤 : {string.Join(", ", removed)} ";
+                html.Append(string.Format(Templates.EmotesBlock, "Removed", string.Join("\n", removed.Select(Conversions.EmoteToHtml))));
             }
 
             html.Append(Templates.Divider);
@@ -57,7 +56,7 @@ internal class Exporter
                 html.Append(string.Format(Templates.EmotesBlock, "Added", string.Join("\n", addedDetails.Select(Conversions.EmoteToHtml))));
             }
 
-            chatResult += $" {await ExportToWeb(channel, html.ToString())} ";
+            chatResult += $" {await ExportToWeb(channel, html)} ";
             ExportToChat(channel, chatResult);
         }
         catch (Exception e)
@@ -82,7 +81,7 @@ internal class Exporter
         BotCore.OutQueuePerChannel[channelSettings.OutputChannelName].Enqueue(new CommandResult(content, false));
     }
 
-    private static async Task<string> ExportToWeb(EmoteMonitorChannel channelSettings, string content)
+    private static async Task<string> ExportToWeb(EmoteMonitorChannel channelSettings, StringBuilder content)
     {
         string slug = ExportUtils.GetSlug(channelSettings.ChannelName);
         BotCore.PagesDB.PageContent.Add(new()
@@ -90,7 +89,7 @@ internal class Exporter
             EmbeddedStyleName = Templates.EmoteUpdatesStyleName,
             EmbeddedStyleVersion = Templates.EmoteUpdatesStyleVersion,
             CreatedAt = DateTime.UtcNow,
-            HtmlContent = content,
+            HtmlContent = content.ToString(),
             Title = channelSettings.ChannelName,
             Summary = string.Format(Templates.EmoteUpdatesSummary, channelSettings.ChannelName),
             Slug = slug
