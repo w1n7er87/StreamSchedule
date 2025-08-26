@@ -48,7 +48,7 @@ internal class Top : Command
         ];
 
         for (int i = 0; i < topTen.Count; i++)
-            result.Append($"{skipToPage + i + 1} {topTen[i].Item1.Username!.Insert(1, "󠀀")} {MathF.Round(topTen[i].Item2, 3)} er ");
+            result.Append($"{skipToPage + i + 1} {topTen[i].Item1.Username!.Insert(1, "\udb40\uddef")} {MathF.Round(topTen[i].Item2, 3)} er ");
         
         return result;
     }
@@ -69,7 +69,7 @@ internal class Top : Command
         ];
 
         for (int i = 0; i < topTen.Count; i++)
-            result.Append($"{skipToPage + i + 1} {topTen[i].Item1.Username!.Insert(1, "󠀀")} {MathF.Round(topTen[i].Item2, 3)} er ");
+            result.Append($"{skipToPage + i + 1} {topTen[i].Item1.Username!.Insert(1, "\udb40\uddef")} {MathF.Round(topTen[i].Item2, 3)} er ");
         
         return result;
     }
@@ -87,7 +87,7 @@ internal class Top : Command
         ];
 
         for (int i = 0; i < topTen.Count; i++)
-            result.Append($"{skipToPage + i + 1} {topTen[i].Username!.Insert(1, "󠀀")} {topTen[i].MessagesOnline} er ");
+            result.Append($"{skipToPage + i + 1} {topTen[i].Username!.Insert(1, "\udb40\uddef")} {topTen[i].MessagesOnline} er ");
         
         return result;
     }
@@ -105,7 +105,7 @@ internal class Top : Command
         ];
 
         for (int i = 0; i < topTen.Count; i++)
-            result.Append($"{skipToPage + i + 1} {topTen[i].Username!.Insert(1, "󠀀")} {topTen[i].MessagesOffline} er ");
+            result.Append($"{skipToPage + i + 1} {topTen[i].Username!.Insert(1, "\udb40\uddef")} {topTen[i].MessagesOffline} er ");
         
         return result;
     }

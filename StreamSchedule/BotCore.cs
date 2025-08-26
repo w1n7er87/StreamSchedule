@@ -218,7 +218,7 @@ internal static class BotCore
                 continue;
             }
             OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
-            _ = await SendLongMessage(channel, response.ReplyID,(sameMessageFlip ? " \udb40\uddef " : "") +  response.Result.ToString(), response.Result.requiresFilter);
+            _ = await SendLongMessage(channel, response.ReplyID,$"{(sameMessageFlip ? "\udb40\uddef" : "")} {response.Result}", response.Result.requiresFilter);
             sameMessageFlip = !sameMessageFlip;
             await Task.Delay(1100);
             OutQueuePerChannel[channel.Username!].Dequeue();
@@ -230,8 +230,6 @@ internal static class BotCore
         string[] parts = requiresFilter
             ? Utils.Filter(message).Split(' ', StringSplitOptions.TrimEntries)
             : message.Split(' ', StringSplitOptions.TrimEntries);
-
-        Nlog.Info(message);
         
         string accumulatedBelowLimit = "";
 
