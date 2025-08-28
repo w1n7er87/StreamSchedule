@@ -149,7 +149,7 @@ internal static class BotCore
         if (cc.LastUsedOnChannel[e.ChatMessage.Channel] + cc.Cooldown > DateTime.Now && userSent.Privileges < Privileges.Mod) return;
         if (userSent.Privileges < cc.Privileges) return;
 
-        trimmedMessage = trimmedMessage[requestedCommand.Length..].Replace("\U000e0000", "").Trim();
+        trimmedMessage = trimmedMessage[requestedCommand.Length..].Replace("\U000e0000", "").Replace("\u034f", "").Trim();
 
         if (userSent.Privileges < Privileges.Mod) cc.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
 
