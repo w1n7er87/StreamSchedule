@@ -68,7 +68,7 @@ public static class Browsing
             //"headless"
         ]);
         options.PageLoadStrategy = PageLoadStrategy.Normal;
-        options.BrowserVersion = "137";
+        options.BrowserVersion = "139";
         
         BotCore.Nlog.Info("ceating driver");
 
@@ -79,7 +79,7 @@ public static class Browsing
             RequestMatcher = (data) => data.Headers?.TryGetValue("user-agent", out _) ?? false,
             RequestTransformer = (data) =>
             {
-                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{Random.Shared.Next(130, 138)}.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(115, 120)}.0.0.0 (Edition Yx 05)";
+                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{Random.Shared.Next(130, 140)}.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(118, 125)}.0.0.0 (Edition Yx 05)";
                 return data;
             }
         };
@@ -124,9 +124,7 @@ public static class Browsing
         IWebElement pass = driver.FindElement(By.Id("password-input"));
 
         pass.Click();
-        await Task.Delay(900);
-
-        await Task.Delay(900);
+        await Task.Delay(1200);
 
         login.Click();
         await Task.Delay(Random.Shared.Next(900, 1200));
@@ -136,7 +134,7 @@ public static class Browsing
         for (int i = 0; i < forsen.Length; i++)
         {
             login.SendKeys(forsen[Random.Shared.Next(forsen.Length)].ToString());
-            await Task.Delay(Random.Shared.Next(800, 1000));
+            await Task.Delay(Random.Shared.Next(200, 1500));
         }
 
         BotCore.Nlog.Info("waiting for token");
