@@ -64,9 +64,20 @@ public static class Browsing
         options.AddArguments(
         [
             "--disk-cache-size=100000000",
-            "disable-blink-features=AutomationControlled"
+            "--disable-blink-features=AutomationControlled",
+            "--disable-gpu",
+            "--disable-extensions",
+            "--disable-plugins",
+            "--single-process",
+            "--disable-mipmap-generation",
+            "--no-zygote",
+            "--no-unsandboxed-zygote",
+            "--wm-window-animations-disabled",
+            "--no-first-run",
+            "--ash-no-nudges",
             //"headless"
         ]);
+        
         options.PageLoadStrategy = PageLoadStrategy.Normal;
         options.BrowserVersion = "139";
         
