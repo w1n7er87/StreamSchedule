@@ -194,14 +194,9 @@ internal static class BotCore
 
     private static void ChatClientOnUnaccounted(object? sender, OnUnaccountedForArgs e)
     {
-        if (e.RawIRC.Contains("automod", StringComparison.InvariantCultureIgnoreCase) || e.RawIRC.Contains("moderation", StringComparison.InvariantCultureIgnoreCase))
-        {
-            Nlog.Info($"{e.RawIRC} {e.Channel} {e.Location}");
-            OutQueuePerChannel[e.Channel].Enqueue(new CommandResult("moderation 1984 ", false));
-            return;
-        }
-
-        Nlog.Info($"[{e.Channel}] [{e.RawIRC}]");
+        if (!e.RawIRC.Contains("automod", StringComparison.InvariantCultureIgnoreCase) && !e.RawIRC.Contains("moderation", StringComparison.InvariantCultureIgnoreCase)) return;
+        Nlog.Info($"{e.RawIRC} {e.Channel} {e.Location}");
+        OutQueuePerChannel[e.Channel].Enqueue(new CommandResult("moderation 1984 ", false));
     }
 
     #endregion EVENTS
