@@ -25,8 +25,11 @@ internal class Kill : Command
 
         string target = text.Split(' ')[0];
 
-        return Random.Shared.Next(100) > 25
-            ? new("✋ unauthorized action. ", false)
-            : new($"MEGALUL 🔪 {target}", false, true);
+        return Random.Shared.Next(100) switch
+        {
+            (< 25) => new($"MEGALUL 🔪 {target}", false, true),
+            (> 90) => new($"MEGALUL 🔪 {message.Sender.Username}", false, true),
+            (_) => new("✋ unauthorized action. ", false),
+        };
     }
 }
