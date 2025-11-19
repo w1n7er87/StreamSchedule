@@ -120,6 +120,45 @@ public static class Browsing
         {
             try
             {
+                IWebElement e = driver.FindElement(By.Id("email-input"));
+                return e.Displayed;
+            }
+            catch (Exception e)
+            {
+                if (e.GetType() == typeof(NoSuchElementException))
+                    return false;
+                throw;
+            }
+        }, TimeSpan.FromSeconds(10));
+        
+        IWebElement email = driver.FindElement(By.Id("email-input"));
+
+        char[] forsenEmail = ['f', 'o', 'r', 's', 'e', 'n', 'b', 'a', 'j'];
+        char[] forsenEmailDomain = ['@', 'f', 'o', 'r', 's', 'e', 'n', '.', 'c', 'o', 'm'];
+        Random.Shared.Shuffle(forsenEmail);
+        
+        email.Click();
+        await Task.Delay(Random.Shared.Next(900, 1200));
+        
+        foreach (char c in forsenEmail)
+        {
+            email.SendKeys(c.ToString());
+            await Task.Delay(Random.Shared.Next(200, 600));
+        }
+        foreach (char c in forsenEmailDomain)
+        {
+            email.SendKeys(c.ToString());
+            await Task.Delay(Random.Shared.Next(200, 600));
+        }
+        
+        IWebElement? submitButton = driver.FindElements(By.TagName("button")).FirstOrDefault(x => (x.GetAttribute("data-a-target") ?? "") == "passport-signup-button");
+        
+        submitButton?.Click();
+        
+        await WaitUntil(() =>
+        {
+            try
+            {
                 IWebElement e = driver.FindElement(By.Id("password-input"));
                 return e.Displayed;
             }
@@ -130,10 +169,10 @@ public static class Browsing
                 throw;
             }
         }, TimeSpan.FromSeconds(10));
-
+        
         IWebElement login = driver.FindElement(By.Id("signup-username"));
         IWebElement pass = driver.FindElement(By.Id("password-input"));
-
+        
         pass.Click();
         await Task.Delay(1200);
 
