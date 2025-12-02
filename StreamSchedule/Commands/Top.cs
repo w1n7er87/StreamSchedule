@@ -25,11 +25,11 @@ internal class Top : Command
 
         int skip = page * PageSize;
 
-        if (args.TryGetValue("ratio", out _)) return Task.FromResult((CommandResult)GetTopByRatio(skip, descending));
-        if (args.TryGetValue("score", out _)) return Task.FromResult((CommandResult)GetTopByScore(skip, descending));
-        if (args.TryGetValue("online", out _)) return Task.FromResult((CommandResult)GetTopByOnline(skip, descending));
+        if (args.TryGetValue("ratio", out _)) return Task.FromResult(new CommandResult(GetTopByRatio(skip, descending), requiresFilter:true));
+        if (args.TryGetValue("score", out _)) return Task.FromResult(new CommandResult(GetTopByScore(skip, descending), requiresFilter:true));
+        if (args.TryGetValue("online", out _)) return Task.FromResult(new CommandResult(GetTopByOnline(skip, descending), requiresFilter:true));
 
-        return Task.FromResult((CommandResult)GetTopByOffline(skip, descending));
+        return Task.FromResult(new CommandResult(GetTopByOffline(skip, descending), requiresFilter:true));
     }
 
     private static StringBuilder GetTopByRatio(int skipToPage, bool descending)
