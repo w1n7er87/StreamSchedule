@@ -12,6 +12,9 @@ internal static class Utils
     private static readonly List<Codepoint> _emojiSpecialCharacters =
         [Emoji.ZeroWidthJoiner, Emoji.ObjectReplacementCharacter, Emoji.Keycap, Emoji.VariationSelector];
 
+    private static readonly string[] _dateTimeInputPatterns = ["d-M-H-mm", "dd-MM-H-mm", "d-M-yy-H-mm", "dd-MM-yy-H-mm", "d-M-yyyy-H-mm", "dd-MM-yyyy-H-mm"];
+    private static  readonly string[] _dateInputPatterns = ["d-M-yy", "dd-MM-yy", "d-M-yyyy", "dd-MM-yyyy"];
+    
     internal static bool ContainsPrefix(ReadOnlySpan<Codepoint> input, out ReadOnlySpan<Codepoint> prefixTrimmedInput)
     {
         int count = 0;
@@ -60,5 +63,19 @@ internal static class Utils
         internal static CommandResult Fail => new("NOIDONTTHINKSO ", false);
         internal static CommandResult Ok => new("ok ", false);
         internal static CommandResult Surprise => new("oh ", false);
+    }
+
+    internal static bool TryParseLocalDateTime(string? input, out DateTime date)
+    {
+        if (input is not null) return DateTime.TryParseExact(input, _dateTimeInputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out date);
+        date = DateTime.MinValue;
+        return false;
+    }
+
+    internal static bool TryParseLocalDate(string? input, out DateTime date)
+    {
+        if (input is not null) return DateTime.TryParseExact(input, _dateInputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out date);
+        date = DateTime.MinValue;
+        return false;
     }
 }

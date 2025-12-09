@@ -11,15 +11,12 @@ internal class AddStream : Command
     public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
-
-    private readonly string[] _inputPatterns = ["d-M-H-mm", "dd-MM-H-mm", "d-M-yy-H-mm", "dd-MM-yy-H-mm", "d-M-yyyy-H-mm", "dd-MM-yyyy-H-mm"];
-
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string[] split = message.Content.Split(" ");
         if (split.Length < 2) return Task.FromResult(Utils.Responses.Fail);
 
-        if (!DateTime.TryParseExact(split[0], _inputPatterns, null, System.Globalization.DateTimeStyles.AssumeLocal, out DateTime temp)) return Task.FromResult(Utils.Responses.Fail + "bad date ");
+        if (!Utils.TryParseLocalDateTime(split[0], out DateTime temp)) return Task.FromResult(Utils.Responses.Fail + "bad date ");
         
         temp = temp.ToUniversalTime();
 

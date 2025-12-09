@@ -17,14 +17,21 @@ internal class Schedule : Command
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        IQueryable<Stream> streams = BotCore.DBContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(DateTime.Now)).AsNoTracking();
+        bool dateRequested = Utils.TryParseLocalDate(message.Content.Split(" ").FirstOrDefault(), out DateTime requestedDate);
+        
+        DateTime startDate = dateRequested ? requestedDate : DateTime.Now;
+        
+        IQueryable<Stream> streams = BotCore.DBContext.Streams.Where(s => s.StreamDate >= DateOnly.FromDateTime(startDate)).AsNoTracking();
+
+        DateOnly inAWeek = DateOnly.FromDateTime(startDate + TimeSpan.FromDays(7));
+        
+        if (dateRequested) streams = streams.Where(s => s.StreamDate <= inAWeek);
 
         if (!streams.Any()) return Task.FromResult(new CommandResult("The schedule is empty. SadCat "));
-
-        DateOnly inAWeek = DateOnly.FromDateTime(DateTime.Now + TimeSpan.FromDays(7));
+        
         StringBuilder sb = new();
 
-        string currentOrLatestTZ = DateTime.Now.ToString("zzz");
+        string currentOrLatestTZ = startDate.ToString("zzz");
 
         foreach (Stream stream in streams)
         {
@@ -34,12 +41,15 @@ internal class Schedule : Command
             if (!currentOrLatestTZ.Equals(streamTZ))
             {
                 currentOrLatestTZ = streamTZ;
-                sb.Append($"(UTC{DateTime.Now:zzz})");
+                sb.Append($"(UTC{startDate:zzz})");
             }
 
-            string when = stream.StreamDate > inAWeek
-                ? $"{streamDate:(MMM/dd) ddd HH:mm}"
-                : $"{streamDate:ddd HH:mm}";
+            string when = (stream.StreamDate > inAWeek, dateRequested) switch
+            {
+                (_, true) or (true, false) => $"{streamDate:(MMM/dd) ddd HH:mm}",
+                (false, false) => $"{streamDate:ddd HH:mm}"
+            };
+
             sb.Append($"{when} : {stream.StreamTitle?[..Math.Min(50, stream.StreamTitle.Length)]} . ");
         }
 
