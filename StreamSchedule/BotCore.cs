@@ -24,6 +24,7 @@ internal static class BotCore
     public static TwitchClient ChatClient { get; private set; } = null!;
     public static Logger Nlog { get; private set; } = null!;
     public static bool Silent { get; set; }
+    public static bool AllowedOnline { get; set; } = false;
     private static LiveStreamMonitorService Monitor { get; set; } = null!;
     private static Dictionary<string, bool> ChannelLiveState { get; set; } = null!;
 
@@ -117,7 +118,7 @@ internal static class BotCore
         MessageCache.Add(e.ChatMessage);
         if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
 
-        if (ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges < Privileges.Mod) return;
+        if (userSent.Privileges < Privileges.Mod && ChannelLiveState[e.ChatMessage.Channel] && !AllowedOnline) return;
 
         ReadOnlySpan<Codepoint> messageAsCodepoints = [.. e.ChatMessage.Message.Codepoints()];
 
