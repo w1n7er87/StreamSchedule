@@ -12,7 +12,7 @@ internal class Top : Command
     public override string Help => "get top chatters by messages sent offline(default)/online or by score/ratio";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
-    public override string[] Arguments => ["online", "offline", "score", "ratio", "p", "d"];
+    public override string[] Arguments => ["online", "offline", "total", "score", "ratio", "p", "d"];
     public override List<string> Aliases { get; set; } = [];
 
     private const int PageSize = 10;
@@ -28,7 +28,8 @@ internal class Top : Command
         if (args.TryGetValue("ratio", out _)) return Task.FromResult(new CommandResult(GetTopByRatio(skip, descending), requiresFilter:true));
         if (args.TryGetValue("score", out _)) return Task.FromResult(new CommandResult(GetTopByScore(skip, descending), requiresFilter:true));
         if (args.TryGetValue("online", out _)) return Task.FromResult(new CommandResult(GetTopByOnline(skip, descending), requiresFilter:true));
-
+        if (args.TryGetValue("total", out _)) return Task.FromResult(new CommandResult(GetTopByTotal(skip, descending), requiresFilter:true));
+        
         return Task.FromResult(new CommandResult(GetTopByOffline(skip, descending), requiresFilter:true));
     }
 
@@ -106,6 +107,21 @@ internal class Top : Command
 
         for (int i = 0; i < topTen.Count; i++)
             result.Append($"{skipToPage + i + 1} {topTen[i].Username!.Insert(1, "\udb40\uddef")} {topTen[i].MessagesOffline} er ");
+        
+        return result;
+    }
+    
+    private static StringBuilder GetTopByTotal(int skipToPage, bool descending)
+    {
+        StringBuilder result = new();
+        List<User> topTen = [.. BotCore.DBContext.Users.OrderByDescending(x => descending ? -(x.MessagesOffline + x.MessagesOnline) : x.MessagesOffline + x.MessagesOnline)
+            .Skip(skipToPage)
+            .Take(PageSize)
+            .AsNoTracking()
+        ];
+        
+        for (int i = 0; i < topTen.Count; i++)
+            result.Append($"{skipToPage + i + 1} {topTen[i].Username!.Insert(1, "\udb40\uddef")} {topTen[i].MessagesOffline + topTen[i].MessagesOnline} er ");
         
         return result;
     }
