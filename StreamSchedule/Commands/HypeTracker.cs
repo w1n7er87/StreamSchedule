@@ -30,6 +30,7 @@ internal class HypeTracker : Command
         User? targetUser = (await BotCore.API.Helix.Users.GetUsersAsync(logins:[channelName])).Users.FirstOrDefault();
         
         if (targetUser is null) return Utils.Responses.Fail + "user does not exist";
+        if (targetUser.BroadcasterType is not ("affiliate" or "partner")) return Utils.Responses.Fail + "user is not a affiliate or partner";
         
         HypeTrainMonitor? alreadyExists = ActiveMonitors.FirstOrDefault(x => x.ChannelName.Equals(targetUser.Login));
         if (alreadyExists is not null) return Utils.Responses.Fail + $"already monitoring {targetUser.Login}, {Stopwatch.GetElapsedTime(alreadyExists.Started).TotalHours}h left";
