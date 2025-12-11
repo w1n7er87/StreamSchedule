@@ -361,4 +361,81 @@ internal static class Queries
             }
         }
         """);
+
+    internal static GraphQLRequest RequestHypeTrainExecution(string userLogin) => new(_getHypeTrainExecution, new { login = userLogin, type = Enum.GetName(UserLookupType.ALL) }, "GetUser");
+    
+    private static readonly GraphQLQuery _getHypeTrainExecution = new GraphQLQuery(
+        """
+       query GetUser($login:String!, $type: UserLookupType) {
+           user(login:$login, lookupType: $type){
+               channel {
+                   hypeTrain {
+                       approaching {
+                           expiresAt
+                           goal
+                           isGoldenKappaTrain
+                           isTreasureTrain
+                           eventsRemaining {
+                               events
+                           }
+                       }
+                       execution {
+                           startedAt
+                           expiresAt
+                           updatedAt
+                           isGoldenKappaTrain
+                           isTreasureTrain
+                           isFastMode
+                           treasureTrainDetails {
+                               discountPercentage
+                               discountLevelThreshold
+                           }
+                           allTimeHigh {
+                               level {
+                                   value
+                               }
+                               goal
+                               progression
+                           }
+                           participations {
+                               action
+                               source
+                               quantity
+                           }
+                           config {
+                               difficulty
+                           }
+                           progress {
+                               level {
+                                   value
+                               }
+                               goal
+                               progression
+                               total
+                           }
+                           sharedHypeTrainDetails {
+                               sharedProgress {
+                                   user {
+                                       login
+                                   }
+                                   channelProgress {
+                                   total
+                                   }
+                               }
+                               sharedAllTimeHighRecords {
+                                   channelAllTimeHigh {
+                                       level {
+                                           value
+                                       }
+                                       goal
+                                       progression
+                                   }
+                               }
+                           }
+                       }
+                    }
+                }
+            }
+       }
+       """);
 }

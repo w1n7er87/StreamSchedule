@@ -106,6 +106,13 @@ public static class GraphQLClient
         return result.Data?.User?.ChatSettings ?? null;
     }
 
+    public static async Task<HypeTrain?> GetHypeTrain(string userLogin)
+    {
+        GraphQLResponse<QueryResponse?> result = await client.SendQueryAsync<QueryResponse?>(Queries.RequestHypeTrainExecution(userLogin));
+        HandleErrors(result.Errors);
+        return result.Data?.User?.Channel?.HypeTrain ?? null;
+    }
+    
     private static void HandleErrors(GraphQLError[]? errors)
     {
         if (errors is null || errors.Length == 0) return;
