@@ -71,7 +71,6 @@ internal class HypeTracker : Command
                 }
 
                 await Task.Delay(interval);
-                BotCore.Nlog.Info($"{monitor.ChannelName} updated in {interval.TotalSeconds}s ");
 
                 HypeTrain? current = await GraphQLClient.GetHypeTrain(monitor.ChannelName);
 
