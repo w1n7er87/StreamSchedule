@@ -33,7 +33,7 @@ internal class HypeTracker : Command
         if (targetUser.BroadcasterType is not ("affiliate" or "partner")) return Utils.Responses.Fail + "user is not a affiliate or partner";
         
         HypeTrainMonitor? alreadyExists = ActiveMonitors.FirstOrDefault(x => x.ChannelName.Equals(targetUser.Login));
-        if (alreadyExists is not null) return Utils.Responses.Fail + $"already monitoring {targetUser.Login}, {Stopwatch.GetElapsedTime(alreadyExists.Started).TotalHours}h left";
+        if (alreadyExists is not null) return Utils.Responses.Fail + $"already monitoring {targetUser.Login}, {Stopwatch.GetElapsedTime(alreadyExists.Started):hh'h 'mm'm '} left";
         
         TimeSpan duration = DefaultDuration;
         if (args.TryGetValue("for", out string? dd))
@@ -49,8 +49,8 @@ internal class HypeTracker : Command
         ActiveMonitors.Add(newMonitor);
         Task.Run(() => Monitor(newMonitor));
         
-        BotCore.Nlog.Info($"monitoring {targetUser.Login} for {duration.TotalHours} hours");
-        return Utils.Responses.Ok + $"monitoring {targetUser.Login} for {duration.TotalHours} hours";
+        BotCore.Nlog.Info($"monitoring {targetUser.Login} for {duration:hh'h 'mm'm '}");
+        return Utils.Responses.Ok + $"monitoring {targetUser.Login} for {duration:hh'h 'mm'm '}";
     }
 
     private static async Task Monitor(HypeTrainMonitor monitor)
@@ -63,10 +63,11 @@ internal class HypeTracker : Command
         {
             try
             {
-                if (Stopwatch.GetElapsedTime(monitor.Started) > monitor.Duration)
+                if (Stopwatch.GetElapsedTime(monitor.Started) > monitor.Duration && tracked is null)
                 {
                     ActiveMonitors.Remove(monitor);
-                    BotCore.Nlog.Info($"{monitor.ChannelName} monitor has expired after {Stopwatch.GetElapsedTime(monitor.Started).TotalHours}h");
+                    BotCore.Nlog.Info($"{monitor.ChannelName} monitor has expired after {Stopwatch.GetElapsedTime(monitor.Started):hh'h 'mm'm '}");
+                    BotCore.OutQueuePerChannel[monitor.OutputChannelName].Enqueue(new CommandResult($"hype train monitor for @{monitor.ChannelName} has expired after {Stopwatch.GetElapsedTime(monitor.Started):hh'h 'mm'm '} @{monitor.RequestedBy}"));
                     return;
                 }
 
@@ -88,6 +89,7 @@ internal class HypeTracker : Command
                 if (current?.Execution is null)
                 {
                     string summary = $"hype train in @{monitor.ChannelName} has ended: {HypeTrainSummary(tracked)} @{monitor.RequestedBy}";
+                    ActiveMonitors.Remove(monitor);
                     BotCore.Nlog.Info(summary);
                     BotCore.OutQueuePerChannel[monitor.OutputChannelName].Enqueue(new CommandResult(summary));
                     return;
@@ -108,11 +110,12 @@ internal class HypeTracker : Command
             }
             catch(Exception e)
             {
-                BotCore.Nlog.Error(e);
                 failCount++;
+                BotCore.Nlog.Error($"error while updating monitor for {monitor.ChannelName}: \n {e} \n waiting for {10 * failCount}s");
                 if (failCount > 5)
                 {
                     ActiveMonitors.Remove(monitor);
+                    BotCore.Nlog.Info($"removing monitor for {monitor.ChannelName} after 5 failed attempts ");
                     return;
                 }
                 await Task.Delay(TimeSpan.FromSeconds(10 * failCount));
