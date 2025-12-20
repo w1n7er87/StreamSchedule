@@ -18,7 +18,7 @@ internal class GetCommands : Command
         _ = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> usedArgs);
 
         StringBuilder response = new();
-        response.Append(string.Join(", ", Commands.AllCommands.Where(c => c.Privileges <= message.Sender.Privileges).Select(c => c.Call)));
+        response.Append(string.Join(" ", Commands.AllCommands.Where(c => c.Privileges <= message.Sender.Privileges).Select(c => c.Call)));
         return Task.FromResult(new CommandResult(response + ". "));
     }
 }

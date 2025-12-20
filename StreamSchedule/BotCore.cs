@@ -214,7 +214,7 @@ internal static class BotCore
                 continue;
             }
             OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
-            _ = await SendLongMessage(channel, response.ReplyID,$"{(sameMessageFlip ? "\udb40\uddef" : "")} {response.Result}", response.Result.requiresFilter);
+            _ = await SendLongMessage(channel, response.ReplyID,$"{response.Result} {(sameMessageFlip ? "͏" : "")}", response.Result.requiresFilter);
             sameMessageFlip = !sameMessageFlip;
             await Task.Delay(1100);
             OutQueuePerChannel[channel.Username!].Dequeue();

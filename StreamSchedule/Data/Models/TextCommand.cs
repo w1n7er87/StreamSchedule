@@ -39,14 +39,17 @@ internal class TextCommand : ICommand
         Span<string> split = Content.Split('`').AsSpan();
         for (int i = 0; i < split.Length; i++)
         {
-            if (!split[i].StartsWith('/')) continue;
+            if (split[i].StartsWith('/'))
+            {
+                split[i] = replacement.Length == 0 || replacement.Length - 1 < targetIndex || string.IsNullOrWhiteSpace(replacement[targetIndex]) ? split[i].Replace("/", "") : replacement[targetIndex][..Math.Min(replacement[targetIndex].Length, 50)];
 
-            split[i] = replacement.Length == 0 || replacement.Length - 1 < targetIndex ||
-                       string.IsNullOrWhiteSpace(replacement[targetIndex])
-                ? split[i].Replace("/", "")
-                : replacement[targetIndex][..Math.Min(replacement[targetIndex].Length, 50)];
+                targetIndex = Math.Min(replacement.Length - 1, targetIndex + 1);
+            }
 
-            targetIndex = Math.Min(replacement.Length - 1, targetIndex + 1);
+            if (split[i].StartsWith('@'))
+            {
+                split[i] = message.Sender.Username!;
+            }
         }
 
         return Task.FromResult(new CommandResult(string.Join(null, split), false, true));
