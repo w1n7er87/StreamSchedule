@@ -17,7 +17,8 @@ public static class StocksClient
 
     public static async Task<Portfolio?> GetPortfolio()
     {
-        try {
+        try
+        {
                 var response = await httpClient.GetAsync(string.Format(Endpoint, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()));
                 Response? stock = JsonConvert.DeserializeObject<Response>(await response.Content.ReadAsStringAsync());
                 Portfolio? portfolio = JsonConvert.DeserializeObject<Portfolio>(stock?.Decode() ?? "");
