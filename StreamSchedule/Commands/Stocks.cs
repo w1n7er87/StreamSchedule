@@ -18,10 +18,12 @@ internal class Stocks : Command
         Portfolio? portfolio = await StocksClient.GetPortfolio();
         
         History? latest = portfolio?.history?.OrderBy(x => x?.timestamp).LastOrDefault();
-        float? latestEquity = portfolio?.account?.originalInvestment + latest?.change;
-        float? difference = latestEquity - portfolio?.account?.originalInvestment;
+        float? total = portfolio?.account?.equity - 137.15f;
+        float? totalCost = portfolio?.account?.originalInvestment;
+        float? change = total - totalCost;
+        float? changePercent = change / totalCost * 100;
         
-        return new CommandResult($"{FormatMoney(latestEquity)} ({FormatMoney(latest?.change)} / {(difference / portfolio?.account?.originalInvestment * 100):0.000}%) {(DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds(latest?.timestamp ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds()).UtcDateTime):m'm 's's '} ago");
+        return new CommandResult($"{FormatMoney(total)} ({FormatMoney(change)} / {changePercent:0.000}%) {(DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds(latest?.timestamp ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds()).UtcDateTime):m'm 's's '} ago");
     }
 
     private static string FormatMoney(float? value) => value > 0 ? $"${Math.Abs(value ?? 0):0.000}" : $"-${Math.Abs(value ?? 0):0.000}";
