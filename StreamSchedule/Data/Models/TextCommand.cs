@@ -44,8 +44,9 @@ internal class TextCommand : ICommand
                 split[i] = replacement.Length == 0 || replacement.Length - 1 < targetIndex || string.IsNullOrWhiteSpace(replacement[targetIndex]) ? split[i].Replace("/", "") : replacement[targetIndex][..Math.Min(replacement[targetIndex].Length, 50)];
 
                 targetIndex = Math.Min(replacement.Length - 1, targetIndex + 1);
+                continue;
             }
-
+            
             if (split[i].StartsWith('@'))
             {
                 split[i] = message.Sender.Username!;

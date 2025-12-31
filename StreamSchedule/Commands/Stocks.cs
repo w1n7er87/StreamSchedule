@@ -22,10 +22,17 @@ internal class Stocks : Command
         float? totalCost = portfolio?.account?.originalInvestment;
         float? change = total - totalCost;
         float? changePercent = change / totalCost * 100;
+        List<Position?> positionsByProfitLoss = portfolio?.positions?.OrderBy(x => x?.profitLoss).ToList() ?? [];
+        List<Position?> positionsByProfitLossPercent = portfolio?.positions?.OrderBy(x => x?.profitLossPercent).ToList() ?? [];
+        Position? lossValue = positionsByProfitLoss.FirstOrDefault();
+        Position? lossPercent = positionsByProfitLossPercent.FirstOrDefault();
+        Position? profitValue = positionsByProfitLoss.LastOrDefault();
+        Position? profitPercent = positionsByProfitLossPercent.LastOrDefault();
         
-        return new CommandResult($"{FormatMoney(total)} ({FormatMoney(change)} / {changePercent:0.000}%) {(DateTime.UtcNow - DateTimeOffset.FromUnixTimeSeconds(latest?.timestamp ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds()).UtcDateTime):m'm 's's '} ago");
+        string positionSummary = $"({lossValue?.symbol}: {FormatMoney(lossValue?.profitLoss)} / {profitValue?.symbol}: {FormatMoney(profitValue?.profitLoss)}) ({lossPercent?.symbol}: {MathF.Round(lossPercent?.profitLossPercent ?? 0, 3)}% / {profitPercent?.symbol}: {MathF.Round(profitPercent?.profitLossPercent ?? 0, 3)}%) ";
+        return new CommandResult($"{FormatMoney(total)} ({FormatMoney(change)} / {MathF.Round(changePercent ?? 0, 3)}%) {positionSummary}");
     }
-
-    private static string FormatMoney(float? value) => value > 0 ? $"${Math.Abs(value ?? 0):0.000}" : $"-${Math.Abs(value ?? 0):0.000}";
+    
+    private static string FormatMoney(float? value) => value > 0 ? $"${MathF.Round(Math.Abs(value ?? 0), 3)}" : $"-${MathF.Round(Math.Abs(value ?? 0), 3)}";
 
 }
