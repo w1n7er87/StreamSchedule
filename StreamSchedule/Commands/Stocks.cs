@@ -29,10 +29,10 @@ internal class Stocks : Command
         Position? profitValue = positionsByProfitLoss.LastOrDefault();
         Position? profitPercent = positionsByProfitLossPercent.LastOrDefault();
         
-        string positionSummary = $"({lossValue?.symbol}: {FormatMoney(lossValue?.profitLoss)} / {profitValue?.symbol}: {FormatMoney(profitValue?.profitLoss)}) ({lossPercent?.symbol}: {MathF.Round(lossPercent?.profitLossPercent ?? 0, 3)}% / {profitPercent?.symbol}: {MathF.Round(profitPercent?.profitLossPercent ?? 0, 3)}%) ";
-        return new CommandResult($"{FormatMoney(total)} ({FormatMoney(change)} / {MathF.Round(changePercent ?? 0, 3)}%) {positionSummary}");
+        string positionSummary = $"({lossValue?.symbol}: {FormatMoney(lossValue?.profitLoss)} {profitValue?.symbol}: {FormatMoney(profitValue?.profitLoss)}) ({lossPercent?.symbol}: {MathF.Round(lossPercent?.profitLossPercent * 100 ?? 0, 2)}% {profitPercent?.symbol}: {MathF.Round(profitPercent?.profitLossPercent * 100 ?? 0, 2)}%) ";
+        return new CommandResult($"{FormatMoney(total)} ({FormatMoney(change)} {MathF.Round(changePercent ?? 0, 2)}%) {positionSummary}");
     }
     
-    private static string FormatMoney(float? value) => value > 0 ? $"${MathF.Round(Math.Abs(value ?? 0), 3)}" : $"-${MathF.Round(Math.Abs(value ?? 0), 3)}";
+    private static string FormatMoney(float? value) => value > 0 ? $"${MathF.Round(Math.Abs(value ?? 0), 2)}" : $"-${MathF.Round(Math.Abs(value ?? 0), 2)}";
 
 }
