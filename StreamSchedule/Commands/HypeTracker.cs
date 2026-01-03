@@ -24,7 +24,7 @@ internal class HypeTracker : Command
     {
         string? channelName = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args).Split(" ").FirstOrDefault();
         
-        if (channelName is null) return Utils.Responses.Fail + "no username provided";
+        if (string.IsNullOrEmpty(channelName)) return Utils.Responses.Fail + "no username provided";
         if (ActiveMonitors.Count >= 10) return Utils.Responses.Fail + $"too many channels are currently being tracked {ActiveMonitors.Count} (max {MaxChannels})";
         
         User? targetUser = (await BotCore.API.Helix.Users.GetUsersAsync(logins:[channelName])).Users.FirstOrDefault();
