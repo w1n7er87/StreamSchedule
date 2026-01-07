@@ -7,4 +7,5 @@ public record Stream(
     int? ViewersCount,
     User? Broadcaster,
     int? ClipCount,
-    DateTime? CreatedAt);
+    DateTime? CreatedAt,
+    string? Title);

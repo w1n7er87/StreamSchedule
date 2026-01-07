@@ -5,4 +5,7 @@ public record UserRoles(
     bool? IsPartner,
     bool? IsSiteAdmin,
     bool? IsGlobalMod,
-    bool? IsStaff);
+    bool? IsStaff,
+    bool? IsMonetized,
+    bool? IsExtensionsDeveloper,
+    bool? IsParticipatingDJ);

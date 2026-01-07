@@ -135,6 +135,9 @@ internal static class Queries
                     isSiteAdmin
                     isGlobalMod
                     isStaff
+                    isMonetized
+                    isExtensionsDeveloper
+                    isParticipatingDJ
                 }
                 channel {
                     chatters {
@@ -220,6 +223,7 @@ internal static class Queries
                     isMature
                 }
                 stream {
+                    title
                     game {
                         displayName
                     }
@@ -261,6 +265,9 @@ internal static class Queries
                     isSiteAdmin
                     isGlobalMod
                     isStaff
+                    isMonetized
+                    isExtensionsDeveloper
+                    isParticipatingDJ
                 }
                 channel {
                     chatters {
@@ -346,6 +353,7 @@ internal static class Queries
                     isMature
                 }
                 stream {
+                    title
                     game {
                         displayName
                     }
