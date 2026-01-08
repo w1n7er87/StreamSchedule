@@ -23,6 +23,6 @@ internal class ChannelRules : Command
             _ => ""
         };
 
-        return new($"{links}chat rules: {string.Join(", ", settings?.Rules?.Index().Select(x => $"{x.Index + 1} - {x.Item}") ?? ["no channel rules set (or failed to fetch idk."])}", true, true);
+        return new($"{links}chat rules: {string.Join(" ", settings?.Rules?.Index().Select(x => $"{x.Index + 1} {x.Item}") ?? ["no channel rules set (or failed to fetch idk."])}", true, true);
     }
 }

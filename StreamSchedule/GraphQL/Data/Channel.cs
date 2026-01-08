@@ -3,4 +3,5 @@
 public record Channel(
     ChattersInfo? Chatters,
     int? FounderBadgeAvailability,
-    HypeTrain? HypeTrain);
+    HypeTrain? HypeTrain,
+    PinnedChatMessageConnection? PinnedChatMessages);

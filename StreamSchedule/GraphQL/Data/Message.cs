@@ -1,3 +1,3 @@
 ﻿namespace StreamSchedule.GraphQL.Data;
 
-public record Message(MessageContent? Content);
+public record Message(MessageContent? Content, User? Sender);

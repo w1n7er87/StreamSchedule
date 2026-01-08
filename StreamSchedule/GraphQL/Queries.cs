@@ -63,6 +63,34 @@ internal static class Queries
             }
         }
         """);
+    internal static GraphQLRequest RequestPinnedMessage(string userLogin) => new(_pinnedMessageQuery, new { login = userLogin, type = Enum.GetName(UserLookupType.ALL) }, "GetPinnedMessage");
+
+    private static readonly GraphQLQuery _pinnedMessageQuery = new GraphQLQuery(
+        """
+        query GetPinnedMessage($login:String!, $type: UserLookupType) {
+            user(login: $login, lookupType: $type) {
+               channel{
+                    pinnedChatMessages {
+        	            edges {
+        		            node {
+        			            pinnedBy {
+        				            login
+        			            }
+        			            pinnedMessage {
+        				            content {
+        					            text
+        				            }
+        				            sender {
+        					            login
+        				            }
+        			            }
+        		            }
+        	            }
+                    }
+                }
+            }
+        }
+        """);
 
     internal static GraphQLRequest RequestEmote(string emoteID) => new(_emoteQuery, new { id = emoteID }, "GetEmote");
 

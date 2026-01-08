@@ -106,6 +106,13 @@ public static class GraphQLClient
         return result.Data?.User?.ChatSettings ?? null;
     }
 
+    public static async Task<PinnedChatMessageConnection?> GetPinnedMessage(string userLogin)
+    {
+        GraphQLResponse<QueryResponse?> result = await client.SendQueryAsync<QueryResponse?>(Queries.RequestPinnedMessage(userLogin));
+        HandleErrors(result.Errors);
+        return result.Data?.User?.Channel?.PinnedChatMessages?? null;
+    }
+
     public static async Task<HypeTrain?> GetHypeTrain(string userLogin)
     {
         GraphQLResponse<QueryResponse?> result = await client.SendQueryAsync<QueryResponse?>(Queries.RequestHypeTrainExecution(userLogin));
@@ -117,6 +124,7 @@ public static class GraphQLClient
     {
         if (errors is null || errors.Length == 0) return;
 
+        BotCore.Nlog.Info(string.Join(", ", errors.Select(x => x.Message)));
         if (errors.Select(x => x.Message).Contains("failed integrity check"))
         {
             BotCore.Nlog.Info("bad integrity");
