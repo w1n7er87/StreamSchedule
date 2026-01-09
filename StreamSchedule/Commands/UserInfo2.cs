@@ -51,6 +51,7 @@ internal class UserInfo2 : Command
         string[] emotes = [];
         string[] liveInfo = [];
         string lurkers = "";
+        string hypeTrain = "";
 
         bool all = usedArgs.TryGetValue("a", out _);
 
@@ -92,10 +93,14 @@ internal class UserInfo2 : Command
             response += lurkers + " ";
         }
 
-        if (usedArgs.TryGetValue("h", out _) || all) response += GetHypeTran(user);
+        if (usedArgs.TryGetValue("h", out _) || all)
+        {
+            hypeTrain = GetHypeTran(user);
+            response += hypeTrain + " ";
+        }
 
         return all
-            ? new($"{generalInfo} | {color} | {followers} | {lurkers} | {emotes[0]} | {liveInfo[0]}", requiresFilter: true)
+            ? new($"{generalInfo} | {color} | {followers} | {lurkers} | {emotes[0]} | {liveInfo[0]} | {hypeTrain}", requiresFilter: true)
             : response;
     }
 
