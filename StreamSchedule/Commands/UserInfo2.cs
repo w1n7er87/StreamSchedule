@@ -211,8 +211,7 @@ internal class UserInfo2 : Command
     private static string GetGeneralInfo(GetUserResult userReason)
     {
         return $"{Helpers.UserErrorReasonToString(userReason.Reason)} " +
-               $"{Helpers.UserRolesIsStaff(userReason.User?.Roles)} " +
-               $"{Helpers.UserRolesIsPartnerOrAffiliate(userReason.User?.Roles)} " +
+               $"{Helpers.UserRolesToLongString(userReason.User?.Roles)} " +
                $"{userReason.User?.Login} " +
                $"(id:{userReason.User?.Id}) " +
                $"created: {userReason.User?.CreatedAt:dd/MMM/yyyy} " +

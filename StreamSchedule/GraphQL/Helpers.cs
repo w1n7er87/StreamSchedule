@@ -40,20 +40,20 @@ public static class Helpers
         HypeTrainDifficulty.UNKNOWN or _ => "",
     };
 
-    public static string UserRolesIsPartnerOrAffiliate(UserRoles? roles)
+    public static string UserRolesToLongString(UserRoles? roles)
     {
-        return (roles?.IsAffiliate ?? false, roles?.IsPartner ?? false) switch
-        {
-            (true, _) => "affiliate",
-            (_, true) => "partner",
-            _ => ""
-        };
-    }
-
-    public static string UserRolesIsStaff(UserRoles? roles)
-    {
-        if ((roles?.IsStaff ?? false) || (roles?.IsGlobalMod ?? false) || (roles?.IsSiteAdmin ?? false)) return "staff";
-        return "";
+        string result = "";
+        if (roles is null) return result;
+        if (roles.IsExtensionsDeveloper ?? false) result += "extension dev ";
+        if (roles.IsParticipatingDJ ?? false) result += "DJ ";
+        if (roles.IsGlobalMod ?? false) result += "global mod ";
+        if (roles.IsSiteAdmin ?? false) result += "site admin ";
+        if (roles.IsStaff ?? false) result += "staff ";
+        if (roles.IsPreAffiliate ?? false) result += "pre-affiliate ";
+        if (roles.IsAffiliate ?? false) result += "affiliate ";
+        if (roles.IsPartner ?? false) result += "partner ";
+        if (roles.IsMonetized ?? false) result += "monetized ";
+        return result;
     }
 
     public static string UserErrorReasonToString(GetUserErrorReason? reason) => reason switch

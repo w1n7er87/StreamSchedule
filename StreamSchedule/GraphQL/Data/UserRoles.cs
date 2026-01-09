@@ -8,4 +8,5 @@ public record UserRoles(
     bool? IsStaff,
     bool? IsMonetized,
     bool? IsExtensionsDeveloper,
-    bool? IsParticipatingDJ);
+    bool? IsParticipatingDJ,
+    bool? IsPreAffiliate);
