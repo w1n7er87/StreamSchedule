@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Markov2.Data;
 
@@ -9,11 +10,15 @@ public static class Markov
     
     private static Dictionary<int, Token> TokenLookup = [];
     private static Dictionary<int, List<TokenPair>> TokenPairLookup = [];
+    
+    public static int TokenCount => TokenLookup.Count;
 
     private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
 
     private static bool IsReady = false;
 
+    public static bool Start => true;
+    
     static Markov()
     {
         context.Database.EnsureCreated();
@@ -102,6 +107,7 @@ public static class Markov
 
     public static void Save()
     {
+        long startSave = Stopwatch.GetTimestamp();
         IsReady = false;
         context.Tokens.AddRange(TokenLookup.Where(t => !context.Tokens.Contains(t.Value)).Select(t => t.Value));
         foreach (KeyValuePair<int, List<TokenPair>> tp in TokenPairLookup)
@@ -110,21 +116,26 @@ public static class Markov
         }
 
         context.SaveChanges();
+        BotCore.Nlog.Info($"markov save took {Stopwatch.GetElapsedTime(startSave).Seconds} s");
         IsReady = true;
     }
 
     public static void Load()
     {
+        long startLoad = Stopwatch.GetTimestamp();
         IsReady = false;
         TokenPairLookup = new Dictionary<int, List<TokenPair>>();
         TokenLookup = new Dictionary<int, Token>();
         
-        foreach (Token token in context.Tokens.OrderBy(t => t.TokenID))
+        List<TokenPair> tokenPairs = [.. context.TokenPairs.AsNoTracking()];
+        
+        foreach (Token token in context.Tokens)
         {
-            TokenPairLookup[token.TokenID] = [.. context.TokenPairs.Where(tp => tp.TokenID == token.TokenID)];
+            TokenPairLookup[token.TokenID] = [.. tokenPairs.Where(tp => tp.TokenID == token.TokenID)];
             TokenLookup.Add(token.TokenID, token);
         }
 
+        BotCore.Nlog.Info($"markov load took {Stopwatch.GetElapsedTime(startLoad).Seconds} s");
         IsReady = true;
     }
     
@@ -135,14 +146,14 @@ public static class Markov
         
         first ??= TokenLookup[Random.Shared.Next(0, TokenLookup.Count)];
 
-        List<int> tokenIDs = method switch 
+        List<int> tokenIDs = method switch
         {
             Method.ordered => PickOrdered(first.TokenID, maxLength),
             Method.weighted => PickWeighted(first.TokenID, maxLength),
             _ => PickRandom(first.TokenID, maxLength),
         };
         string result = "";
-        
+
         foreach (int tokenID in tokenIDs)
         {
             result += TokenLookup[tokenID].Value + " ";

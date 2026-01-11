@@ -31,7 +31,7 @@ internal static class BotCore
 
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
-    public static int MessageLengthLimit = 270;
+    public static int MessageLengthLimit = 350;
 
     private static long _lastSave;
 
@@ -92,8 +92,7 @@ internal static class BotCore
 
         _ = EmoteMonitors.Monitoring.Start;
         _ = Browsing.Browsing.Start;
-        Markov.Load();
-
+        _ = Markov.Start;
         ExportUtils.UpdateStyles();
     }
 
@@ -139,10 +138,14 @@ internal static class BotCore
             }
         }
         
-        if(userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365")) Markov.TokenizationQueue.Enqueue(e.ChatMessage.Message);
+        if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
+        {
+            if (userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365")) Markov.TokenizationQueue.Enqueue(e.ChatMessage.Message.Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", ""));
+            return;
+        }
         
         if (userSent.Privileges < Privileges.Mod && ChannelLiveState[e.ChatMessage.Channel] && !AllowedOnline) return;
-        if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints)) return;
+        
         if (messageAsCodepoints.Length < 2) return;
 
         string trimmedMessage = messageAsCodepoints.ToStringRepresentation();
@@ -153,7 +156,7 @@ internal static class BotCore
         if (cc.LastUsedOnChannel[e.ChatMessage.Channel] + cc.Cooldown > DateTime.Now && userSent.Privileges < Privileges.Mod) return;
         if (userSent.Privileges < cc.Privileges) return;
 
-        trimmedMessage = trimmedMessage[requestedCommand.Length..].Replace("\U000e0000", "").Replace("\u034f", "").Trim();
+        trimmedMessage = trimmedMessage[requestedCommand.Length..].Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", "").Trim();
 
         if (userSent.Privileges < Privileges.Mod) cc.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
 

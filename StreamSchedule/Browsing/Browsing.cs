@@ -24,14 +24,14 @@ public static class Browsing
                 if (await GraphQLClient.VerifyIntegrity(i))
                 {
                     GraphQLClient.SetIntegrity(i);
-                    TimeSpan nextUpdate = new(Random.Shared.Next(12, 16), Random.Shared.Next(0, 45), 0);
+                    TimeSpan nextUpdate = new(Random.Shared.Next(14, 18), Random.Shared.Next(0, 45), 0);
                     NextUpdate = DateTime.Now + nextUpdate;
                     BotCore.Nlog.Info($"next planned update is in {nextUpdate:h'h 'm'm '} ");
                 }
                 else
                 {
-                    BotCore.Nlog.Info("the token was bad, retrying in 5m ... ");
-                    await Task.Delay(TimeSpan.FromMinutes(5));
+                    BotCore.Nlog.Info("the token was bad, retrying in 3m ... ");
+                    await Task.Delay(TimeSpan.FromMinutes(3));
                     continue;
                 }
             }
@@ -79,7 +79,7 @@ public static class Browsing
         ]);
         
         options.PageLoadStrategy = PageLoadStrategy.Normal;
-        options.BrowserVersion = "139";
+        options.BrowserVersion = "140";
         
         BotCore.Nlog.Info("ceating driver");
 

@@ -5,12 +5,12 @@ namespace StreamSchedule.Commands;
 
 internal class Markov : Command
 {
-    public override string Call => "test";
+    public override string Call => "markov";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => "markov \"-o\" - ordered, \"-w\" - weighted, \"-c[value]\" token count ";
-    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Minute);
+    public override string Help => "markov. o - ordered, w - weighted, c[value] tokens(1-75) (-l -s -m)";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
     public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
-    public override string[] Arguments => ["o", "w", "c", "s", "l", "m"];
+    public override string[] Arguments => ["o", "w", "c", "s", "l", "m", "count"];
     public override List<string> Aliases { get; set; } = [];
     
     private static bool Muted = false;
@@ -18,7 +18,7 @@ internal class Markov : Command
     {
         try
         {
-            string? word = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args).Split(" " , StringSplitOptions.TrimEntries).LastOrDefault();
+            string? word = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args).Split(" ").LastOrDefault();
 
             if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Mod)
             {
@@ -42,6 +42,11 @@ internal class Markov : Command
             {
                 Markov2.Markov.Load();
                 return Task.FromResult(Utils.Responses.Ok + "loaded ");
+            }
+
+            if (args.TryGetValue("count", out _))
+            {
+                return Task.FromResult(new CommandResult($"{Markov2.Markov.TokenCount} tokens "));
             }
 
             string result = Markov2.Markov.GenerateSequence(word, count, method);
