@@ -30,13 +30,13 @@ public static class Markov
         IsReady = true;
     }
 
-    private static void Tokenizer()
+    private static async Task Tokenizer()
     {
         while (true)
         {
             if (TokenizationQueue.Count <= 0 || !IsReady)
             {
-                Task.Delay(50);
+                await Task.Delay(50);
                 continue;
             }
             
