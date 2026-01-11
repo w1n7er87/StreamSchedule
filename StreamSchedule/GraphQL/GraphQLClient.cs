@@ -119,6 +119,20 @@ public static class GraphQLClient
         HandleErrors(result.Errors);
         return result.Data?.User?.Channel?.HypeTrain ?? null;
     }
+
+    public static async Task<User?> GetUserRolesByLogin(string userLogin)
+    {
+        GraphQLResponse<QueryResponse?> result = await client.SendQueryAsync<QueryResponse?>(Queries.GetUserRolesByLogin(userLogin));
+        HandleErrors(result.Errors);
+        return result.Data?.User ?? null;
+    }
+    
+    public static async Task<User?> GetUserRolesByID(string userID)
+    {
+        GraphQLResponse<QueryResponse?> result = await client.SendQueryAsync<QueryResponse?>(Queries.GetUserRolesByID(userID));
+        HandleErrors(result.Errors);
+        return result.Data?.User?? null;
+    }
     
     private static void HandleErrors(GraphQLError[]? errors)
     {

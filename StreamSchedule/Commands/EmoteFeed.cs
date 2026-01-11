@@ -2,7 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using StreamSchedule.Data;
 using StreamSchedule.Data.Models;
 using StreamSchedule.EmoteMonitors;
-using TwitchLib.Api.Helix.Models.Users.GetUsers;
+using StreamSchedule.GraphQL;
+using User = StreamSchedule.GraphQL.Data.User;
 
 namespace StreamSchedule.Commands;
 
@@ -61,18 +62,17 @@ internal class EmoteFeed : Command
                 return Utils.Responses.Ok + $"removed you from the ping list for {toDelete.ChannelName}";
             }
 
-            GetUsersResponse? a = idProvided
-                ? await BotCore.API.Helix.Users.GetUsersAsync([userIDNumber.ToString()])
-                : await BotCore.API.Helix.Users.GetUsersAsync(logins: [targetUsername]);
-            TwitchLib.Api.Helix.Models.Users.GetUsers.User u = a.Users[0];
+            User? uu = idProvided 
+                ? await GraphQLClient.GetUserRolesByID(userIDNumber.ToString())
+                : await GraphQLClient.GetUserRolesByLogin(targetUsername);
 
-            if (u.BroadcasterType is not ("partner" or "affiliate"))
-                return Utils.Responses.Surprise + "user is not a partner or affiliate";
-
+            if (uu?.Roles is null) return Utils.Responses.Surprise + "failed to get user status";
+            if (!((uu.Roles.IsMonetized ?? false) || (uu.Roles.IsAffiliate ?? false) || (uu.Roles.IsPartner ?? false))) return Utils.Responses.Surprise + "user is not monetized and should not be able to have emotes ";
+            
             EmoteMonitorChannel emc = new()
             {
-                ChannelID = int.Parse(u.Id),
-                ChannelName = u.Login,
+                ChannelID = int.Parse(uu.Id ?? "1"),
+                ChannelName = uu.Login ?? "",
                 OutputChannelName = targetOutputChannelName,
                 UpdateSubscribersUsers = [message.Sender.Id]
             };

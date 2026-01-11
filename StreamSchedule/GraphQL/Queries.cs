@@ -159,6 +159,7 @@ internal static class Queries
                 }
                 roles {
                     isAffiliate
+                    isPreAffiliate
                     isPartner
                     isSiteAdmin
                     isGlobalMod
@@ -289,6 +290,7 @@ internal static class Queries
                 }
                 roles {
                     isAffiliate
+                    isPreAffiliate
                     isPartner
                     isSiteAdmin
                     isGlobalMod
@@ -474,4 +476,51 @@ internal static class Queries
             }
        }
        """);
+    internal static GraphQLRequest GetUserRolesByID(string userID) =>  new(_getUserRolesByID, new { userID = userID, type = Enum.GetName(UserLookupType.ALL)});
+    
+    private static readonly GraphQLQuery _getUserRolesByID = new GraphQLQuery(
+        """
+        query GetUser($userID: ID!, $type: UserLookupType) {
+        	user(id: $userID, lookupType: $type) {
+        	login
+        	id
+        		roles {
+        			isAffiliate
+        			isPreAffiliate
+        			isPartner
+        			isSiteAdmin
+        			isGlobalMod
+        			isStaff
+        			isMonetized
+        			isExtensionsDeveloper
+        			isParticipatingDJ
+        		}
+        	}
+        }
+        """);
+    
+    internal static GraphQLRequest GetUserRolesByLogin(string login) =>  new(_getUserRolesByLogin, new { login = login, type = Enum.GetName(UserLookupType.ALL)});
+    
+    private static readonly GraphQLQuery _getUserRolesByLogin = new GraphQLQuery(
+        """
+        query GetUser($login: String!, $type: UserLookupType) {
+        	user(login: $login, lookupType: $type) {
+        	    login
+        	    id
+        		roles {
+        			isAffiliate
+        			isPreAffiliate
+        			isPartner
+        			isSiteAdmin
+        			isGlobalMod
+        			isStaff
+        			isMonetized
+        			isExtensionsDeveloper
+        			isParticipatingDJ
+        		}
+        	}
+        }
+        """);
 }
+
+
