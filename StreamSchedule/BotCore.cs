@@ -12,6 +12,7 @@ using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
+using Markov = StreamSchedule.Markov2.Markov;
 using OutgoingMessage = StreamSchedule.Data.OutgoingMessage;
 
 namespace StreamSchedule;
@@ -91,6 +92,7 @@ internal static class BotCore
 
         _ = EmoteMonitors.Monitoring.Start;
         _ = Browsing.Browsing.Start;
+        Markov.Load();
 
         ExportUtils.UpdateStyles();
     }
@@ -118,8 +120,6 @@ internal static class BotCore
         MessageCache.Add(e.ChatMessage);
         if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
 
-        if (userSent.Privileges < Privileges.Mod && ChannelLiveState[e.ChatMessage.Channel] && !AllowedOnline) return;
-
         ReadOnlySpan<Codepoint> messageAsCodepoints = [.. e.ChatMessage.Message.Codepoints()];
 
         string? replyID = null;
@@ -138,7 +138,10 @@ internal static class BotCore
                 return;
             }
         }
-
+        
+        if(userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365")) Markov.TokenizationQueue.Enqueue(e.ChatMessage.Message);
+        
+        if (userSent.Privileges < Privileges.Mod && ChannelLiveState[e.ChatMessage.Channel] && !AllowedOnline) return;
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints)) return;
         if (messageAsCodepoints.Length < 2) return;
 
