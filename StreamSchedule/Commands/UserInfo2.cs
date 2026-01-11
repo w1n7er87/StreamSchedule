@@ -239,8 +239,7 @@ internal class UserInfo2 : Command
     {
         if (user.Channel?.HypeTrain?.Approaching is not null)
         {
-            string events = user.Channel.HypeTrain.Approaching.EventsRemaining?.FirstOrDefault()?.Events.ToString() ??
-                            "0";
+            string events = user.Channel.HypeTrain.Approaching.EventsRemaining?.FirstOrDefault()?.Events.ToString() ?? "0";
             string isKappaApproaching = user.Channel.HypeTrain.Approaching.IsGoldenKappaTrain ?? false ? "golden Kappa" : "";
             string isTreasureApproaching = user.Channel.HypeTrain.Approaching.IsTreasureTrain ?? false ? "treasure" : "";
             string secondsLeft = ((user.Channel.HypeTrain.Approaching.ExpiresAt ?? DateTime.UtcNow) - DateTime.UtcNow).Seconds.ToString();
