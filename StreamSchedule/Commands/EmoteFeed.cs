@@ -14,7 +14,7 @@ internal class EmoteFeed : Command
     public override string Help => "add channel to monitor emote changes in my chat";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
     public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
-    public override string[] Arguments => ["rm", "channel"];
+    public override string[] Arguments => ["rm", "channel", "rmsub"];
     public override List<string> Aliases { get; set; } = [];
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
@@ -80,6 +80,8 @@ internal class EmoteFeed : Command
             EmoteMonitorChannel? existing = BotCore.DBContext.EmoteMonitorChannels.SingleOrDefault(x => x.ChannelID == emc.ChannelID);
             if (existing is not null)
             {
+                bool pingListChangeRequired = true;
+                
                 CommandResult res = Utils.Responses.Ok + $"already monitoring {emc.ChannelName}";
                 if (existing.Deleted)
                 {
@@ -87,14 +89,31 @@ internal class EmoteFeed : Command
                     existing.Deleted = false;
                 }
 
-                if (existing.UpdateSubscribersUsers.Contains(message.Sender.Id))
+                if (usedArs.TryGetValue("channel", out string? newTargetChannel) && message.Sender.Privileges == Privileges.Uuh)
                 {
-                    res += " you are in the ping list.";
+                    pingListChangeRequired = false;
+                    existing.OutputChannelName = newTargetChannel;
+                    res += $" changed output channel to {newTargetChannel}";
                 }
-                else
+
+                if (usedArs.TryGetValue("rmsub", out string? login))
                 {
-                    res += " added you to the ping list.";
-                    existing.UpdateSubscribersUsers.Add(message.Sender.Id);
+                    pingListChangeRequired = false;
+                    if (string.IsNullOrEmpty(login)) return Utils.Responses.Surprise + "no username provided";
+                    Data.Models.User? u = BotCore.DBContext.Users.FirstOrDefault(u => u.Username == login);
+                    if (u is null) return Utils.Responses.Surprise + "no such user";
+                    existing.UpdateSubscribersUsers.Remove(u.Id);
+                    res += $" removed {u.Username} from the ping list";
+                }
+                
+                if(pingListChangeRequired)
+                {
+                    if (existing.UpdateSubscribersUsers.Contains(message.Sender.Id)) { res += " you are in the ping list."; }
+                    else
+                    {
+                        res += " added you to the ping list.";
+                        existing.UpdateSubscribersUsers.Add(message.Sender.Id);
+                    }
                 }
 
                 await BotCore.DBContext.SaveChangesAsync();
