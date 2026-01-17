@@ -7,10 +7,10 @@ internal class Markov : Command
 {
     public override string Call => "markov";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => "markov. o - ordered, w - weighted, c[value] tokens(1-75) (-l -s -m)";
+    public override string Help => "markov. o ordered, w weighted, c[value(1-75)] specify token count, f force no eol (will still stop if eol is the only next for last token) ";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
     public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
-    public override string[] Arguments => ["o", "w", "c", "s", "l", "m", "count"];
+    public override string[] Arguments => ["o", "w", "c", "s", "l", "m", "f", "count"];
     public override List<string> Aliases { get; set; } = [];
     
     private static bool Muted = false;
@@ -30,26 +30,27 @@ internal class Markov : Command
             int count = args.TryGetValue("c", out string? cc)? int.TryParse(cc, out int ccc)? Math.Clamp(ccc, 1, 75) : 25 : 25;
         
             Method method = Method.random;
+            
             if (args.TryGetValue("o", out _)) method = Method.ordered;
+            
             if (args.TryGetValue("w", out _)) method = Method.weighted;
+            
             if (args.TryGetValue("s", out _) && message.Sender.Privileges >= Privileges.Uuh)
             {
-                Markov2.Markov.Save();
-                return Task.FromResult(Utils.Responses.Ok + "saved ");
+                return Task.FromResult(Utils.Responses.Ok + $"saved in {Markov2.Markov.Save():s's 'fff'ms '}");
             }
 
             if (args.TryGetValue("l", out _) && message.Sender.Privileges >= Privileges.Uuh)
             {
-                Markov2.Markov.Load();
-                return Task.FromResult(Utils.Responses.Ok + "loaded ");
+                return Task.FromResult(Utils.Responses.Ok + $"loaded in {Markov2.Markov.Load():s's 'fff'ms '}");
             }
 
             if (args.TryGetValue("count", out _))
             {
-                return Task.FromResult(new CommandResult($"{Markov2.Markov.TokenCount} tokens "));
+                return Task.FromResult(new CommandResult($"{Markov2.Markov.TokenCount} tokens {Markov2.Markov.TokenPairCount} pairs "));
             }
 
-            string result = Markov2.Markov.GenerateSequence(word, count, method);
+            string result = Markov2.Markov.GenerateSequence(word, count, method, args.TryGetValue("f", out _));
             BotCore.Nlog.Info($"markov query: {(int)method} {count} : {word}");
             BotCore.Nlog.Info(result.Replace("\e", ""));
             return Task.FromResult(new CommandResult(result.Replace("\e", ""), requiresFilter: true));

@@ -17,7 +17,7 @@ internal class Update : Command
     {
         BotCore.OutQueuePerChannel[message.ChannelName].Enqueue(new CommandResult("📆 🛠️ ", false));
 
-        Markov2.Markov.Save();
+        _ = Markov2.Markov.Save();
         await BotCore.DBContext.SaveChangesAsync();
         Process.Start(new ProcessStartInfo
         {
