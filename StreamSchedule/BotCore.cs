@@ -31,7 +31,7 @@ internal static class BotCore
 
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
-    public static int MessageLengthLimit = 350;
+    public static int MessageLengthLimit = 250;
 
     private static long _lastSave;
 

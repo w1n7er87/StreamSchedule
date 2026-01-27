@@ -16,7 +16,7 @@ public static class Markov
     public static int TokenCount => TokenLookup.Count;
     public static int TokenCountOnline => TokenLookupOnline.Count;
     public static int TokenPairCount => context.TokenPairs.Count();
-    public static int TokenPairCountOnline => TokenPairLookupOnline.Count();
+    public static int TokenPairCountOnline => context.TokenPairsOnline.Count();
     
     private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
 
@@ -136,15 +136,12 @@ public static class Markov
     {
         long startSave = Stopwatch.GetTimestamp();
         IsReady = false;
-        context.Tokens.AddRange(TokenLookup.Where(t => !context.Tokens.Contains(t.Value)).Select(t => t.Value));
-        context.TokensOnline.AddRange(TokenLookupOnline.Where(t => !context.TokensOnline.Contains(t.Value)).Select(t => t.Value));
-        
-        foreach (KeyValuePair<int, List<TokenPair>> tp in TokenPairLookup)
-            context.TokenPairs.AddRange(tp.Value.Where(t => !context.TokenPairs.Contains(t)));
-        
-        foreach (KeyValuePair<int, List<TokenPair>> tp in TokenPairLookupOnline)
-            context.TokenPairsOnline.AddRange(tp.Value.Where(t => !context.TokenPairsOnline.Contains(t)));
 
+        context.Tokens.AddRange(TokenLookup.Values.Except(context.Tokens));
+        context.TokensOnline.AddRange(TokenLookupOnline.Values.Select(TokenOnline.FromToken).Except(context.TokensOnline));
+        context.TokenPairs.AddRange(TokenPairLookup.Values.SelectMany(tp => tp).Except(context.TokenPairs));
+        context.TokenPairsOnline.AddRange(TokenPairLookupOnline.Values.SelectMany(tp => tp.Select(TokenPairOnline.FromTokenPair)).Except(context.TokenPairsOnline));
+        
         context.SaveChanges();
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startSave);
         BotCore.Nlog.Info($"markov save took {elapsed.Seconds} s");
