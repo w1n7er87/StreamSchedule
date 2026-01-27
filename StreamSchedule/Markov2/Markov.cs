@@ -21,6 +21,9 @@ public static class Markov
     private static readonly int eolID = 0;
     public static bool Start => true;
 
+    private static DateTime lastSave = DateTime.UtcNow;
+    private static readonly TimeSpan saveInterval = TimeSpan.FromHours(3);
+    
     static Markov()
     {
         context.Database.EnsureCreated();
@@ -34,11 +37,25 @@ public static class Markov
         }
 
         eolID = context.Tokens.FirstOrDefault(t => t.Value.Equals("\e"))?.TokenID ?? 0;
-        
+
+        Task.Run(Saver);
         Task.Run(Tokenizer);
         IsReady = true;
     }
 
+    private static async Task Saver()
+    {
+        while (true)
+        {
+            await Task.Delay(1000);
+            if (DateTime.UtcNow - lastSave > saveInterval)
+            {
+                Save();
+                lastSave = DateTime.UtcNow;
+            }
+        }
+    }
+    
     private static async Task Tokenizer()
     {
         while (true)
@@ -149,6 +166,8 @@ public static class Markov
 
     public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.ordered, bool forceNoLineEnd = false)
     {
+        if (!IsReady) return "uuh ";
+        
         Token? first = null;
         if (!string.IsNullOrWhiteSpace(firstWord)) first = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(firstWord)).Value;
         

@@ -18,7 +18,7 @@ internal class Markov : Command
     {
         try
         {
-            string? word = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args).Split(" ").LastOrDefault();
+            string? word = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args).Split(' ').LastOrDefault(x => !string.IsNullOrEmpty(x));
 
             if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Mod)
             {
@@ -51,8 +51,6 @@ internal class Markov : Command
             }
 
             string result = Markov2.Markov.GenerateSequence(word, count, method, args.TryGetValue("f", out _));
-            BotCore.Nlog.Info($"markov query: {(int)method} {count} : {word}");
-            BotCore.Nlog.Info(result.Replace("\e", ""));
             return Task.FromResult(new CommandResult(result.Replace("\e", ""), requiresFilter: true));
         }
         catch (Exception e)
