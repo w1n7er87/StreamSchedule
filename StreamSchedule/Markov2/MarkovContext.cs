@@ -10,8 +10,6 @@ public class MarkovContext : DbContext
     
     internal DbSet<Token> Tokens => Set<Token>();
     internal DbSet<TokenPair> TokenPairs => Set<TokenPair>();
-    internal DbSet<Token> TokensOnline => Set<Token>();
-    internal DbSet<TokenPair> TokenPairsOnline => Set<TokenPair>();
 }
 
 public class MarkovContextFactory : IDesignTimeDbContextFactory<MarkovContext>
