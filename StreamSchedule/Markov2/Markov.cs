@@ -27,14 +27,8 @@ public static class Markov
     static Markov()
     {
         context.Database.EnsureCreated();
-        if (context.Tokens.Any())
-        {
-            Load();
-        }
-        else
-        {
-            TokenLookup[0] = new Token(0, "\e");
-        }
+        
+        Load();
 
         eolID = context.Tokens.FirstOrDefault(t => t.Value.Equals("\e"))?.TokenID ?? 0;
 
@@ -130,6 +124,7 @@ public static class Markov
     {
         long startSave = Stopwatch.GetTimestamp();
         IsReady = false;
+        
         context.Tokens.AddRange(TokenLookup.Where(t => !context.Tokens.Contains(t.Value)).Select(t => t.Value));
         foreach (KeyValuePair<int, List<TokenPair>> tp in TokenPairLookup)
         {
@@ -147,17 +142,20 @@ public static class Markov
     {
         long startLoad = Stopwatch.GetTimestamp();
         IsReady = false;
-        TokenPairLookup = new Dictionary<int, List<TokenPair>>();
-        TokenLookup = new Dictionary<int, Token>();
+        TokenPairLookup = [];
+        TokenLookup = [];
         
-        List<TokenPair> tokenPairs = [.. context.TokenPairs.AsNoTracking()];
-        
-        foreach (Token token in context.Tokens)
+        if (!context.Tokens.Any())
+            TokenLookup[0] = new Token(0, "\e");
+
+        ILookup<int, TokenPair> tokenPairs = context.TokenPairs.AsNoTracking().ToLookup(t => t.TokenID);
+
+        foreach (Token token in context.Tokens.AsNoTracking())
         {
-            TokenPairLookup[token.TokenID] = [.. tokenPairs.Where(tp => tp.TokenID == token.TokenID)];
+            TokenPairLookup.Add(token.TokenID, [.. tokenPairs[token.TokenID]]);
             TokenLookup.Add(token.TokenID, token);
         }
-        
+
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startLoad);
         BotCore.Nlog.Info($"markov load took {elapsed.Seconds} s");
         IsReady = true;
