@@ -24,7 +24,7 @@ public static class Browsing
                 if (await GraphQLClient.VerifyIntegrity(i))
                 {
                     GraphQLClient.SetIntegrity(i);
-                    TimeSpan nextUpdate = new(Random.Shared.Next(14, 18), Random.Shared.Next(0, 45), 0);
+                    TimeSpan nextUpdate = new(Random.Shared.Next(13, 15), Random.Shared.Next(0, 45), 0);
                     NextUpdate = DateTime.Now + nextUpdate;
                     BotCore.Nlog.Info($"next planned update is in {nextUpdate:h'h 'm'm '} ");
                 }
