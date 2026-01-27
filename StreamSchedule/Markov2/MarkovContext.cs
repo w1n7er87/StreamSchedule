@@ -10,14 +10,8 @@ public class MarkovContext : DbContext
     
     internal DbSet<Token> Tokens => Set<Token>();
     internal DbSet<TokenPair> TokenPairs => Set<TokenPair>();
-    internal DbSet<TokenOnline> TokensOnline => Set<TokenOnline>();
-    internal DbSet<TokenPairOnline> TokenPairsOnline => Set<TokenPairOnline>();
-    
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Token>().UseTptMappingStrategy();
-        modelBuilder.Entity<TokenPair>().UseTptMappingStrategy();
-    }
+    internal DbSet<Token> TokensOnline => Set<Token>();
+    internal DbSet<TokenPair> TokenPairsOnline => Set<TokenPair>();
 }
 
 public class MarkovContextFactory : IDesignTimeDbContextFactory<MarkovContext>
