@@ -140,7 +140,7 @@ internal static class BotCore
         
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
-            if (userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
+            if (!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
                 Markov.TokenizationQueue.Enqueue(e.ChatMessage.Message.Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", ""));
 
             return;
