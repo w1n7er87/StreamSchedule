@@ -27,16 +27,20 @@ public static class Markov
     static Markov()
     {
         context.Database.EnsureCreated();
-        
-        Load();
-
         eolID = context.Tokens.FirstOrDefault(t => t.Value.Equals("\e"))?.TokenID ?? 0;
+        Task.Run(FirstLoader);
+    }
 
+    private static async Task FirstLoader()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(10));
+        BotCore.Nlog.Info("Loading markov");
+        Load();
         Task.Run(Saver);
         Task.Run(Tokenizer);
         IsReady = true;
     }
-
+    
     private static async Task Saver()
     {
         while (true)
