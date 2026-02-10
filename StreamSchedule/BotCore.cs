@@ -31,7 +31,7 @@ internal static class BotCore
 
     public static readonly List<ChatMessage> MessageCache = [];
     private const int _cacheSize = 800;
-    public static int MessageLengthLimit = 350;
+    public static int MessageLengthLimit = 278;
 
     private static long _lastSave;
 
@@ -138,14 +138,15 @@ internal static class BotCore
             }
         }
 
+        if(!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned)
+            Scramble.CheckWord(new(userSent, e.ChatMessage.Message.Split(" ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? "", e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
+
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
             string content = e.ChatMessage.Message.Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", "");
+            
             if (!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
                 Markov.TokenizationQueue.Enqueue(content);
-            
-            if(!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned)
-                Scramble.CheckWord(new(userSent, content.Split(" ").FirstOrDefault() ?? "", e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
             
             return;
         }

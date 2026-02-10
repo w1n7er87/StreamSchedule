@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using NeoSmart.Unicode;
 using StreamSchedule.Data;
+using StreamSchedule.Markov2;
 using StreamSchedule.Markov2.Data;
 
 namespace StreamSchedule.Commands;
@@ -16,21 +18,34 @@ internal class Scramble : Command
     public override List<string> Aliases { get; set; } = [];
 
     private static readonly Dictionary<string, ActiveGame> activeGames = [];
-
+    private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
+    private static readonly Random random = new();
+    
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         if (activeGames.TryGetValue(message.ChannelID, out _))
             return Task.FromResult(new CommandResult("✋ Awkward a game is already in progress "));
 
-        IQueryable<TokenPair> candidates = Markov2.Markov.context.TokenPairs.Where(tp => tp.Count >= 15).AsNoTracking();
-        TokenPair tp = candidates.ElementAt(Random.Shared.Next(candidates.Count()));
-        string word = Markov2.Markov.context.Tokens.First(t => t.TokenID == tp.TokenID).Value.ToLower();
+        long timeStart = Stopwatch.GetTimestamp();
+        bool ok = false;
+        string word = "";
+        int attempts = 0;
+        while (!ok)
+        {
+            IQueryable<TokenPair> candidates = context.TokenPairs.Where(tp => tp.Count >= 5).AsNoTracking();
+            TokenPair tp = candidates.ElementAt(Random.Shared.Next(candidates.Count()));
+            word = context.Tokens.First(t => t.TokenID == tp.TokenID).Value.ToLower();
+            attempts++;
+            if (word.Length < 3) continue;
+            ok = true;
+        }
+
         activeGames[message.ChannelID] = new ActiveGame(word, message.ChannelName, message.ChannelID);
 
         Codepoint[] w = word.Codepoints().ToArray();
-        Random.Shared.Shuffle(w);
+        random.Shuffle(w);
 
-        BotCore.Nlog.Info(word);
+        BotCore.Nlog.Info($"picked {word} in {Stopwatch.GetElapsedTime(timeStart)} in {attempts}");
         return Task.FromResult(new CommandResult($"Unscramble this: \" {string.Join("", w.Select(c => c.AsString()))} \" you have 30s. "));
     }
 
@@ -64,7 +79,7 @@ internal class Scramble : Command
         public void TryWord(string w)
         {
             if (!w.Equals(word, StringComparison.CurrentCultureIgnoreCase)) return;
-            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"FeelsGoodMan the word was {word} "));
+            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"FeelsGoodMan the word was \" {word} \" "));
             cts.Cancel();
             activeGames.Remove(channelID);
             cts.Dispose();
@@ -72,7 +87,7 @@ internal class Scramble : Command
 
         internal void ExpireGame()
         {
-            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"Awkward time is out, the word was {word} "));
+            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"Awkward time is out, the word was \" {word} \" "));
             activeGames.Remove(channelID);
             cts.Dispose();
         }

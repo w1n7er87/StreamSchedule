@@ -14,7 +14,7 @@ public static class Markov
     public static int TokenCount => TokenLookup.Count;
     public static int TokenPairCount => context.TokenPairs.Count();
 
-    public static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
+    private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
 
     private static bool IsReady = false;
 
