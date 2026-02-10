@@ -137,12 +137,16 @@ internal static class BotCore
                 return;
             }
         }
-        
+
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
+            string content = e.ChatMessage.Message.Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", "");
             if (!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
-                Markov.TokenizationQueue.Enqueue(e.ChatMessage.Message.Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", ""));
-
+                Markov.TokenizationQueue.Enqueue(content);
+            
+            if(!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned)
+                Scramble.CheckWord(new(userSent, content.Split(" ").FirstOrDefault() ?? "", e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
+            
             return;
         }
         
