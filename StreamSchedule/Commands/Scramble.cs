@@ -10,7 +10,7 @@ namespace StreamSchedule.Commands;
 internal class Scramble : Command
 {
     public override string Call => "unscramble";
-    public override Privileges Privileges => Privileges.None;
+    public override Privileges Privileges => Privileges.Uuh;
     public override string Help => "scramble";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
@@ -34,7 +34,7 @@ internal class Scramble : Command
         {
             IQueryable<TokenPair> candidates = context.TokenPairs.Where(tp => tp.Count >= 5).AsNoTracking();
             TokenPair tp = candidates.ElementAt(Random.Shared.Next(candidates.Count()));
-            word = context.Tokens.First(t => t.TokenID == tp.TokenID).Value.ToLower();
+            word = context.Tokens.First(t => t.TokenID == tp.TokenID).Value;
             attempts++;
             if (word.Length < 3) continue;
             ok = true;
@@ -68,6 +68,7 @@ internal class Scramble : Command
         private readonly string word;
         private readonly string channelName;
         private readonly string channelID;
+        
         public ActiveGame(string word, string channelName, string channelID) : base()
         {
             this.word = word;
@@ -98,7 +99,7 @@ internal class Scramble : Command
         DateTime timeStart = DateTime.UtcNow;
         while (!token.IsCancellationRequested)
         {
-            await Task.Delay(25, token);
+            await Task.Delay(100, token);
             if (DateTime.UtcNow - timeStart < TimeSpan.FromSeconds(30)) continue;
             
             game.ExpireGame();
