@@ -7,7 +7,7 @@ internal class Markov : Command
 {
     public override string Call => "markov";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => "markov. o ordered, w weighted, c[value(1-75)] specify token count, f force no eol (will still stop if eol is the only next for last token) ";
+    public override string Help => "markov. o ordered, w weighted, c[value(1-75)] specify token count, f force no eol (will still stop if eol is the only next for last token), q seed ";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
     public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["o", "w", "c", "s", "l", "m", "f", "q", "count"];
