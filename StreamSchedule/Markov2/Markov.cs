@@ -24,6 +24,8 @@ public static class Markov
     private static DateTime lastSave = DateTime.UtcNow;
     private static readonly TimeSpan saveInterval = TimeSpan.FromHours(3);
     
+    private static Random random = new();
+    
     static Markov()
     {
         context.Database.EnsureCreated();
@@ -166,14 +168,16 @@ public static class Markov
         return elapsed;
     }
 
-    public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.ordered, bool forceNoLineEnd = false)
+    public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.ordered, bool forceNoLineEnd = false, int? seed = null)
     {
         if (!IsReady) return "uuh ";
+        
+        random = new Random(seed ?? DateTime.Now.Millisecond);
         
         Token? first = null;
         if (!string.IsNullOrWhiteSpace(firstWord)) first = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(firstWord)).Value;
         
-        first ??= TokenLookup[Random.Shared.Next(0, TokenLookup.Count)];
+        first ??= TokenLookup[random.Next(0, TokenLookup.Count)];
 
         List<int> tokenIDs = method switch
         {
@@ -201,8 +205,8 @@ public static class Markov
                 if (p.Count == 0) return sequence;
             }
 
-            int cut = Random.Shared.Next(0, p.Count + 1);
-            sequence.Add(p.OrderByDescending(x => x.Count).ElementAt(Random.Shared.Next(0, cut)).NextTokenID);
+            int cut = random.Next(0, p.Count + 1);
+            sequence.Add(p.OrderByDescending(x => x.Count).ElementAt(random.Next(0, cut)).NextTokenID);
         }
         return sequence;
     }
@@ -219,9 +223,9 @@ public static class Markov
                 p.RemoveAll(t => t.NextTokenID == eolID);
                 if (p.Count == 0) return sequence;
             }
-            
+
             int max = p.MaxBy(x => x.Count)?.Count ?? 2;
-            int cut = Random.Shared.Next(0, max + 1);
+            int cut = random.Next(0, max + 1);
             sequence.Add(p.OrderBy(x => x.Count).First(x => x.Count >= cut).NextTokenID);
         }
         return sequence;
@@ -239,8 +243,8 @@ public static class Markov
                 p.RemoveAll(t => t.NextTokenID == eolID);
                 if (p.Count == 0) return sequence;
             }
-            
-            sequence.Add(p[Random.Shared.Next(0, p.Count)].NextTokenID);
+
+            sequence.Add(p[random.Next(0, p.Count)].NextTokenID);
         }
         return sequence;
     }

@@ -10,7 +10,7 @@ internal class Markov : Command
     public override string Help => "markov. o ordered, w weighted, c[value(1-75)] specify token count, f force no eol (will still stop if eol is the only next for last token) ";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
     public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
-    public override string[] Arguments => ["o", "w", "c", "s", "l", "m", "f", "count"];
+    public override string[] Arguments => ["o", "w", "c", "s", "l", "m", "f", "q", "count"];
     public override List<string> Aliases { get; set; } = [];
     
     private static bool Muted = false;
@@ -31,6 +31,8 @@ internal class Markov : Command
         
             Method method = Method.random;
             
+            int? seed = args.TryGetValue("q", out string? qq) ? int.TryParse(qq, out int qqq) ? Math.Clamp(qqq, 0, int.MaxValue - 1) : null : null;
+            
             if (args.TryGetValue("o", out _)) method = Method.ordered;
             
             if (args.TryGetValue("w", out _)) method = Method.weighted;
@@ -50,7 +52,7 @@ internal class Markov : Command
                 return Task.FromResult(new CommandResult($"{Markov2.Markov.TokenCount} tokens {Markov2.Markov.TokenPairCount} pairs "));
             }
 
-            string result = Markov2.Markov.GenerateSequence(word, count, method, args.TryGetValue("f", out _));
+            string result = Markov2.Markov.GenerateSequence(word, count, method, args.TryGetValue("f", out _), seed);
             return Task.FromResult(new CommandResult(result.Replace("\e", ""), requiresFilter: true));
         }
         catch (Exception e)
