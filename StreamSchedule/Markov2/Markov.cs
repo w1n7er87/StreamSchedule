@@ -87,7 +87,6 @@ public static class Markov
                     next = new Token(TokenLookup.Count, nextWord);
                     TokenLookup.Add(next.TokenID, next);
                     TokenPairLookup.Add(next.TokenID, []);
-                    ReverseTokenPairLookup.Add(next.TokenID, []);
                 }
             
                 Token? current = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(words[i])).Value;
@@ -95,10 +94,18 @@ public static class Markov
                 {
                     current = new Token(TokenLookup.Count, words[i]);
                     TokenLookup.Add(current.TokenID, current);
-                
+
                     TokenPair tp = new TokenPair(current.TokenID, next.TokenID, 1);
                     TokenPairLookup.Add(current.TokenID, [tp]);
-                    ReverseTokenPairLookup.Add(next.TokenID, [tp]);
+                    
+                    if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
+                    {
+                        tempReverse.Add(tp);
+                    }
+                    else
+                    {
+                        ReverseTokenPairLookup.Add(next.TokenID, [tp]);
+                    }
                     continue;
                 }
             
