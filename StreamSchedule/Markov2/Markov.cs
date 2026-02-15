@@ -10,6 +10,7 @@ public static class Markov
     
     private static Dictionary<int, Token> TokenLookup = [];
     private static Dictionary<int, List<TokenPair>> TokenPairLookup = [];
+    private static Dictionary<int, List<TokenPair>> ReverseTokenPairLookup = [];
     
     public static int TokenCount => TokenLookup.Count;
     public static int TokenPairCount => context.TokenPairs.Count();
@@ -86,6 +87,7 @@ public static class Markov
                     next = new Token(TokenLookup.Count, nextWord);
                     TokenLookup.Add(next.TokenID, next);
                     TokenPairLookup.Add(next.TokenID, []);
+                    ReverseTokenPairLookup.Add(next.TokenID, []);
                 }
             
                 Token? current = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(words[i])).Value;
@@ -96,6 +98,7 @@ public static class Markov
                 
                     TokenPair tp = new TokenPair(current.TokenID, next.TokenID, 1);
                     TokenPairLookup.Add(current.TokenID, [tp]);
+                    ReverseTokenPairLookup.Add(next.TokenID, [tp]);
                     continue;
                 }
             
@@ -111,6 +114,15 @@ public static class Markov
                     else
                     {
                         TokenPairLookup.Add(current.TokenID, [pairWithNext]);
+                    }
+
+                    if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
+                    {
+                        tempReverse.Add(pairWithNext);
+                    }
+                    else
+                    {
+                        ReverseTokenPairLookup.Add(next.TokenID, [pairWithNext]);
                     }
                 }
                 else
@@ -148,17 +160,20 @@ public static class Markov
     {
         long startLoad = Stopwatch.GetTimestamp();
         IsReady = false;
-        TokenPairLookup = [];
         TokenLookup = [];
+        TokenPairLookup = [];
+        ReverseTokenPairLookup = [];
         
         if (!context.Tokens.Any())
             TokenLookup[0] = new Token(0, "\e");
 
-        ILookup<int, TokenPair> tokenPairs = context.TokenPairs.AsNoTracking().ToLookup(t => t.TokenID);
-
+        ILookup<int, TokenPair> tokenPairsPerToken = context.TokenPairs.AsNoTracking().ToLookup(t => t.TokenID);
+        ILookup<int, TokenPair> tokenPairsPerNext = context.TokenPairs.AsNoTracking().ToLookup(t => t.NextTokenID);
+        
         foreach (Token token in context.Tokens.AsNoTracking())
         {
-            TokenPairLookup.Add(token.TokenID, [.. tokenPairs[token.TokenID]]);
+            TokenPairLookup.Add(token.TokenID, [.. tokenPairsPerToken[token.TokenID]]);
+            ReverseTokenPairLookup.Add(token.TokenID, [.. tokenPairsPerNext[token.TokenID]]);
             TokenLookup.Add(token.TokenID, token);
         }
 
@@ -220,9 +235,8 @@ public static class Markov
         List<int> sequence = [id];
         for (int i = 1; i < maxLength; i++)
         {
-            int i1 = i;
-            List<TokenPair> p = context.TokenPairs.Where(tp => tp.NextTokenID == sequence[i1 - 1]).AsNoTracking().ToList();
-            if (p.Count == 0)
+            ReverseTokenPairLookup.TryGetValue(sequence[i - 1], out List<TokenPair>? p);
+            if (p is null || p.Count == 0)
             {
                 sequence.Reverse();
                 return sequence;
@@ -260,14 +274,13 @@ public static class Markov
         List<int> sequence = [id];
         for (int i = 1; i < maxLength; i++)
         {
-            int i1 = i;
-            List<TokenPair> p = context.TokenPairs.Where(tp => tp.NextTokenID == sequence[i1 - 1]).AsNoTracking().ToList();
-            if (p.Count == 0)
+            ReverseTokenPairLookup.TryGetValue(sequence[i - 1], out List<TokenPair>? p);
+            if (p is null || p.Count == 0)
             {
                 sequence.Reverse();
                 return sequence;
             }
-            
+
             int max = p.MaxBy(x => x.Count)?.Count ?? 2;
             int cut = random.Next(0, max + 1);
             sequence.Add(p.OrderBy(x => x.Count).First(x => x.Count >= cut).TokenID);
@@ -300,15 +313,14 @@ public static class Markov
         List<int> sequence = [id];
         for (int i = 1; i < maxLength; i++)
         {
-            int i1 = i;
-            List<TokenPair> candidates = context.TokenPairs.Where(tp => tp.NextTokenID == sequence[i1 - 1]).AsNoTracking().ToList();
-            if (candidates.Count == 0)
+            ReverseTokenPairLookup.TryGetValue(sequence[i - 1], out List<TokenPair>? p);
+            if (p is null || p.Count == 0)
             {
                 sequence.Reverse();
                 return sequence;
             }
-            
-            sequence.Add(candidates[random.Next(0, candidates.Count)].TokenID);
+
+            sequence.Add(p[random.Next(0, p.Count)].TokenID);
         }
         sequence.Reverse();
         return sequence;
