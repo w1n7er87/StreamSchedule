@@ -195,7 +195,7 @@ public static class Markov
 
         return result;
     }
-    
+
     private static List<int> PickOrdered(int id, int maxLength, bool forceNoLineEnd)
     {
         List<int> sequence = [id];
@@ -214,7 +214,7 @@ public static class Markov
         }
         return sequence;
     }
-    
+
     private static List<int> PickOrderedReverse(int id, int maxLength)
     {
         List<int> sequence = [id];
@@ -229,7 +229,7 @@ public static class Markov
             }
             
             int cut = random.Next(0, p.Count + 1);
-            sequence.Add(p.OrderByDescending(x => x.Count).ElementAt(random.Next(0, cut)).NextTokenID);
+            sequence.Add(p.OrderByDescending(x => x.Count).ElementAt(random.Next(0, cut)).TokenID);
         }
         sequence.Reverse();
         return sequence;
@@ -270,14 +270,13 @@ public static class Markov
             
             int max = p.MaxBy(x => x.Count)?.Count ?? 2;
             int cut = random.Next(0, max + 1);
-            sequence.Add(p.OrderBy(x => x.Count).First(x => x.Count >= cut).NextTokenID);
+            sequence.Add(p.OrderBy(x => x.Count).First(x => x.Count >= cut).TokenID);
         }
         
         sequence.Reverse();
         return sequence;
     }
 
-    
     private static List<int> PickRandom(int id, int maxLength, bool forceNoLineEnd)
     {
         List<int> sequence = [id];
