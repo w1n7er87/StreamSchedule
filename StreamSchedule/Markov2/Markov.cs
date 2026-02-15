@@ -168,9 +168,12 @@ public static class Markov
         return elapsed;
     }
 
-    public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.ordered, bool forceNoLineEnd = false, int? seed = null)
+    public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.random, int? seed = null)
     {
         if (!IsReady) return "uuh ";
+        
+        bool forceNoLineEnd = method.HasFlag(Method.force);
+        bool reverse = method.HasFlag(Method.reverse);
         
         random = new Random(seed ?? DateTime.Now.Millisecond);
         
@@ -181,8 +184,9 @@ public static class Markov
 
         List<int> tokenIDs = method switch
         {
-            Method.ordered => PickOrdered(first.TokenID, maxLength, forceNoLineEnd),
-            Method.weighted => PickWeighted(first.TokenID, maxLength, forceNoLineEnd),
+            _ when method.HasFlag(Method.ordered) => reverse ? PickOrderedReverse(first.TokenID, maxLength) : PickOrdered(first.TokenID, maxLength, forceNoLineEnd),
+            _ when method.HasFlag(Method.weighted) => reverse ? PickWeightedReverse(first.TokenID, maxLength) : PickWeighted(first.TokenID, maxLength, forceNoLineEnd),
+            _ when method.HasFlag(Method.random) => reverse ? PickRandomReverse(first.TokenID, maxLength) : PickRandom(first.TokenID, maxLength, forceNoLineEnd),
             _ => PickRandom(first.TokenID, maxLength, forceNoLineEnd),
         };
         string result = "";
@@ -210,6 +214,26 @@ public static class Markov
         }
         return sequence;
     }
+    
+    private static List<int> PickOrderedReverse(int id, int maxLength)
+    {
+        List<int> sequence = [id];
+        for (int i = 1; i < maxLength; i++)
+        {
+            int i1 = i;
+            List<TokenPair> p = context.TokenPairs.Where(tp => tp.NextTokenID == sequence[i1 - 1]).AsNoTracking().ToList();
+            if (p.Count == 0)
+            {
+                sequence.Reverse();
+                return sequence;
+            }
+            
+            int cut = random.Next(0, p.Count + 1);
+            sequence.Add(p.OrderByDescending(x => x.Count).ElementAt(random.Next(0, cut)).NextTokenID);
+        }
+        sequence.Reverse();
+        return sequence;
+    }
 
     private static List<int> PickWeighted(int id, int maxLength, bool forceNoLineEnd)
     {
@@ -231,6 +255,29 @@ public static class Markov
         return sequence;
     }
 
+    private static List<int> PickWeightedReverse(int id, int maxLength)
+    {
+        List<int> sequence = [id];
+        for (int i = 1; i < maxLength; i++)
+        {
+            int i1 = i;
+            List<TokenPair> p = context.TokenPairs.Where(tp => tp.NextTokenID == sequence[i1 - 1]).AsNoTracking().ToList();
+            if (p.Count == 0)
+            {
+                sequence.Reverse();
+                return sequence;
+            }
+            
+            int max = p.MaxBy(x => x.Count)?.Count ?? 2;
+            int cut = random.Next(0, max + 1);
+            sequence.Add(p.OrderBy(x => x.Count).First(x => x.Count >= cut).NextTokenID);
+        }
+        
+        sequence.Reverse();
+        return sequence;
+    }
+
+    
     private static List<int> PickRandom(int id, int maxLength, bool forceNoLineEnd)
     {
         List<int> sequence = [id];
@@ -246,6 +293,25 @@ public static class Markov
 
             sequence.Add(p[random.Next(0, p.Count)].NextTokenID);
         }
+        return sequence;
+    }
+
+    private static List<int> PickRandomReverse(int id, int maxLength)
+    {
+        List<int> sequence = [id];
+        for (int i = 1; i < maxLength; i++)
+        {
+            int i1 = i;
+            List<TokenPair> candidates = context.TokenPairs.Where(tp => tp.NextTokenID == sequence[i1 - 1]).AsNoTracking().ToList();
+            if (candidates.Count == 0)
+            {
+                sequence.Reverse();
+                return sequence;
+            }
+            
+            sequence.Add(candidates[random.Next(0, candidates.Count)].TokenID);
+        }
+        sequence.Reverse();
         return sequence;
     }
 }
