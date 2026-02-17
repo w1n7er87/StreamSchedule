@@ -11,4 +11,5 @@ public record HypeTrainExecution(
     TreasureTrainDetails? TreasureTrainDetails,
     HypeTrainCompleted? AllTimeHigh,
     HypeTrainParticipation?[]? Participations,
-    SharedHypeTrainDetails? SharedHypeTrainDetails);
+    SharedHypeTrainDetails? SharedHypeTrainDetails,
+    CommunityTrainDetails? VariantTrainDetails);

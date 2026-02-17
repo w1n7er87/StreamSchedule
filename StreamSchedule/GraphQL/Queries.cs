@@ -194,6 +194,12 @@ internal static class Queries
                                 discountPercentage
                                 discountLevelThreshold
                             }
+                            variantTrainDetails {
+                                 currentRewardAmount
+                                 nextRewardAmount
+                                 previousRewardAmount
+                                 rewardLevelThreshold
+                            }
                             allTimeHigh {
                                 level {
                                     value
@@ -325,6 +331,12 @@ internal static class Queries
                                 discountPercentage
                                 discountLevelThreshold
                             }
+                            variantTrainDetails {
+                                 currentRewardAmount
+                                 nextRewardAmount
+                                 previousRewardAmount
+                                 rewardLevelThreshold
+                            }
                             allTimeHigh {
                                 level {
                                     value
@@ -427,6 +439,12 @@ internal static class Queries
                            treasureTrainDetails {
                                discountPercentage
                                discountLevelThreshold
+                           }
+                           variantTrainDetails {
+                                currentRewardAmount
+                                nextRewardAmount
+                                previousRewardAmount
+                                rewardLevelThreshold
                            }
                            allTimeHigh {
                                level {
