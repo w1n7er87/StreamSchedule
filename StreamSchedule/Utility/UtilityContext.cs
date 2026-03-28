@@ -13,7 +13,7 @@ public class UtilityContext : DbContext
     
     public static UtilityContext GetInstance() 
     {
-        UtilityContext instance = new(new DbContextOptionsBuilder<UtilityContext>().UseSqlite("Data Source=UtilityContext.data").Options);
+        UtilityContext instance = new(new DbContextOptionsBuilder<UtilityContext>().UseSqlite("Data Source=Utility.data").Options);
         instance.Database.EnsureCreated();
         return instance;
     }

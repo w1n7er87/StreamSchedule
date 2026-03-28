@@ -17,12 +17,21 @@ public static class Browsing
         Utility.Data.Integrity? saved = utilDb.Integrities.OrderBy(i => i.ID).LastOrDefault();
         if (saved is null)
         {
+            Console.WriteLine("no saved token found");
+            Task.Run(Loop);
+            return;
+        }
+
+        if (DateTime.Now > saved.ExpiresAt)
+        {
+            Console.WriteLine("latest token expired");
             Task.Run(Loop);
             return;
         }
         
         GraphQLClient.SetIntegrity(new Integrity(saved.Token, saved.DeviceID));
         NextUpdate = saved.ExpiresAt;
+        Console.WriteLine("set persisted token");
         Task.Run(Loop);
     }
 
