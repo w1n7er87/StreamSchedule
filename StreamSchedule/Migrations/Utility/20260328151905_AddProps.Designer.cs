@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StreamSchedule.Utility;
 
@@ -10,9 +11,11 @@ using StreamSchedule.Utility;
 namespace StreamSchedule.Migrations.Utility
 {
     [DbContext(typeof(UtilityContext))]
-    partial class UtilityContextModelSnapshot : ModelSnapshot
+    [Migration("20260328151905_AddProps")]
+    partial class AddProps
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
