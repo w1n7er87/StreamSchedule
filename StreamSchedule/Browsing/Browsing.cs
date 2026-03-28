@@ -14,7 +14,7 @@ public static class Browsing
 
     static Browsing()
     {
-        Utility.Data.Integrity? saved = utilDb.Integrities.FirstOrDefault(i => NextUpdate >= DateTime.Now);
+        Utility.Data.Integrity? saved = utilDb.Integrities.OrderBy(i => i.ID).LastOrDefault();
         if (saved is null) return;
         
         GraphQLClient.SetIntegrity(new Integrity(saved.Token, saved.DeviceID));
