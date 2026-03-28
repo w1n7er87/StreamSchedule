@@ -91,8 +91,8 @@ internal static class BotCore
         Nlog.Info(Environment.GetEnvironmentVariable("STREAM_SCHEDULE_PAGES", EnvironmentVariableTarget.User));
 
         _ = EmoteMonitors.Monitoring.Start;
-        _ = Browsing.Browsing.Start;
         _ = Markov.Start;
+        Browsing.Browsing.Start();
         ExportUtils.UpdateStyles();
     }
 

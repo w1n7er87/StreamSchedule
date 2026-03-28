@@ -2,16 +2,27 @@ using System.Diagnostics;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using StreamSchedule.GraphQL;
+using StreamSchedule.Utility;
 
 namespace StreamSchedule.Browsing;
 
 public static class Browsing
 {
     private static DateTime NextUpdate = DateTime.MinValue;
-    public static bool Start => true;
+
+    public static void Start()
+    {
+        Utility.Data.Integrity? saved = utilDb.Integrities.FirstOrDefault(i => NextUpdate >= DateTime.Now);
+        if (saved is null) return;
+        
+        GraphQLClient.SetIntegrity(new Integrity(saved.Token, saved.DeviceID));
+        NextUpdate = saved.ExpiresAt;
+    }
 
     static Browsing() { Task.Run(Loop); }
 
+    private static readonly UtilityContext utilDb = UtilityContext.GetInstance();
+    
     private static async Task Loop()
     {
         while (true)
@@ -26,6 +37,10 @@ public static class Browsing
                     GraphQLClient.SetIntegrity(i);
                     TimeSpan nextUpdate = new(Random.Shared.Next(13, 15), Random.Shared.Next(0, 45), 0);
                     NextUpdate = DateTime.Now + nextUpdate;
+
+                    utilDb.Integrities.Add(new Utility.Data.Integrity() { DeviceID = i.DeviceID, Token = i.Token, ExpiresAt = NextUpdate });
+                    await utilDb.SaveChangesAsync();
+                    
                     BotCore.Nlog.Info($"next planned update is in {nextUpdate:h'h 'm'm '} ");
                 }
                 else

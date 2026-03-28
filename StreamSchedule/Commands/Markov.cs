@@ -12,8 +12,11 @@ internal class Markov : Command
     public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["o", "w", "c", "m", "f", "q", "r", "count", "load", "save"];
     public override List<string> Aliases { get; set; } = [];
-    
+
     private static bool Muted = false;
+    private const int maxTokenCount = 200;
+    private const int defaultTokenCount = 10;
+
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         try
@@ -27,7 +30,7 @@ internal class Markov : Command
             }
             if(Muted) return Task.FromResult(new CommandResult("uuh "));
 
-            int count = args.TryGetValue("c", out string? cc)? int.TryParse(cc, out int ccc)? Math.Clamp(ccc, 1, 75) : 25 : 25;
+            int count = args.TryGetValue("c", out string? cc)? int.TryParse(cc, out int ccc)? Math.Clamp(ccc, 1, maxTokenCount) : defaultTokenCount : defaultTokenCount;
         
             Method method = Method.random;
             
