@@ -92,7 +92,7 @@ internal static class BotCore
 
         _ = EmoteMonitors.Monitoring.Start;
         _ = Markov.Start;
-        Browsing.Browsing.Start();
+        _ = Browsing.Browsing.Start;
         ExportUtils.UpdateStyles();
     }
 

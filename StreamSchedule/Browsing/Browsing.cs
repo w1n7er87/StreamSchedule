@@ -10,16 +10,17 @@ public static class Browsing
 {
     private static DateTime NextUpdate = DateTime.MinValue;
 
-    public static void Start()
+    public static bool Start => true;
+
+    static Browsing()
     {
         Utility.Data.Integrity? saved = utilDb.Integrities.FirstOrDefault(i => NextUpdate >= DateTime.Now);
         if (saved is null) return;
         
         GraphQLClient.SetIntegrity(new Integrity(saved.Token, saved.DeviceID));
         NextUpdate = saved.ExpiresAt;
+        Task.Run(Loop);
     }
-
-    static Browsing() { Task.Run(Loop); }
 
     private static readonly UtilityContext utilDb = UtilityContext.GetInstance();
     
