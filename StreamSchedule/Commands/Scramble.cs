@@ -11,8 +11,8 @@ internal class Scramble : Command
 {
     public override string Call => "unscramble";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => "scramble, try to get a word of [c] length";
-    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
+    public override string Help => $"scramble, try to get a word of [c] length ({minCount} - {maxCount})";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.HalfAMinute);
     public override string[] Arguments => ["c", "m"];
     public override List<string> Aliases { get; set; } = [];
 
@@ -20,6 +20,8 @@ internal class Scramble : Command
     private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
     private static readonly Random random = new();
     private static bool muted = false;
+    private const int minCount = 3;
+    private const int maxCount = 20;
     
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -34,7 +36,8 @@ internal class Scramble : Command
         
         int desiredCount;
         {
-            desiredCount = args.TryGetValue("c", out string? cc) ? int.TryParse(cc, out int c) ? Math.Clamp(c, 3, 20) : 5 : 5;
+            int def = Random.Shared.Next(minCount, maxCount + 1);
+            desiredCount = args.TryGetValue("c", out string? cc) ? int.TryParse(cc, out int c) ? Math.Clamp(c, minCount, maxCount) : def : def;
         }
         
         long timeStart = Stopwatch.GetTimestamp();
@@ -50,14 +53,14 @@ internal class Scramble : Command
             word = context.Tokens.First(t => t.TokenID == tp.TokenID).Value;
             attempts++;
             
-            if (attempts > 4)
+            if (attempts > 10)
             {
                 desiredCount--;
                 attempts = 0;
                 continue;
             }
             
-            if (word.Length < desiredCount) continue;
+            if (word.Length != desiredCount) continue;
             ok = true;
         }
 

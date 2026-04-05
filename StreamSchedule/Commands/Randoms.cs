@@ -11,7 +11,7 @@ internal class Randoms : Command
     public override string[] Arguments => ["flip"];
     public override List<string> Aliases { get; set; } = [];
     
-    private static readonly string[] neuros = ["nwero", "hiyori", "eliv", "nuero", "newero", "wuero", "cleliv", "cluero", "weliv", "newliv"];
+    private static readonly string[] neuros = ["nwero", "hiyori", "eliv", "nuero", "newero", "wuero", "cleliv", "cluero", "weliv", "newliv", "cybuero"];
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
