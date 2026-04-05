@@ -4,3 +4,4 @@ StreamSchedule/Credentials.cs
 /StreamSchedule/.vs
 StreamSchedule/.editorconfig
 /StreamSchedule/.idea
+StreamSchedule/BadWords.cs

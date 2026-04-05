@@ -10,42 +10,75 @@ namespace StreamSchedule.Commands;
 internal class Scramble : Command
 {
     public override string Call => "unscramble";
-    public override Privileges Privileges => Privileges.Uuh;
-    public override string Help => "scramble";
-    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
-    public override string[]? Arguments => null;
+    public override Privileges Privileges => Privileges.Trusted;
+    public override string Help => "scramble, try to get a word of [c] length";
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override string[] Arguments => ["c", "m"];
     public override List<string> Aliases { get; set; } = [];
 
     private static readonly Dictionary<string, ActiveGame> activeGames = [];
     private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
     private static readonly Random random = new();
+    private static bool muted = false;
     
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         if (activeGames.TryGetValue(message.ChannelID, out _))
             return Task.FromResult(new CommandResult("✋ Awkward a game is already in progress "));
 
+        _ = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args);
+        
+        if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Mod) muted = !muted;
+
+        if (muted) return Task.FromResult(new CommandResult());
+        
+        int desiredCount;
+        {
+            desiredCount = args.TryGetValue("c", out string? cc) ? int.TryParse(cc, out int c) ? Math.Clamp(c, 3, 20) : 5 : 5;
+        }
+        
         long timeStart = Stopwatch.GetTimestamp();
         bool ok = false;
         string word = "";
         int attempts = 0;
+        
         while (!ok)
         {
             IQueryable<TokenPair> candidates = context.TokenPairs.Where(tp => tp.Count >= 5).AsNoTracking();
+            
             TokenPair tp = candidates.ElementAt(Random.Shared.Next(candidates.Count()));
             word = context.Tokens.First(t => t.TokenID == tp.TokenID).Value;
             attempts++;
-            if (word.Length < 3) continue;
+            
+            if (attempts > 4)
+            {
+                desiredCount--;
+                attempts = 0;
+                continue;
+            }
+            
+            if (word.Length < desiredCount) continue;
             ok = true;
         }
 
         activeGames[message.ChannelID] = new ActiveGame(word, message.ChannelName, message.ChannelID);
 
         Codepoint[] w = word.Codepoints().ToArray();
-        random.Shuffle(w);
-
-        BotCore.Nlog.Info($"picked {word} in {Stopwatch.GetElapsedTime(timeStart)} in {attempts}");
-        return Task.FromResult(new CommandResult($"Unscramble this: \" {string.Join("", w.Select(c => c.AsString()))} \" you have 30s. "));
+        
+        string shuffled = "";
+        bool picked = false;
+        int shuffleCount = 0;
+        while (!picked)
+        {
+            random.Shuffle(w);
+            shuffled = string.Join("", w.Select(c => c.AsString()));
+            shuffleCount++;
+            if (BadWords.Contains(shuffled)) continue;
+            picked = true;
+        }
+        
+        BotCore.Nlog.Info($"picked {word} in {Stopwatch.GetElapsedTime(timeStart)} in {attempts}, shuffling {shuffleCount} times");
+        return Task.FromResult(new CommandResult($"Unscramble this: \" {shuffled} \" you have 30s. "));
     }
 
     public static void CheckWord(UniversalMessageInfo message)
