@@ -11,7 +11,6 @@ internal class GetStream : Command
     public override Privileges Privileges => Privileges.None;
     public override string Help => "time until next stream on the schedule";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["h", "min", "s", "mic", "ms", "ns", "d", "y"];
     public override List<string> Aliases { get; set; } = [];
 

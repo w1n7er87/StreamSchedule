@@ -12,7 +12,6 @@ internal class GetEmotesFromMessage : Command
     public override Privileges Privileges => Privileges.None;
     public override string Help => "get emote owners from a reply, your message, message by messageID, or by emote id";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["messageid", "emoteid"];
     public override List<string> Aliases { get; set; } = [];
 

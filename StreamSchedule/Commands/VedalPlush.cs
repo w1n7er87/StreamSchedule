@@ -10,7 +10,6 @@ internal class VedalPlush : Command
     public override Privileges Privileges => Privileges.Mod;
     public override string Help => "stayTuteled ";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
 

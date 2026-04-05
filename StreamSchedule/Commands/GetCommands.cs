@@ -9,7 +9,6 @@ internal class GetCommands : Command
     public override Privileges Privileges => Privileges.Banned;
     public override string Help => "show list of commands available to you";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["q"];
     public override List<string> Aliases { get; set; } = [];
 

@@ -8,7 +8,6 @@ internal class AddStream : Command
     public override Privileges Privileges => Privileges.Mod;
     public override string Help => "set new stream time or update given day: [date-time] (d-M-H-mm dd-MM-H-mm d-M-yy-H-mm dd-MM-yy-H-mm d-M-yyyy-H-mm dd-MM-yyyy-H-mm) [stream title] (required)";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
     public override Task<CommandResult> Handle(UniversalMessageInfo message)

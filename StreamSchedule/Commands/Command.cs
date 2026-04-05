@@ -8,7 +8,7 @@ internal abstract class Command : ICommand
     public abstract Privileges Privileges { get; }
     public abstract string Help { get; }
     public abstract TimeSpan Cooldown { get; }
-    public abstract Dictionary<string, DateTime> LastUsedOnChannel { get; }
+    public Dictionary<int, Cooldown> PersonalCooldowns { get; } = [];
     public abstract string[]? Arguments { get; }
     public abstract List<string> Aliases { get; set; }
 

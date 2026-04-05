@@ -28,7 +28,7 @@ internal class TextCommand : ICommand
     [NotMapped] public string Call => Name;
     [NotMapped] public string Help => "simple text command Aloo ";
     [NotMapped] public TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    [NotMapped] public Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
+    [NotMapped] public Dictionary<int, Cooldown> PersonalCooldowns { get; } = [];
     [NotMapped] public string[]? Arguments => null;
 
     public Task<CommandResult> Handle(UniversalMessageInfo message)

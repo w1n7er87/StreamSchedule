@@ -34,8 +34,6 @@ internal static class Commands
         {
             Command currentCommandInstance = (Command)Activator.CreateInstance(c)!;
 
-            channels.ForEach(x => currentCommandInstance.LastUsedOnChannel.Add(x, DateTime.Now));
-
             CommandAlias? alias = context.CommandAliases.FirstOrDefault(x => x.CommandName == currentCommandInstance.Call);
 
             if (alias is null)
@@ -51,10 +49,8 @@ internal static class Commands
         }
 
         foreach (TextCommand tc in context.TextCommands.ToList())
-        {
-            channels.ForEach(x => tc.LastUsedOnChannel.Add(x, DateTime.UtcNow));
             AllCommands.Add(tc);
-        }
+        
     }
 
     internal static bool IsNameAvailable(string alias)

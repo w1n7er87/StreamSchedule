@@ -13,7 +13,6 @@ internal class EmoteFeed : Command
     public override Privileges Privileges => Privileges.Trusted;
     public override string Help => "add channel to monitor emote changes in my chat";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["rm", "channel", "rmsub"];
     public override List<string> Aliases { get; set; } = [];
 

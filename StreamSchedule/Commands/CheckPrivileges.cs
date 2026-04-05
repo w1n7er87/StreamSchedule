@@ -9,7 +9,6 @@ internal class CheckPrivileges : Command
     public override Privileges Privileges => Privileges.None;
     public override string Help => "check bot privileges: [username](optional)";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
 

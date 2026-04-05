@@ -10,7 +10,6 @@ internal class ChannelRules : Command
     public override Privileges Privileges => Privileges.Banned;
     public override string Help => "channel rules";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
 

@@ -9,7 +9,6 @@ internal class EvaluateUsers : Command
     public override Privileges Privileges => Privileges.Uuh;
     public override string Help => "evaluate user's scores and assign privileges accordingly: [username](optional)";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["s"];
     public override List<string> Aliases { get; set; } = [];
 

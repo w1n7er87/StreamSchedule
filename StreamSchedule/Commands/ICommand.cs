@@ -8,7 +8,7 @@ internal interface ICommand
     internal Privileges Privileges { get; }
     internal string Help { get; }
     internal TimeSpan Cooldown { get; }
-    internal Dictionary<string, DateTime> LastUsedOnChannel { get; }
+    internal Dictionary<int, Cooldown> PersonalCooldowns { get; }
     internal string[]? Arguments { get; }
     internal List<string> Aliases { get; }
 

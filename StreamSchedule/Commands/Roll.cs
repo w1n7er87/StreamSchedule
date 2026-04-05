@@ -8,7 +8,6 @@ internal class Roll : Command
     public override Privileges Privileges => Privileges.None;
     public override string Help => "roll a die [amount(max 100_000)]d[sides(max 100_000)], -v for details (up to 50 results)";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["v"];
     public override List<string> Aliases { get; set; } = [];
 

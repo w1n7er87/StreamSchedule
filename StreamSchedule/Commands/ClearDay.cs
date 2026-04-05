@@ -8,7 +8,6 @@ internal class ClearDay : Command
     public override Privileges Privileges => Privileges.Mod;
     public override string Help => "clear schedule for the given day: [date] (d-M-yy or dd-MM-yy)";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
     

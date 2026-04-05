@@ -8,7 +8,6 @@ internal class Randoms : Command
     public override Privileges Privileges => Privileges.None;
     public override string Help => "get random number [0 - n( = 100)]; -flip for 50/50";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["flip"];
     public override List<string> Aliases { get; set; } = [];
     

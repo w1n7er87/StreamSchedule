@@ -9,7 +9,6 @@ internal class SetPrivileges : Command
     public override Privileges Privileges => Privileges.Mod;
     public override string Help => "set other user's privileges (who's privileges are < yours) to < your privileges: [privilege](ban<ok<trusted<mod) [target](username, must be known user)";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
 

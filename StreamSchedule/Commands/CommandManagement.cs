@@ -9,7 +9,6 @@ internal class CommandManagement : Command
     public override Privileges Privileges => Privileges.Mod;
     public override string Help => "manage simple text commands: -add/-rm (-p[priv] optional) [command name](required) [command content](required)";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["add", "rm", "p", "alias", "append", "edit"];
     public override List<string> Aliases { get; set; } = [];
 
@@ -29,7 +28,7 @@ internal class CommandManagement : Command
 
         if (usedArguments.TryGetValue("add", out _)) return Task.FromResult(usedArguments.TryGetValue("alias", out _)
                 ? AddAlias(commandName, commandContent)
-                : AddCommand(commandName, commandContent, privileges, LastUsedOnChannel));
+                : AddCommand(commandName, commandContent, privileges));
 
         if (usedArguments.TryGetValue("rm", out _)) return Task.FromResult(usedArguments.TryGetValue("alias", out _)
                 ? RemoveAlias(commandName, commandContent)
@@ -44,14 +43,12 @@ internal class CommandManagement : Command
         return Task.FromResult(Utils.Responses.Surprise);
     }
 
-    private static CommandResult AddCommand(string commandName, string content, Privileges privileges, Dictionary<string, DateTime> lastUsed)
+    private static CommandResult AddCommand(string commandName, string content, Privileges privileges)
     {
         if (string.IsNullOrEmpty(content)) return Utils.Responses.Fail + " no content provided ";
         if (!Commands.IsNameAvailable(commandName)) return Utils.Responses.Fail + " command with this name/alias already exists. ";
 
         TextCommand newCommand = new() { Name = commandName, Content = content, Privileges = privileges, Aliases = [] };
-
-        foreach (string channel in lastUsed.Keys) newCommand.LastUsedOnChannel.Add(channel, DateTime.MinValue);
 
         Commands.AllCommands.Add(newCommand);
         BotCore.DBContext.TextCommands.Add(newCommand);

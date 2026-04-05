@@ -13,7 +13,6 @@ internal class UserInfo : Command
     public override Privileges Privileges => Privileges.Uuh;
     public override string Help => "user info: [username] / [#id]";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n"];
     public override List<string> Aliases { get; set; } = [];
 

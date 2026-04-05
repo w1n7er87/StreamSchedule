@@ -8,7 +8,6 @@ internal class Kill : Command
     public override Privileges Privileges => Privileges.None;
     public override string Help => "kill the bot";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["fr"];
     public override List<string> Aliases { get; set; } = [];
 

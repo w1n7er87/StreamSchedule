@@ -10,7 +10,6 @@ internal class Lurkers : Command
     public override Privileges Privileges => Privileges.None;
     public override string Help => "get channel lurkers";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.ThreeMinutes);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
 

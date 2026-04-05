@@ -8,7 +8,6 @@ internal class SetMessageLengthLimit : Command
     public override Privileges Privileges => Privileges.Uuh;
     public override string Help => "set character limit per message";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
 

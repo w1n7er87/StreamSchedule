@@ -12,7 +12,6 @@ internal class HypeTracker : Command
     public override Privileges Privileges => Privileges.Trusted;
     public override string Help => $"track current hype train with a summary at the end, -for[h] to specify duration in hours (default 2, max 12) ({MaxChannels} channels max) ";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["for"];
     public override List<string> Aliases { get; set; } = [];
 

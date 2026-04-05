@@ -9,7 +9,6 @@ internal class Permit : Command
     public override Privileges Privileges => Privileges.Mod;
     public override string Help => "block term, or replace it with another term";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["as", "remove", "noreplace", "anycase"];
     public override List<string> Aliases { get; set; } = [];
 

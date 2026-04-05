@@ -8,7 +8,6 @@ internal class Say : Command
     public override Privileges Privileges => Privileges.Uuh;
     public override string Help => "say";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Short);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["f"];
     public override List<string> Aliases { get; set; } = [];
 

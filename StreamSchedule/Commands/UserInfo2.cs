@@ -12,7 +12,6 @@ internal class UserInfo2 : Command
     public override Privileges Privileges => Privileges.None;
     public override string Help => "user info: [username]";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
-    public override Dictionary<string, DateTime> LastUsedOnChannel { get; } = [];
     public override string[] Arguments => ["f", "e", "s", "a", "g", "c", "n", "l", "h"];
     public override List<string> Aliases { get; set; } = [];
 

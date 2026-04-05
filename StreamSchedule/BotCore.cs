@@ -160,13 +160,19 @@ internal static class BotCore
 
         ICommand? cc = Commands.Commands.AllCommands.FirstOrDefault(x => x.Call == requestedCommand || x.Aliases.Contains(requestedCommand));
         if (cc is null) return;
-        if (cc.LastUsedOnChannel[e.ChatMessage.Channel] + cc.Cooldown > DateTime.Now && userSent.Privileges < Privileges.Mod) return;
         if (userSent.Privileges < cc.Privileges) return;
-
+        
+        if (cc.PersonalCooldowns.TryGetValue(userSent.Id, out Cooldown? cooldown))
+        {
+            if(!cooldown.TryExtend()) return;
+        }
+        else
+        {
+            cc.PersonalCooldowns.Add(userSent.Id, new Cooldown(userSent, cc.Cooldown));
+        }
+        
         trimmedMessage = trimmedMessage[requestedCommand.Length..].Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", "").Trim();
-
-        if (userSent.Privileges < Privileges.Mod) cc.LastUsedOnChannel[e.ChatMessage.Channel] = DateTime.Now;
-
+        
         Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{cc.Call}]:[{trimmedMessage}]");
 
         start = Stopwatch.GetTimestamp();
