@@ -9,6 +9,7 @@ internal enum Cooldowns
     Longer = 20,
     HalfAMinute = 30,
     Minute = 60,
+    TwoMinutes = 120,
     ThreeMinutes = 180,
     FiveMinutes = 300,
     TenMinutes = 600,

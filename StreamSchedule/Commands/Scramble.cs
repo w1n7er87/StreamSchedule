@@ -49,7 +49,7 @@ internal class Scramble : Command
 
         while (!ok)
         {
-            if (!candidates.Any())
+            if (candidates.Count == 0)
             {
                 desiredCount = Math.Clamp(desiredCount - 1, minCount, maxCount);
                 attempts++;
