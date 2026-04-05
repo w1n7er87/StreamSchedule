@@ -21,7 +21,7 @@ internal class Scramble : Command
     private static readonly Random random = new();
     private static bool muted = false;
     private const int minCount = 3;
-    private const int maxCount = 20;
+    private const int maxCount = 15;
     
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -45,26 +45,31 @@ internal class Scramble : Command
         string word = "";
         int attempts = 0;
         
+        List<Token> candidates = [.. context.Tokens.Where(tt => tt.Value.Length == desiredCount).AsNoTracking()];
+
         while (!ok)
         {
-            IQueryable<TokenPair> candidates = context.TokenPairs.Where(tp => tp.Count >= 5).AsNoTracking();
-            
-            TokenPair tp = candidates.ElementAt(Random.Shared.Next(candidates.Count()));
-            word = context.Tokens.First(t => t.TokenID == tp.TokenID).Value;
-            attempts++;
-            
-            if (attempts > 10)
+            if (!candidates.Any())
             {
-                desiredCount--;
-                attempts = 0;
+                desiredCount = Math.Clamp(desiredCount - 1, minCount, maxCount);
+                attempts++;
+                candidates = [.. context.Tokens.Where(tt => tt.Value.Length == desiredCount).AsNoTracking()];
+                continue;
+            }
+
+            Token tt = candidates.ElementAt(Random.Shared.Next(candidates.Count));
+            
+            IQueryable<TokenPair> usedIn = context.TokenPairs.Where(tp => tp.Count >= 5 && (tp.TokenID == tt.TokenID || tp.NextTokenID == tt.TokenID)).AsNoTracking();
+
+            if (!usedIn.Any())
+            {
+                attempts++;
                 continue;
             }
             
-            if (word.Length != desiredCount) continue;
+            word = tt.Value;
             ok = true;
         }
-
-        activeGames[message.ChannelID] = new ActiveGame(word, message.ChannelName, message.ChannelID);
 
         Codepoint[] w = word.Codepoints().ToArray();
         
@@ -79,6 +84,8 @@ internal class Scramble : Command
             if (BadWords.Contains(shuffled)) continue;
             picked = true;
         }
+        
+        activeGames[message.ChannelID] = new ActiveGame(word, message.ChannelName, message.ChannelID);
         
         BotCore.Nlog.Info($"picked {word} in {Stopwatch.GetElapsedTime(timeStart)} in {attempts}, shuffling {shuffleCount} times");
         return Task.FromResult(new CommandResult($"Unscramble this: \" {shuffled} \" you have 30s. "));
