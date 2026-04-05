@@ -8,13 +8,13 @@ internal class Markov : Command
     public override string Call => "markov";
     public override Privileges Privileges => Privileges.Trusted;
     public override string Help => $"markov. o ordered, w weighted, c[value(1-{maxTokenCount})]({defaultTokenCount}) specify token count, q seed, r reverse, f force no eol (will still stop if eol is the only next for last token)";
-    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.HalfAMinute);
     public override string[] Arguments => ["o", "w", "c", "m", "f", "q", "r", "count", "load", "save"];
     public override List<string> Aliases { get; set; } = [];
 
     private static bool Muted = false;
-    private const int maxTokenCount = 200;
-    private const int defaultTokenCount = 10;
+    private const int maxTokenCount = 75;
+    private const int defaultTokenCount = 12;
 
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {

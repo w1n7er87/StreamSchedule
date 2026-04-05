@@ -12,7 +12,7 @@ internal class Scramble : Command
     public override string Call => "unscramble";
     public override Privileges Privileges => Privileges.Trusted;
     public override string Help => "scramble, try to get a word of [c] length";
-    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Long);
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
     public override string[] Arguments => ["c", "m"];
     public override List<string> Aliases { get; set; } = [];
 

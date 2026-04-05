@@ -26,7 +26,7 @@ internal class Helps : Command
 
         string aliases = c.Aliases.Count != 0 ? $"( {string.Join(" , ", c.Aliases)} )" : "";
         string args = c.Arguments is not null ? $"args: {string.Join(", ", c.Arguments)}" : "";
-        string cd = $"cooldown: {c.Cooldown.TotalSeconds}s";
+        string cd = $"base cooldown: {c.Cooldown.TotalSeconds}s";
         return Task.FromResult(new CommandResult($"{c.Call} {aliases} {c.Help}. {args} {cd} "));
     }
 }
