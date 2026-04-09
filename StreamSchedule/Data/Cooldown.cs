@@ -26,11 +26,11 @@ public sealed class Cooldown
         if (user.Privileges < Privileges.Mod && DateTime.Now < expiresAt)
             return false;
 
-        if (DateTime.Now > lastUsedAt + (baseCooldown * 2))
+        if (DateTime.Now > lastUsedAt + (baseCooldown * 3))
             useCount = 0;
 
         lastUsedAt = DateTime.Now;
-        expiresAt = lastUsedAt + baseCooldown + (baseCooldown / 5) * useCount;
+        expiresAt = lastUsedAt + baseCooldown + (baseCooldown / 3) * useCount;
         useCount++;
 
         BotCore.Nlog.Info($"{user.Username} c:{useCount} {expiresAt - lastUsedAt} {baseCooldown}");

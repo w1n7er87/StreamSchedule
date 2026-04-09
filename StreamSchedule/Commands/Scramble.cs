@@ -19,7 +19,7 @@ internal class Scramble : Command
     private static readonly Dictionary<string, ActiveGame> activeGames = [];
     private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
     private static readonly Random random = new();
-    private static bool muted = false;
+    private static bool muted = true;
     private const int minCount = 3;
     private const int maxCount = 15;
     
