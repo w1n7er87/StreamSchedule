@@ -28,10 +28,13 @@ internal class Exporter
 
             if (removed.Count == totalCount && added.Count == totalCount)
             {
-                GraphQL.Data.Emote? oldEmote = await GraphQLClient.GetEmote(removed.FirstOrDefault()?.ID ?? "");
-                string oldPrefix = oldEmote?.Prefix ?? "";
-                string newPrefix = addedEmoteDetails.FirstOrDefault(x => x?.ID == oldEmote?.ID)?.Prefix ?? "";
-
+                string? id = removed.FirstOrDefault()?.ID ?? "";
+                Emote oldEmote = addedEmoteDetails.FirstOrDefault(e => e?.ID == id);
+                GraphQL.Data.Emote? newEmote = addedEmoteDetails.FirstOrDefault(e => e?.ID == id);
+                
+                string newPrefix = newEmote?.Prefix ?? "";
+                string oldPrefix = string.Join("", oldEmote?.Token.Take((oldEmote?.Token.Length ?? 0) - newEmote?.Suffix?.Length ?? 0) ?? "");
+                
                 chatResult.Append($"prefix changed \"{oldPrefix}\" > \"{newPrefix}\" ");
                 ExportToChat(channel, chatResult);
                 return;
