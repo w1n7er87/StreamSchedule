@@ -8,7 +8,7 @@ internal class CheckCD : Command
     public override string Call => "checkcd";
     public override Privileges Privileges => Privileges.None;
     public override string Help => "check cooldown [command] (username)";
-    public override TimeSpan Cooldown => new((int)Cooldowns.Medium);
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Medium);
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
     
@@ -34,6 +34,6 @@ internal class CheckCD : Command
     }
 
     private static string ReadableCooldown(TimeSpan timeSpan) 
-        => $"{(timeSpan.Days > 0 ? $"{timeSpan.Days}d " : "")}{(timeSpan.Hours > 0 ? $"{timeSpan.Hours}h " : "")}{(timeSpan.Minutes > 0 ? $"{timeSpan.Minutes}m " : "")}{(timeSpan.Seconds > 0 ? $"{timeSpan.Seconds}.{timeSpan:fff}s " : $"0.{timeSpan:fff}s ")}";
+        => $"{(timeSpan < TimeSpan.Zero ? "-" : "") }{(timeSpan.Days != 0 ? $"{Math.Abs(timeSpan.Days)}d " : "")}{(timeSpan.Hours != 0 ? $"{Math.Abs(timeSpan.Hours)}h " : "")}{(timeSpan.Minutes != 0 ? $"{Math.Abs(timeSpan.Minutes)}m " : "")}{(timeSpan.Seconds != 0 ? $"{Math.Abs(timeSpan.Seconds)}.{timeSpan:fff}s " : $"0.{timeSpan:fff}s")}";
     
 }

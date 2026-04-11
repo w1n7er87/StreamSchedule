@@ -6,6 +6,7 @@ public sealed class Cooldown
 {
     private Cooldown() {}
 
+    private const float ResetMultiplier = 2.5f;
     private readonly TimeSpan baseCooldown;
     private readonly User user;
 
@@ -26,14 +27,14 @@ public sealed class Cooldown
     public bool Expired => DateTime.Now > expiresAt;
     public TimeSpan currentCooldown => lastCooldown;
     public DateTime ExpiresAtUtc => TimeZoneInfo.ConvertTimeToUtc(expiresAt);
-    public DateTime ResetAtUtc => TimeZoneInfo.ConvertTimeToUtc(lastUsedAt + lastCooldown * 3);
+    public DateTime ResetAtUtc => TimeZoneInfo.ConvertTimeToUtc(lastUsedAt + lastCooldown * ResetMultiplier);
     
     public bool TryExtend()
     {
         if (user.Privileges < Privileges.Mod && !Expired)
             return false;
 
-        if (DateTime.Now > lastUsedAt + (lastCooldown * 3))
+        if (DateTime.Now > lastUsedAt + lastCooldown * ResetMultiplier)
         {
             useCount = 0;
             lastCooldown = baseCooldown;
