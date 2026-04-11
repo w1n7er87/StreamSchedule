@@ -23,13 +23,21 @@ public sealed class Cooldown
         lastCooldown = baseCooldown;
     }
 
+    public bool Expired => DateTime.Now > expiresAt;
+    public TimeSpan currentCooldown => lastCooldown;
+    public DateTime ExpiresAtUtc => TimeZoneInfo.ConvertTimeToUtc(expiresAt);
+    public DateTime ResetAtUtc => TimeZoneInfo.ConvertTimeToUtc(lastUsedAt + lastCooldown * 3);
+    
     public bool TryExtend()
     {
-        if (user.Privileges < Privileges.Mod && DateTime.Now < expiresAt)
+        if (user.Privileges < Privileges.Mod && !Expired)
             return false;
 
         if (DateTime.Now > lastUsedAt + (lastCooldown * 3))
+        {
             useCount = 0;
+            lastCooldown = baseCooldown;
+        }
 
         lastUsedAt = DateTime.Now;
         lastCooldown += (baseCooldown / 3) * useCount;
