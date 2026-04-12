@@ -155,20 +155,17 @@ internal class UserInfo2 : Command
 
     private static async Task<string> GetColor(User user, bool detailedInfo = false)
     {
+        static string rgb(string hex)
+        {
+            hex = hex.Replace("#", "");
+            return $"({Convert.ToInt32(hex[..2], 16)}R {Convert.ToInt32(hex[2..4], 16)}G {Convert.ToInt32(hex[4..6], 16)}B)";
+        }
+
         string? color = user.ChatColor;
         string? creatorColor = user.PrimaryColorHex;
 
-        if (color is not null)
-            color = detailedInfo ? $"{color} {await ColorInfo.GetColor(color)}" : color;
-        else
-            color = "not set";
-
-        if (creatorColor is not null)
-            creatorColor = detailedInfo
-                ? $"#{creatorColor} {await ColorInfo.GetColor(creatorColor)}"
-                : $"#{creatorColor}";
-        else
-            creatorColor = "not set";
+        color = color is not null ? $"{color}{(detailedInfo ? $" {await ColorInfo.GetColorName(color)} {rgb(color)}" : "")}" : "not set";
+        creatorColor = creatorColor is not null ? $"#{creatorColor}{(detailedInfo ? $" {await ColorInfo.GetColorName(creatorColor)} {rgb(creatorColor)}" : "")}" : "not set";
 
         return $"chat color: {color}, accent color: {creatorColor}";
     }

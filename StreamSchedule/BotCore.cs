@@ -114,11 +114,11 @@ internal static class BotCore
                 User.AddMessagesCounter(userSent, online: 1);
             else
                 User.AddMessagesCounter(userSent, offline: 1);
+            
+            MessageCache.Add(e.ChatMessage);
+            if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
         }
-
-        MessageCache.Add(e.ChatMessage);
-        if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
-
+        
         ReadOnlySpan<Codepoint> messageAsCodepoints = [.. e.ChatMessage.Message.Codepoints()];
 
         string? replyID = null;

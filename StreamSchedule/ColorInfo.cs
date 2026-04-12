@@ -1,34 +1,53 @@
 ﻿using Newtonsoft.Json;
+using StreamSchedule.Data;
 
 namespace StreamSchedule;
 
 internal static class ColorInfo
 {
     private static readonly HttpClient _colorClient = new(new SocketsHttpHandler() { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
-
-    internal class Name
-    {
-        [JsonProperty("value")] internal string? Value { get; set; }
-    }
-
-    internal class ColorsResponse
-    {
-        [JsonProperty("name")] internal Name? Name { get; set; }
-    }
-
-    public static async Task<string> GetColor(string colorHex)
+    
+    public static async Task<string> GetColorName(string colorHex)
     {
         colorHex = colorHex.Replace("#", "");
-        string rgb = $" ({Convert.ToInt32(colorHex[..2], 16)}R {Convert.ToInt32(colorHex[2..4], 16)}G {Convert.ToInt32(colorHex[4..6], 16)}B) ";
         try
         {
-            string response =
-                await _colorClient.GetStringAsync($"https://www.thecolorapi.com/id?hex={colorHex}&format=json");
-            return JsonConvert.DeserializeObject<ColorsResponse>(response)?.Name?.Value + rgb;
+            string response = await _colorClient.GetStringAsync($"https://www.thecolorapi.com/id?hex={colorHex}&format=json");
+            return JsonConvert.DeserializeObject<ColorsResponse>(response)?.Name?.Value ?? "";
         }
         catch
         {
-            return rgb;
+            return "";
         }
     }
+    
+    public static async Task<Color> GetColorName(Color color)
+    {
+        string name;
+        try
+        {
+            string response = await _colorClient.GetStringAsync($"https://www.thecolorapi.com/id?hex={color.ToHex()}&format=json");
+            name = JsonConvert.DeserializeObject<ColorsResponse>(response)?.Name?.Value ?? "";
+        }
+        catch(Exception e)
+        {
+            BotCore.Nlog.Error(e);
+            name = "";
+        }
+        
+        return color with {name = name};
+    }
+}
+
+
+
+internal class Name
+{
+    [JsonProperty("value")] internal string? Value { get; set; }
+    [JsonProperty("distance")] internal float Distance { get; set; }
+}
+
+internal class ColorsResponse
+{
+    [JsonProperty("name")] internal Name? Name { get; set; }
 }

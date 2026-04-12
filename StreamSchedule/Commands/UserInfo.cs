@@ -149,9 +149,9 @@ internal class UserInfo : Command
         {
             GetUserChatColorResponse? color = await BotCore.API.Helix.Chat.GetUserChatColorAsync([userID]);
 
-            if (color.Data.First().Color.Equals("")) return "color not set";
+            if (string.IsNullOrEmpty(color.Data.First().Color)) return "color not set";
             string value = color.Data.First().Color;
-            return !detailedInfo ? value : $"{value} {await ColorInfo.GetColor(value)}";
+            return !detailedInfo ? value : $"{value} {await ColorInfo.GetColorName(value)}";
         }
         catch (Exception ex)
         {
