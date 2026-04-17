@@ -88,7 +88,7 @@ internal static class BotCore
         ChatClient.OnGiftedSubscription += ChatClientOnGifted;
         ChatClient.Connect();
 
-        Nlog.Info(Environment.GetEnvironmentVariable("STREAM_SCHEDULE_PAGES", EnvironmentVariableTarget.User));
+        //Nlog.Info(Environment.GetEnvironmentVariable("STREAM_SCHEDULE_PAGES", EnvironmentVariableTarget.User));
 
         _ = EmoteMonitors.Monitoring.Start;
         _ = Markov.Start;

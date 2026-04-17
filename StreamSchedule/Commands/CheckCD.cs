@@ -29,11 +29,11 @@ internal class CheckCD : Command
         
         return Task.FromResult(new CommandResult(
             $"{targetUser.Username}'s cooldown for {command.Call} : {ReadableCooldown(cooldown.currentCooldown)} " +
-            $"expires in {ReadableCooldown(cooldown.ExpiresAtUtc - DateTime.UtcNow)}, " +
-            $"reset in {ReadableCooldown(cooldown.ResetAtUtc - DateTime.UtcNow)} "));
+            $"expires in about {ReadableCooldown(cooldown.ExpiresAtUtc - DateTime.UtcNow)}, " +
+            $"reset in about {ReadableCooldown(cooldown.ResetAtUtc - DateTime.UtcNow)} "));
     }
 
     private static string ReadableCooldown(TimeSpan timeSpan) 
-        => $"{(timeSpan < TimeSpan.Zero ? "-" : "") }{(timeSpan.Days != 0 ? $"{Math.Abs(timeSpan.Days)}d " : "")}{(timeSpan.Hours != 0 ? $"{Math.Abs(timeSpan.Hours)}h " : "")}{(timeSpan.Minutes != 0 ? $"{Math.Abs(timeSpan.Minutes)}m " : "")}{(timeSpan.Seconds != 0 ? $"{Math.Abs(timeSpan.Seconds)}.{timeSpan:fff}s " : $"0.{timeSpan:fff}s")}";
+        => $"{(timeSpan < TimeSpan.Zero ? "-" : "") }{(timeSpan.Days != 0 ? $"{Math.Abs(timeSpan.Days)}d " : "")}{(timeSpan.Hours != 0 ? $"{Math.Abs(timeSpan.Hours)}h " : "")}{(timeSpan.Minutes != 0 ? $"{Math.Abs(timeSpan.Minutes)}m " : "")}{(timeSpan.Seconds != 0 ? $"{Math.Abs(timeSpan.Seconds)}s " : $"0.{timeSpan:fff}s")}";
     
 }
