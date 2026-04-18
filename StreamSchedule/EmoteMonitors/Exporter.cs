@@ -29,7 +29,7 @@ internal class Exporter
             if (removed.Count == totalCount && added.Count == totalCount)
             {
                 string? id = removed.FirstOrDefault()?.ID ?? "";
-                Emote oldEmote = addedEmoteDetails.FirstOrDefault(e => e?.ID == id);
+                Emote? oldEmote = removed.FirstOrDefault(e => e?.ID == id);
                 GraphQL.Data.Emote? newEmote = addedEmoteDetails.FirstOrDefault(e => e?.ID == id);
                 
                 string newPrefix = newEmote?.Prefix ?? "";
