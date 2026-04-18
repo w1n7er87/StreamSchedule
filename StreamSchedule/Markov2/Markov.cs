@@ -39,34 +39,28 @@ public static class Markov
         await Task.Delay(TimeSpan.FromSeconds(10));
         BotCore.Nlog.Info("Loading markov");
         Load();
-        Task.Run(Saver);
-        Task.Run(Tokenizer);
+        _ = new Saver();
+        _ = new Tokenizer();
         IsReady = true;
     }
-    
-    private static async Task Saver()
+
+    private sealed class Saver : Periodic
     {
-        while (true)
+        protected override void Update()
         {
-            await Task.Delay(1000);
-            if (DateTime.UtcNow - lastSave > saveInterval)
-            {
-                Save();
-                lastSave = DateTime.UtcNow;
-            }
+            if (DateTime.UtcNow - lastSave <= saveInterval) return;
+            Save();
+            lastSave = DateTime.UtcNow;
+            BotCore.Nlog.Info("Markov save cycle");
         }
     }
-    
-    private static async Task Tokenizer()
+
+    private sealed class Tokenizer : Periodic
     {
-        while (true)
+        protected override void Update()
         {
-            if (TokenizationQueue.Count <= 0 || !IsReady)
-            {
-                await Task.Delay(50);
-                continue;
-            }
-            
+            if (TokenizationQueue.Count <= 0 || !IsReady) return;
+
             TokenizeMessage(TokenizationQueue.Peek());
             TokenizationQueue.Dequeue();
         }
@@ -99,13 +93,10 @@ public static class Markov
                     TokenPairLookup.Add(current.TokenID, [tp]);
                     
                     if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
-                    {
                         tempReverse.Add(tp);
-                    }
                     else
-                    {
                         ReverseTokenPairLookup.Add(next.TokenID, [tp]);
-                    }
+                    
                     continue;
                 }
             
@@ -115,22 +106,14 @@ public static class Markov
                 {
                     pairWithNext = new TokenPair(current.TokenID, next.TokenID, 1);
                     if (temp is not null)
-                    {
                         TokenPairLookup[current.TokenID].Add(pairWithNext);
-                    }
                     else
-                    {
                         TokenPairLookup.Add(current.TokenID, [pairWithNext]);
-                    }
-
+                    
                     if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
-                    {
                         tempReverse.Add(pairWithNext);
-                    }
                     else
-                    {
                         ReverseTokenPairLookup.Add(next.TokenID, [pairWithNext]);
-                    }
                 }
                 else
                 {
@@ -141,25 +124,22 @@ public static class Markov
         catch (Exception e)
         {
             BotCore.Nlog.Error(e);
-            return;
         }
     }
 
     public static TimeSpan Save()
     {
         long startSave = Stopwatch.GetTimestamp();
-        IsReady = false;
-        
+
         context.Tokens.AddRange(TokenLookup.Where(t => !context.Tokens.Contains(t.Value)).Select(t => t.Value));
+        
         foreach (KeyValuePair<int, List<TokenPair>> tp in TokenPairLookup)
-        {
             context.TokenPairs.AddRange(tp.Value.Where(t => !context.TokenPairs.Contains(t)));
-        }
 
         context.SaveChanges();
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startSave);
         BotCore.Nlog.Info($"markov save took {elapsed.Seconds} s");
-        IsReady = true;
+
         return elapsed;
     }
 

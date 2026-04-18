@@ -36,7 +36,7 @@ public static class Browsing
     }
 
     private static readonly UtilityContext utilDb = UtilityContext.GetInstance();
-    
+
     private static async Task Loop()
     {
         while (true)
@@ -49,22 +49,16 @@ public static class Browsing
                 if (await GraphQLClient.VerifyIntegrity(i))
                 {
                     GraphQLClient.SetIntegrity(i);
-                    TimeSpan nextUpdate = new(Random.Shared.Next(13, 15), Random.Shared.Next(0, 45), 0);
-                    NextUpdate = DateTime.Now + nextUpdate;
-
                     utilDb.Integrities.Add(new Utility.Data.Integrity() { DeviceID = i.DeviceID, Token = i.Token, ExpiresAt = NextUpdate });
                     await utilDb.SaveChangesAsync();
-                    
+
+                    TimeSpan nextUpdate = new(Random.Shared.Next(13, 15), Random.Shared.Next(0, 45), 0);
+                    NextUpdate = DateTime.Now + nextUpdate;
                     BotCore.Nlog.Info($"next planned update is in {nextUpdate:h'h 'm'm '} ");
-                }
-                else
-                {
-                    BotCore.Nlog.Info("the token was bad, retrying in 3m ... ");
-                    await Task.Delay(TimeSpan.FromMinutes(3));
                     continue;
                 }
+                BotCore.Nlog.Info("the token was bad, retrying in 3m ... ");
             }
-
             await Task.Delay(TimeSpan.FromMinutes(3));
         }
     }

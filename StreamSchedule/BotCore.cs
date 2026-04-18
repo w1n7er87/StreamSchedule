@@ -73,7 +73,7 @@ internal static class BotCore
         {
             OutQueuePerChannel.Add(user.Username!, []);
             ChannelLiveState.Add(user.Username!, false);
-            Task.Run(() => OutPump(user));
+            _ = new OutPump(user);
         }
 
         Commands.Commands.InitializeCommands([.. joinedUsers.Select(u => u.Username!)], DBContext);
@@ -220,23 +220,28 @@ internal static class BotCore
     }
 
     #endregion EVENTS
-    
-    private static async Task OutPump(User channel)
+
+    private sealed class OutPump(User channel) : Periodic
     {
-        bool sameMessageFlip = false;
+        private bool sameMessageFlip = false;
+        private long second = Stopwatch.GetTimestamp();
         
-        while (true)
+        protected override async void Update()
         {
-            if (OutQueuePerChannel[channel.Username!].Count <= 0)
+            try
             {
-                await Task.Delay(25);
-                continue;
+                if (Stopwatch.GetElapsedTime(second).TotalMilliseconds < 1100) return;
+                if (OutQueuePerChannel[channel.Username!].Count <= 0) return;
+                OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
+                _ = SendLongMessage(channel, response.ReplyID,$"{response.Result} {(sameMessageFlip ? "͏" : "")}", response.Result.requiresFilter);
+                sameMessageFlip = !sameMessageFlip;
+                OutQueuePerChannel[channel.Username!].Dequeue();
+                second = Stopwatch.GetTimestamp();
             }
-            OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
-            _ = await SendLongMessage(channel, response.ReplyID,$"{response.Result} {(sameMessageFlip ? "͏" : "")}", response.Result.requiresFilter);
-            sameMessageFlip = !sameMessageFlip;
-            await Task.Delay(1100);
-            OutQueuePerChannel[channel.Username!].Dequeue();
+            catch (Exception e)
+            {
+                Nlog.Error(e);
+            }
         }
     }
 
