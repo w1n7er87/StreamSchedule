@@ -173,33 +173,73 @@ public static class Markov
     public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.random, int? seed = null)
     {
         if (!IsReady) return "uuh ";
-        
-        bool forceNoLineEnd = method.HasFlag(Method.force);
-        bool reverse = method.HasFlag(Method.reverse);
-        
-        random = new Random(seed ?? DateTime.Now.Millisecond);
-        
-        Token? first = null;
-        if (!string.IsNullOrWhiteSpace(firstWord)) first = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(firstWord)).Value;
-        
-        first ??= TokenLookup[random.Next(0, TokenLookup.Count)];
 
-        List<int> tokenIDs = method switch
-        {
-            _ when method.HasFlag(Method.ordered) => reverse ? PickOrderedReverse(first.TokenID, maxLength) : PickOrdered(first.TokenID, maxLength, forceNoLineEnd),
-            _ when method.HasFlag(Method.weighted) => reverse ? PickWeightedReverse(first.TokenID, maxLength) : PickWeighted(first.TokenID, maxLength, forceNoLineEnd),
-            _ when method.HasFlag(Method.random) => reverse ? PickRandomReverse(first.TokenID, maxLength) : PickRandom(first.TokenID, maxLength, forceNoLineEnd),
-            _ => PickRandom(first.TokenID, maxLength, forceNoLineEnd),
-        };
+        random = new Random(seed ?? DateTime.Now.Nanosecond);
+
+        Token? source = null;
+        if (!string.IsNullOrWhiteSpace(firstWord)) source = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(firstWord)).Value;
+        source ??= TokenLookup[random.Next(0, TokenLookup.Count)];
+
+        List<int> generatedTokens = [source.TokenID];
+        
+        while (generatedTokens.Count < maxLength)
+            if(generatedTokens.PickNext(method)) break;
+        
+        if (method.HasFlag(Method.reverse)) generatedTokens.Reverse();
+        
         string result = "";
 
-        foreach (int tokenID in tokenIDs) result += TokenLookup[tokenID].Value + " ";
+        foreach (int tokenID in generatedTokens) result += TokenLookup[tokenID].Value + " ";
 
         return result;
     }
 
+    private static bool PickNext(this List<int> sequence, Method method)
+    {
+        bool reverse = method.HasFlag(Method.reverse);
+        bool force = method.HasFlag(Method.force);
+        
+        List<TokenPair>? pairs = null;
+        if (reverse) ReverseTokenPairLookup.TryGetValue(sequence.Last(), out pairs);
+        else TokenPairLookup.TryGetValue(sequence.Last(), out pairs);
+        if (pairs is null || pairs.Count == 0) return true;
+        if (force)
+        {
+            pairs.RemoveAll(tp => tp.NextTokenID == eolID);
+            if (pairs.Count == 0) return true;
+        }
+
+        TokenPair next = method switch
+        {
+            _ when method.HasFlag(Method.ordered) => Ordered(),
+            _ when method.HasFlag(Method.weighted) => Weighted(),
+            _ when method.HasFlag(Method.random) => Random(),
+            _ => Random()
+        };
+        
+        sequence.Add(reverse ? next.TokenID : next.NextTokenID);
+        return false;
+        
+        TokenPair Ordered()
+        {
+            return pairs.OrderByDescending(x => x.Count).ElementAt(random.Next(0, random.Next(0, pairs.Count + 1)));
+        }
+
+        TokenPair Weighted()
+        {
+            int max = pairs.MaxBy(x => x.Count)?.Count ?? 2;
+            return pairs.OrderBy(x => x.Count).First(x => x.Count >= random.Next(0, max + 1));
+        }
+
+        TokenPair Random()
+        {
+            return pairs[random.Next(0, pairs.Count)];
+        }
+    }
+    
     private static List<int> PickOrdered(int id, int maxLength, bool forceNoLineEnd)
     {
+        
         List<int> sequence = [id];
         for (int i = 1; i < maxLength; i++)
         {
