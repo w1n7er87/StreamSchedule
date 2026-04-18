@@ -7,9 +7,9 @@ internal class Markov : Command
 {
     public override string Call => "markov";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => $"markov. o ordered, w weighted, c[value(1-{maxTokenCount})]({defaultTokenCount}) specify token count, q seed, r reverse, f force no eol (will still stop if eol is the only next for last token)";
+    public override string Help => $"o ordered, w weighted, c[value(1-{maxTokenCount})]({defaultTokenCount}) token count, q seed, r reverse, i include, f force try no eol";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.TwoMinutes);
-    public override string[] Arguments => ["o", "w", "c", "m", "f", "q", "r", "count", "load", "save"];
+    public override string[] Arguments => ["o", "w", "c", "m", "f", "q", "r", "i", "count", "load", "save"];
     public override List<string> Aliases { get; set; } = [];
 
     private static bool Muted = false;
@@ -40,24 +40,20 @@ internal class Markov : Command
             if (args.TryGetValue("w", out _)) method |= Method.weighted;
             
             if (args.TryGetValue("r", out _)) method |= Method.reverse;
-            
-            if(args.TryGetValue("f", out _))  method |= Method.force;
+
+            if (args.TryGetValue("f", out _)) method |= Method.force;
+
+            if (args.TryGetValue("i", out _)) method |= Method.include;
             
             if (args.TryGetValue("save", out _) && message.Sender.Privileges >= Privileges.Uuh)
-            {
                 return Task.FromResult(Utils.Responses.Ok + $"saved in {Markov2.Markov.Save():s's 'fff'ms '}");
-            }
-
+            
             if (args.TryGetValue("load", out _) && message.Sender.Privileges >= Privileges.Uuh)
-            {
                 return Task.FromResult(Utils.Responses.Ok + $"loaded in {Markov2.Markov.Load():s's 'fff'ms '}");
-            }
-
+            
             if (args.TryGetValue("count", out _))
-            {
                 return Task.FromResult(new CommandResult($"{Markov2.Markov.TokenCount} tokens {Markov2.Markov.TokenPairCount} pairs "));
-            }
-
+            
             string result = Markov2.Markov.GenerateSequence(word, count, method, seed);
             return Task.FromResult(new CommandResult(result.Replace("\e", ""), requiresFilter: true));
         }

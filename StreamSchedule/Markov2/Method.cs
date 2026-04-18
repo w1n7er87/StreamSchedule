@@ -6,6 +6,7 @@ public enum Method
     random = 2,
     force = 4,
     ordered = 8,
-    weighted = 32,
     reverse = 16,
+    weighted = 32,
+    include = 64,
 }
