@@ -21,13 +21,13 @@ public class Periodic
             await Task.Delay(50);
             foreach (Periodic updateTarget in UpdateTargets)
             {
-                try { updateTarget.Update(); }
+                try { await updateTarget.Update(); }
                 catch (Exception e) { BotCore.Nlog.Error(e); }
             }
         }
     }
 
-    protected virtual void Update() { }
+    protected virtual Task Update() { return Task.CompletedTask; }
 
     // i think this doesn't make much sense, since the very fact that the instance is in the list is holding it from being GC, so this would never be called, but i'll still leave this here ok 
     ~Periodic()

@@ -226,22 +226,16 @@ internal static class BotCore
         private bool sameMessageFlip = false;
         private long second = Stopwatch.GetTimestamp();
         
-        protected override async void Update()
+        protected override Task Update()
         {
-            try
-            {
-                if (Stopwatch.GetElapsedTime(second).TotalMilliseconds < 1100) return;
-                if (OutQueuePerChannel[channel.Username!].Count <= 0) return;
-                OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
-                _ = SendLongMessage(channel, response.ReplyID,$"{response.Result} {(sameMessageFlip ? "͏" : "")}", response.Result.requiresFilter);
-                sameMessageFlip = !sameMessageFlip;
-                OutQueuePerChannel[channel.Username!].Dequeue();
-                second = Stopwatch.GetTimestamp();
-            }
-            catch (Exception e)
-            {
-                Nlog.Error(e);
-            }
+            if (Stopwatch.GetElapsedTime(second).TotalMilliseconds < 1100) return Task.CompletedTask;
+            if (OutQueuePerChannel[channel.Username!].Count <= 0) return Task.CompletedTask;
+            OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
+            _ = SendLongMessage(channel, response.ReplyID,$"{response.Result} {(sameMessageFlip ? "͏" : "")}", response.Result.requiresFilter);
+            sameMessageFlip = !sameMessageFlip;
+            OutQueuePerChannel[channel.Username!].Dequeue();
+            second = Stopwatch.GetTimestamp();
+            return Task.CompletedTask;
         }
     }
 

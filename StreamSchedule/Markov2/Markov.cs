@@ -47,83 +47,81 @@ public static class Markov
 
     private sealed class Saver : Periodic
     {
-        protected override void Update()
+        protected override Task Update()
         {
-            if (DateTime.UtcNow - lastSave <= saveInterval) return;
-            Save();
+            if (DateTime.UtcNow - lastSave <= saveInterval) return Task.CompletedTask;
+            Task.Run(Save);
             lastSave = DateTime.UtcNow;
             BotCore.Nlog.Info("Markov save cycle");
+            return Task.CompletedTask;
         }
     }
 
     private sealed class Tokenizer : Periodic
     {
-        protected override void Update()
+        protected override Task Update()
         {
-            if (TokenizationQueue.Count <= 0 || !IsReady) return;
-
+            if (TokenizationQueue.Count <= 0 || !IsReady) return Task.CompletedTask;
             TokenizeMessage(TokenizationQueue.Peek());
             TokenizationQueue.Dequeue();
+            return Task.CompletedTask;
         }
     }
 
     private static void TokenizeMessage(string message)
     {
-        try
+        string[] words = message.Split(' ');
+        for (int i = 0; i < words.Length; i++)
         {
-            string[] words = message.Split(' ');
-            for (int i = 0; i < words.Length; i++)
+            string nextWord = (i + 1 >= words.Length) ? "\e" : words[i + 1];
+            Token? next = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(nextWord)).Value;
+
+            if (next is null)
             {
-                string nextWord = (i + 1 >= words.Length) ? "\e" : words[i + 1];
-                Token? next = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(nextWord)).Value;
-
-                if (next is null)
-                {
-                    next = new Token(TokenLookup.Count, nextWord);
-                    TokenLookup.Add(next.TokenID, next);
-                    TokenPairLookup.Add(next.TokenID, []);
-                }
-
-                Token? current = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(words[i])).Value;
-                if (current is null)
-                {
-                    current = new Token(TokenLookup.Count, words[i]);
-                    TokenLookup.Add(current.TokenID, current);
-
-                    TokenPair tp = new TokenPair(current.TokenID, next.TokenID, 1);
-                    TokenPairLookup.Add(current.TokenID, [tp]);
-
-                    if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
-                        tempReverse.Add(tp);
-                    else
-                        ReverseTokenPairLookup.Add(next.TokenID, [tp]);
-
-                    continue;
-                }
-
-                TokenPairLookup.TryGetValue(current.TokenID, out List<TokenPair>? temp);
-                TokenPair? pairWithNext = temp?.FirstOrDefault(x => x.NextTokenID == next.TokenID);
-                if (pairWithNext is null)
-                {
-                    pairWithNext = new TokenPair(current.TokenID, next.TokenID, 1);
-                    if (temp is not null)
-                        TokenPairLookup[current.TokenID].Add(pairWithNext);
-                    else
-                        TokenPairLookup.Add(current.TokenID, [pairWithNext]);
-
-                    if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
-                        tempReverse.Add(pairWithNext);
-                    else
-                        ReverseTokenPairLookup.Add(next.TokenID, [pairWithNext]);
-                }
-                else { pairWithNext.Count++; }
+                next = new Token(TokenLookup.Count, nextWord);
+                TokenLookup.Add(next.TokenID, next);
+                TokenPairLookup.Add(next.TokenID, []);
             }
+
+            Token? current = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(words[i])).Value;
+            if (current is null)
+            {
+                current = new Token(TokenLookup.Count, words[i]);
+                TokenLookup.Add(current.TokenID, current);
+
+                TokenPair tp = new TokenPair(current.TokenID, next.TokenID, 1);
+                TokenPairLookup.Add(current.TokenID, [tp]);
+
+                if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
+                    tempReverse.Add(tp);
+                else
+                    ReverseTokenPairLookup.Add(next.TokenID, [tp]);
+
+                continue;
+            }
+
+            TokenPairLookup.TryGetValue(current.TokenID, out List<TokenPair>? temp);
+            TokenPair? pairWithNext = temp?.FirstOrDefault(x => x.NextTokenID == next.TokenID);
+            if (pairWithNext is null)
+            {
+                pairWithNext = new TokenPair(current.TokenID, next.TokenID, 1);
+                if (temp is not null)
+                    TokenPairLookup[current.TokenID].Add(pairWithNext);
+                else
+                    TokenPairLookup.Add(current.TokenID, [pairWithNext]);
+
+                if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
+                    tempReverse.Add(pairWithNext);
+                else
+                    ReverseTokenPairLookup.Add(next.TokenID, [pairWithNext]);
+            }
+            else { pairWithNext.Count++; }
         }
-        catch (Exception e) { BotCore.Nlog.Error(e); }
     }
 
     public static TimeSpan Save()
     {
+        IsReady = false;
         long startSave = Stopwatch.GetTimestamp();
 
         context.Tokens.AddRange(TokenLookup.Where(t => !context.Tokens.Contains(t.Value)).Select(t => t.Value));
@@ -135,6 +133,7 @@ public static class Markov
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startSave);
         BotCore.Nlog.Info($"markov save took {elapsed.TotalSeconds} s");
 
+        IsReady = true;
         return elapsed;
     }
 
