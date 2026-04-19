@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StreamSchedule.Markov2.Data;
 
 namespace StreamSchedule.Markov2;
@@ -132,7 +133,7 @@ public static class Markov
 
         context.SaveChanges();
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startSave);
-        BotCore.Nlog.Info($"markov save took {elapsed.Seconds} s");
+        BotCore.Nlog.Info($"markov save took {elapsed.TotalSeconds} s");
 
         return elapsed;
     }
@@ -168,7 +169,7 @@ public static class Markov
     {
         if (!IsReady) return "uuh ";
 
-        random = new Random(seed ?? DateTime.Now.Nanosecond);
+        random = new Random(seed ?? (DateTime.Now.Minute + DateTime.Now.Millisecond) / (DateTime.Now.Hour + 1) );
 
         Token? source = null;
         if (!string.IsNullOrWhiteSpace(firstWord)) source = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(firstWord)).Value;
