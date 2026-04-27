@@ -81,6 +81,7 @@ public static class Markov
                 next = new Token(TokenLookup.Count, nextWord);
                 TokenLookup.Add(next.TokenID, next);
                 TokenPairLookup.Add(next.TokenID, []);
+                context.Tokens.Add(next);
             }
 
             Token? current = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(words[i])).Value;
@@ -88,9 +89,11 @@ public static class Markov
             {
                 current = new Token(TokenLookup.Count, words[i]);
                 TokenLookup.Add(current.TokenID, current);
+                context.Tokens.Add(current);
 
                 TokenPair tp = new TokenPair(current.TokenID, next.TokenID, 1);
                 TokenPairLookup.Add(current.TokenID, [tp]);
+                context.TokenPairs.Add(tp);
 
                 if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
                     tempReverse.Add(tp);
@@ -114,6 +117,8 @@ public static class Markov
                     tempReverse.Add(pairWithNext);
                 else
                     ReverseTokenPairLookup.Add(next.TokenID, [pairWithNext]);
+                
+                context.TokenPairs.Add(pairWithNext);
             }
             else { pairWithNext.Count++; }
         }
@@ -124,10 +129,10 @@ public static class Markov
         IsReady = false;
         long startSave = Stopwatch.GetTimestamp();
 
-        context.Tokens.AddRange(TokenLookup.Where(t => !context.Tokens.Contains(t.Value)).Select(t => t.Value));
+        //context.Tokens.AddRange(TokenLookup.Where(t => !context.Tokens.Contains(t.Value)).Select(t => t.Value));
 
-        foreach (KeyValuePair<int, List<TokenPair>> tp in TokenPairLookup)
-            context.TokenPairs.AddRange(tp.Value.Where(t => !context.TokenPairs.Contains(t)));
+        //foreach (KeyValuePair<int, List<TokenPair>> tp in TokenPairLookup)
+            //context.TokenPairs.AddRange(tp.Value.Where(t => !context.TokenPairs.Contains(t)));
 
         context.SaveChanges();
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startSave);
@@ -148,10 +153,10 @@ public static class Markov
         if (!context.Tokens.Any())
             TokenLookup[0] = new Token(0, "\e");
 
-        ILookup<int, TokenPair> tokenPairsPerToken = context.TokenPairs.AsNoTracking().ToLookup(t => t.TokenID);
-        ILookup<int, TokenPair> tokenPairsPerNext = context.TokenPairs.AsNoTracking().ToLookup(t => t.NextTokenID);
+        ILookup<int, TokenPair> tokenPairsPerToken = context.TokenPairs.ToLookup(t => t.TokenID);
+        ILookup<int, TokenPair> tokenPairsPerNext = context.TokenPairs.ToLookup(t => t.NextTokenID);
 
-        foreach (Token token in context.Tokens.AsNoTracking())
+        foreach (Token token in context.Tokens)
         {
             TokenPairLookup.Add(token.TokenID, [.. tokenPairsPerToken[token.TokenID]]);
             ReverseTokenPairLookup.Add(token.TokenID, [.. tokenPairsPerNext[token.TokenID]]);
