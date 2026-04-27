@@ -128,12 +128,6 @@ public static class Markov
     {
         IsReady = false;
         long startSave = Stopwatch.GetTimestamp();
-
-        //context.Tokens.AddRange(TokenLookup.Where(t => !context.Tokens.Contains(t.Value)).Select(t => t.Value));
-
-        //foreach (KeyValuePair<int, List<TokenPair>> tp in TokenPairLookup)
-            //context.TokenPairs.AddRange(tp.Value.Where(t => !context.TokenPairs.Contains(t)));
-
         context.SaveChanges();
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startSave);
         BotCore.Nlog.Info($"markov save took {elapsed.TotalSeconds} s");
@@ -154,7 +148,7 @@ public static class Markov
             TokenLookup[0] = new Token(0, "\e");
 
         ILookup<int, TokenPair> tokenPairsPerToken = context.TokenPairs.ToLookup(t => t.TokenID);
-        ILookup<int, TokenPair> tokenPairsPerNext = context.TokenPairs.ToLookup(t => t.NextTokenID);
+        ILookup<int, TokenPair> tokenPairsPerNext = context.TokenPairs.AsNoTracking().ToLookup(t => t.NextTokenID);
 
         foreach (Token token in context.Tokens)
         {
