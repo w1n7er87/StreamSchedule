@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using StreamSchedule.Markov2.Data;
 
 namespace StreamSchedule.Markov2;
@@ -24,7 +24,7 @@ public static class Markov
     public static bool Start => true;
 
     private static DateTime lastSave = DateTime.UtcNow;
-    private static readonly TimeSpan saveInterval = TimeSpan.FromHours(3);
+    private static readonly TimeSpan saveInterval = TimeSpan.FromMinutes(30);
 
     private static Random random = new();
 
@@ -66,6 +66,49 @@ public static class Markov
             TokenizationQueue.Dequeue();
             return Task.CompletedTask;
         }
+    }
+
+    
+    public static TimeSpan Save()
+    {
+        IsReady = false;
+        long startSave = Stopwatch.GetTimestamp();
+        context.SaveChanges();
+        context.ChangeTracker.Clear();
+        TimeSpan elapsed = Stopwatch.GetElapsedTime(startSave);
+        BotCore.Nlog.Info($"markov save took {elapsed.TotalSeconds} s");
+
+        IsReady = true;
+        return elapsed;
+    }
+
+    public static TimeSpan Load()
+    {
+        long startLoad = Stopwatch.GetTimestamp();
+        IsReady = false;
+        TokenLookup = [];
+        TokenPairLookup = [];
+        ReverseTokenPairLookup = [];
+
+        if (!context.Tokens.Any())
+            TokenLookup[0] = new Token(0, "\e");
+        
+        IEnumerable<TokenPair> pairs = context.TokenPairs.AsNoTracking().ToList();
+        
+        ILookup<int, TokenPair> tokenPairsPerToken = pairs.ToLookup(t => t.TokenID);
+        ILookup<int, TokenPair> tokenPairsPerNext = pairs.ToLookup(t => t.NextTokenID);
+
+        foreach (Token token in context.Tokens)
+        {
+            TokenPairLookup.Add(token.TokenID, [.. tokenPairsPerToken[token.TokenID]]);
+            ReverseTokenPairLookup.Add(token.TokenID, [.. tokenPairsPerNext[token.TokenID]]);
+            TokenLookup.Add(token.TokenID, token);
+        }
+
+        TimeSpan elapsed = Stopwatch.GetElapsedTime(startLoad);
+        BotCore.Nlog.Info($"markov load took {elapsed.Seconds} s");
+        IsReady = true;
+        return elapsed;
     }
 
     private static void TokenizeMessage(string message)
@@ -120,47 +163,13 @@ public static class Markov
                 
                 context.TokenPairs.Add(pairWithNext);
             }
-            else { pairWithNext.Count++; }
+            else
+            {
+                if (context.Entry(pairWithNext).State == EntityState.Detached)
+                    context.TokenPairs.Attach(pairWithNext);
+                pairWithNext.Count++;
+            }
         }
-    }
-
-    public static TimeSpan Save()
-    {
-        IsReady = false;
-        long startSave = Stopwatch.GetTimestamp();
-        context.SaveChanges();
-        TimeSpan elapsed = Stopwatch.GetElapsedTime(startSave);
-        BotCore.Nlog.Info($"markov save took {elapsed.TotalSeconds} s");
-
-        IsReady = true;
-        return elapsed;
-    }
-
-    public static TimeSpan Load()
-    {
-        long startLoad = Stopwatch.GetTimestamp();
-        IsReady = false;
-        TokenLookup = [];
-        TokenPairLookup = [];
-        ReverseTokenPairLookup = [];
-
-        if (!context.Tokens.Any())
-            TokenLookup[0] = new Token(0, "\e");
-
-        ILookup<int, TokenPair> tokenPairsPerToken = context.TokenPairs.ToLookup(t => t.TokenID);
-        ILookup<int, TokenPair> tokenPairsPerNext = context.TokenPairs.AsNoTracking().ToLookup(t => t.NextTokenID);
-
-        foreach (Token token in context.Tokens)
-        {
-            TokenPairLookup.Add(token.TokenID, [.. tokenPairsPerToken[token.TokenID]]);
-            ReverseTokenPairLookup.Add(token.TokenID, [.. tokenPairsPerNext[token.TokenID]]);
-            TokenLookup.Add(token.TokenID, token);
-        }
-
-        TimeSpan elapsed = Stopwatch.GetElapsedTime(startLoad);
-        BotCore.Nlog.Info($"markov load took {elapsed.Seconds} s");
-        IsReady = true;
-        return elapsed;
     }
 
     public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.random, int? seed = null)
