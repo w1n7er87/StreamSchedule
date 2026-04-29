@@ -13,7 +13,7 @@ internal class Massping : Command
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string first = message.Content.Split(" ").FirstOrDefault() ?? "yo";
-        string names = string.Join(" ", BotCore.MessageCache.Select(m => m.Username));
+        string names = string.Join(" ", BotCore.MessageCache.Select(m => m.Username).Distinct());
         return Task.FromResult(new CommandResult($"{first} {names}", requiresFilter: true, reply: false));
     }
 }
