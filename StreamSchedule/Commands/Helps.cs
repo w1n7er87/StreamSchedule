@@ -28,12 +28,11 @@ internal class Helps : Command
         string args = c.Arguments is not null ? $"args: {string.Join(", ", c.Arguments)}" : "";
         string privileges = c.Privileges switch
         {
-
-            Privileges.Trusted => "trusted +",
-            Privileges.Banned => "banned +",
-            Privileges.None => "ok +",
-            Privileges.Mod => "mod +",
-            Privileges.Uuh => "uuh +",
+            Privileges.Banned => "banned+",
+            Privileges.None => "regular+",
+            Privileges.Trusted => "trusted+",
+            Privileges.Mod => "mod+",
+            Privileges.Uuh => "uuh+",
             _ => ""
         };
         string cd = $"base cooldown: {c.Cooldown.TotalSeconds}s";
