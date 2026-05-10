@@ -19,9 +19,9 @@ internal class Lurkers : Command
 
         string chatter = Random.Shared.Next(100) switch
         {
-            <= 15 => PickFromVips(),
-            <= 30 => PickFromBots(),
-            > 30 => PickFromViewers()
+            <= 3 => PickFromVips(),
+            <= 10 => PickFromBots(),
+            > 10 => PickFromViewers()
         };
         
         return new($"{chatterCount} lurkers{chatter} uuh");
