@@ -20,7 +20,7 @@ internal class Massping : Command
             .Select(g => new { name = g.Key, count = g.Count() })
             .OrderByDescending(p => p.count)
             .Take(50)
-            .Select(p => p.name.Insert(1, Random.Shared.Next(100) > 85 ? "\udb40\uddef" : "")));
+            .Select(p => p.name.Insert(1, Random.Shared.Next(100) >= 85 ? "" : "\udb40\uddef" )));
         
         return Task.FromResult(new CommandResult($"{first} {names}", requiresFilter: true, reply: false));
     }
