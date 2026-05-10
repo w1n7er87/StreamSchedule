@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using StreamSchedule.Markov2.Data;
 
 namespace StreamSchedule.Markov2;

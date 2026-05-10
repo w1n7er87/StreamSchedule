@@ -55,13 +55,13 @@ public static class GraphQLClient
         return r.Errors is null || !r.Errors.Select(x => x.Message).Contains("failed integrity check");
     }
 
-    public static async Task<(int, Chatter?[]?)> GetChattersCount(string userID, string? userLogin = null)
+    public static async Task<(int, ChattersInfo?)> GetChattersCount(string userID, string? userLogin = null)
     {
         GraphQLResponse<QueryResponse?> result = userLogin is null
             ? await client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersByID(userID))
             : await client.SendQueryAsync<QueryResponse?>(Queries.RequestChattersByLogin(userLogin));
         HandleErrors(result.Errors);
-        return (result.Data?.User?.Channel?.Chatters?.Count ?? 0, result.Data?.User?.Channel?.Chatters?.Viewers ?? []);
+        return (result.Data?.User?.Channel?.Chatters?.Count ?? 0, result.Data?.User?.Channel?.Chatters);
     }
 
     public static async Task<Emote?> GetEmote(string emoteID)

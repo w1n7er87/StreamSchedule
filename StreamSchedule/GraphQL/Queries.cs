@@ -26,6 +26,12 @@ internal static class Queries
                         viewers {
                             login
                         }
+                        vips {
+                            login 
+                        }
+                        chatbots {
+                            login
+                        }
         			}
         		}
         	}
@@ -42,6 +48,12 @@ internal static class Queries
         			chatters {
         				count
                         viewers {
+                            login
+                        }
+                        vips {
+                            login 
+                        }
+                        chatbots {
                             login
                         }
         			}

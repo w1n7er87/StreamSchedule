@@ -15,12 +15,33 @@ internal class Lurkers : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        (int, Chatter?[]?) count = await GraphQLClient.GetChattersCount(message.ChannelID);
+        (int chatterCount, ChattersInfo? chatters) = await GraphQLClient.GetChattersCount(message.ChannelID);
 
-        string chatter = count.Item2 is not null && count.Item2.Length != 0
-            ? $", and @{count.Item2[Random.Shared.Next(count.Item2.Length)]?.Login ?? BotCore.ChatClient.TwitchUsername} is one of them"
-            : "";
+        string chatter = Random.Shared.Next(100) switch
+        {
+            <= 15 => PickFromVips(),
+            <= 30 => PickFromBots(),
+            > 30 => PickFromViewers()
+        };
+        
+        return new($"{chatterCount} lurkers{chatter} uuh");
+        
+        string PickFromBots()
+        {
+            if (chatters?.Chatbots is null || chatters.Chatbots.Length == 0) return PickFromViewers();
+            return $", and clanker @{chatters.Chatbots[Random.Shared.Next(chatters.Chatbots.Length)]?.Login} is one of them";
+        }
 
-        return new($"{count.Item1} lurkers{chatter} uuh");
+        string PickFromVips()
+        {
+            if (chatters?.Vips is null || chatters.Vips.Length == 0) return PickFromViewers();
+            return $", and @{chatters.Vips[Random.Shared.Next(chatters.Vips.Length)]?.Login} is one of the VIPs";
+        }
+
+        string PickFromViewers()
+        {
+            if (chatters?.Viewers is null || chatters.Viewers.Length == 0) return "";
+            return $", and @{chatters.Viewers[Random.Shared.Next(chatters.Viewers.Length)]?.Login} is one of them";
+        }
     }
 }
