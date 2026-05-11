@@ -7,9 +7,9 @@ internal class Markov : Command
 {
     public override string Call => "markov";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => $"o ordered, w weighted, c[value(1-{maxTokenCount})]({defaultTokenCount}) token count, q seed, r reverse, i include, f force try no eol";
+    public override string Help => $"rnd random, o ordered, c[value(1-{maxTokenCount})]({defaultTokenCount}) token count, q seed, r reverse, i include, f force try no eol";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.TwoMinutes);
-    public override string[] Arguments => ["o", "w", "c", "m", "f", "q", "r", "i", "count", "load", "save"];
+    public override string[] Arguments => ["rnd", "o", "c", "m", "f", "q", "r", "i", "count", "load", "save"];
     public override List<string> Aliases { get; set; } = [];
 
     private static bool Muted = false;
@@ -31,13 +31,13 @@ internal class Markov : Command
 
             int count = args.TryGetValue("c", out string? cc)? int.TryParse(cc, out int ccc)? Math.Clamp(ccc, 1, maxTokenCount) : defaultTokenCount : defaultTokenCount;
         
-            Method method = Method.random;
+            Method method = Method.weighted;
             
             int? seed = args.TryGetValue("q", out string? qq) ? int.TryParse(qq, out int qqq) ? Math.Clamp(qqq, 0, int.MaxValue - 1) : null : null;
             
-            if (args.TryGetValue("o", out _)) method |= Method.ordered;
+            if (args.TryGetValue("rnd", out _)) method |= Method.random;
             
-            if (args.TryGetValue("w", out _)) method |= Method.weighted;
+            if (args.TryGetValue("o", out _)) method |= Method.ordered;
             
             if (args.TryGetValue("r", out _)) method |= Method.reverse;
 

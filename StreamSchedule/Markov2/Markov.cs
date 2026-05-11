@@ -171,7 +171,7 @@ public static class Markov
         }
     }
 
-    public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.random, int? seed = null)
+    public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.weighted, int? seed = null)
     {
         if (!IsReady) return "uuh ";
 
@@ -251,18 +251,16 @@ public static class Markov
         TokenPair next = method switch
         {
             _ when method.HasFlag(Method.ordered) => Ordered(),
-            _ when method.HasFlag(Method.weighted) => Weighted(),
             _ when method.HasFlag(Method.random) => Random(),
-            _ => Random()
+            _ => Weighted()
         };
 
         sequence.Add(reverse ? next.TokenID : next.NextTokenID);
         return false;
 
         TokenPair Ordered() => pairs.OrderByDescending(x => x.Count).ElementAt(random.Next(0, random.Next(0, pairs.Count + 1)));
-
-        TokenPair Weighted() => pairs.OrderBy(x => x.Count).First(tp => tp.Count >= random.Next(0, (pairs.MaxBy(x => x.Count)?.Count ?? 2) + 1));
-
+        TokenPair Weighted_() => pairs.OrderBy(x => x.Count).First(tp => tp.Count >= random.Next(0, (pairs.MaxBy(x => x.Count)?.Count ?? 2) + 1));
+        TokenPair Weighted() => pairs.Select(tp => new { count = tp.Count, pair = tp }).OrderBy(tpc => tpc.count).First(tpc => tpc.count >= random.Next(0, pairs.MaxBy(tp => tp.Count)?.Count ?? 0)).pair;
         TokenPair Random() => pairs[random.Next(0, pairs.Count)];
     }
 }
