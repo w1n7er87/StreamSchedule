@@ -13,35 +13,31 @@ internal class Lurkers : Command
     public override string[]? Arguments => null;
     public override List<string> Aliases { get; set; } = [];
 
+    private enum ChatterType
+    {
+        Viewer,
+        Vip,
+        Bot,
+    }
+    
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        (int chatterCount, ChattersInfo? chatters) = await GraphQLClient.GetChattersCount(message.ChannelID);
+        (int chatterCount, ChattersInfo? chatterGroups) = await GraphQLClient.GetChattersCount(message.ChannelID);
 
-        string chatter = Random.Shared.Next(100) switch
-        {
-            <= 3 => PickFromVips(),
-            <= 10 => PickFromBots(),
-            > 10 => PickFromViewers()
-        };
+        List<(ChatterType, string)> chatters = chatterGroups?.Viewers?.Select(c => (ChatterType.Viewer, c!.Login!)).ToList() ?? [];
         
-        return new($"{chatterCount} lurkers{chatter} uuh");
+        chatters.AddRange(chatterGroups?.Vips?.Select(c => (ChatterType.Vip, c!.Login!)) ?? []);
+        chatters.AddRange(chatterGroups?.Chatbots?.Select(c => (ChatterType.Bot, c!.Login!)) ?? []);
+
+        string chatter;
         
-        string PickFromBots()
+        if (chatters.Count == 0) chatter = "";
+        else
         {
-            if (chatters?.Chatbots is null || chatters.Chatbots.Length == 0) return PickFromViewers();
-            return $", and clanker @{chatters.Chatbots[Random.Shared.Next(chatters.Chatbots.Length)]?.Login} is one of them";
+            (ChatterType, string) cc = chatters[Random.Shared.Next(0, chatters.Count)];
+            chatter = $", and {cc.Item1 switch { ChatterType.Vip => "VIP ", ChatterType.Bot => "clanker ", _ => ""}}@{cc.Item2} is one them";
         }
-
-        string PickFromVips()
-        {
-            if (chatters?.Vips is null || chatters.Vips.Length == 0) return PickFromViewers();
-            return $", and @{chatters.Vips[Random.Shared.Next(chatters.Vips.Length)]?.Login} is one of the VIPs";
-        }
-
-        string PickFromViewers()
-        {
-            if (chatters?.Viewers is null || chatters.Viewers.Length == 0) return "";
-            return $", and @{chatters.Viewers[Random.Shared.Next(chatters.Viewers.Length)]?.Login} is one of them";
-        }
+        BotCore.Nlog.Info($"{chatterCount} lurkers{chatter} uuh");
+        return new();
     }
 }

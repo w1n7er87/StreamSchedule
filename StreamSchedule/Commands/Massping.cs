@@ -13,14 +13,14 @@ internal class Massping : Command
     public override List<string> Aliases { get; set; } = [];
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        string first = message.Content.Split(" ").FirstOrDefault() ?? "yo ";
+        string first = message.Content.Split(" ", StringSplitOptions.TrimEntries).FirstOrDefault() ?? "yo ";
         string names = string.Join(" ", BotCore.MessageCache
             .Where(m => m.UserType != UserType.Moderator)
             .GroupBy(m => m.Username)
             .Select(g => new { name = g.Key, count = g.Count() })
             .OrderByDescending(p => p.count)
             .Take(50)
-            .Select(p => p.name.Insert(1, Random.Shared.Next(100) >= 85 ? "" : "\udb40\uddef" )));
+            .Select(p => p.name.Insert(1, Random.Shared.Next(100) >= 67 ? "" : "\udb40\uddef" )));
         
         return Task.FromResult(new CommandResult($"{first} {names}", requiresFilter: true, reply: false));
     }
