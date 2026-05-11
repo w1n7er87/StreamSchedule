@@ -37,7 +37,7 @@ internal class Lurkers : Command
             (ChatterType, string) cc = chatters[Random.Shared.Next(0, chatters.Count)];
             chatter = $", and {cc.Item1 switch { ChatterType.Vip => "VIP ", ChatterType.Bot => "clanker ", _ => ""}}@{cc.Item2} is one them";
         }
-        BotCore.Nlog.Info($"{chatterCount} lurkers{chatter} uuh");
-        return new();
+
+        return new($"{chatterCount} lurkers{chatter} uuh");
     }
 }
