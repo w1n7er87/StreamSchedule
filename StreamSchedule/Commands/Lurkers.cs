@@ -35,7 +35,7 @@ internal class Lurkers : Command
         else
         {
             (ChatterType, string) cc = chatters[Random.Shared.Next(0, chatters.Count)];
-            chatter = $", and {cc.Item1 switch { ChatterType.Vip => "VIP ", ChatterType.Bot => "clanker ", _ => ""}}@{cc.Item2} is one them";
+            chatter = $", and {cc.Item1 switch { ChatterType.Vip => "VIP ", ChatterType.Bot => "clanker ", _ => ""}}@{cc.Item2} is one of them";
         }
 
         return new($"{chatterCount} lurkers{chatter} uuh");
