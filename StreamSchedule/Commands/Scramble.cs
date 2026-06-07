@@ -19,13 +19,15 @@ internal class Scramble : Command
     private static readonly Dictionary<string, ActiveGame> activeGames = [];
     private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
     private static readonly Random random = new();
-    private static bool muted = true;
+    private static bool muted;
     private const int minCount = 3;
     private const int maxCount = 15;
     
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-
+        if (activeGames.TryGetValue(message.ChannelID, out _))
+            return Task.FromResult(new CommandResult("✋ Awkward a game is already in progress "));
+        
         _ = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args);
 
         if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Mod)
