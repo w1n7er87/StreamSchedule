@@ -24,7 +24,7 @@ internal static class BotCore
     public static TwitchAPI API { get; private set; } = null!;
     public static TwitchClient ChatClient { get; private set; } = null!;
     public static Logger Nlog { get; private set; } = null!;
-    public static bool Silent { get; set; } = true;
+    public static bool Silent { get; set; }
     public static bool AllowedOnline { get; set; } = false;
     private static LiveStreamMonitorService Monitor { get; set; } = null!;
     private static Dictionary<string, bool> ChannelLiveState { get; set; } = null!;
