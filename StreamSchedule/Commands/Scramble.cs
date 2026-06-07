@@ -16,7 +16,7 @@ internal class Scramble : Command
     public override string[] Arguments => ["c", "m"];
     public override List<string> Aliases { get; set; } = [];
 
-    private static readonly Dictionary<string, List<ActiveGame>> activeGames = [];
+    private static readonly Dictionary<string, ActiveGame> activeGames = [];
     private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
     private static readonly Random random = new();
     private static bool muted = true;
@@ -87,9 +87,8 @@ internal class Scramble : Command
             if (BadWords.Contains(shuffled)) continue;
             picked = true;
         }
-
-        List<ActiveGame> games = activeGames.TryGetValue(message.ChannelID, out games) ? games :  activeGames[message.ChannelID] = new List<ActiveGame>();
-        games.Add(new ActiveGame(word, message.ChannelName, message.ChannelID));
+        
+        activeGames[message.ChannelID] = new ActiveGame(word, message.ChannelName, message.ChannelID);
         
         BotCore.Nlog.Info($"picked {word} in {Stopwatch.GetElapsedTime(timeStart)} in {attempts}, shuffling {shuffleCount} times");
         return Task.FromResult(new CommandResult($"Unscramble this: \" {shuffled} \" you have 30s. ", requiresFilter:true));
@@ -97,11 +96,8 @@ internal class Scramble : Command
 
     public static void CheckWord(UniversalMessageInfo message)
     {
-        if (!activeGames.TryGetValue(message.ChannelID, out List<ActiveGame>? games)) return;
-        foreach (ActiveGame game in games)
-        {
+        if (activeGames.TryGetValue(message.ChannelID, out ActiveGame? game))
             game.TryWord(message.Content.Split(" ").FirstOrDefault()?.ToLower() ?? "") ;
-        }
     }
     
     private class ActiveGame
@@ -131,14 +127,14 @@ internal class Scramble : Command
             if (!w.Equals(word, StringComparison.CurrentCultureIgnoreCase)) return;
             BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"FeelsGoodMan the word was \" {word} \" ", requiresFilter:true));
             cts.Cancel();
-            activeGames[channelID].Remove(this);
+            activeGames.Remove(channelID);
             cts.Dispose();
         }
 
         internal void ExpireGame()
         {
             BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"Awkward time is out, the word was \" {word} \" ", requiresFilter:true));
-            activeGames[channelID].Remove(this);
+            activeGames.Remove(channelID);
             cts.Dispose();
         }
     }
