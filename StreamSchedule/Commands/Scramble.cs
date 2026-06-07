@@ -88,7 +88,7 @@ internal class Scramble : Command
         activeGames[message.ChannelID] = new ActiveGame(word, message.ChannelName, message.ChannelID);
         
         BotCore.Nlog.Info($"picked {word} in {Stopwatch.GetElapsedTime(timeStart)} in {attempts}, shuffling {shuffleCount} times");
-        return Task.FromResult(new CommandResult($"Unscramble this: \" {shuffled} \" you have 30s. "));
+        return Task.FromResult(new CommandResult($"Unscramble this: \" {shuffled} \" you have 30s. ", requiresFilter:true));
     }
 
     public static void CheckWord(UniversalMessageInfo message)
@@ -122,7 +122,7 @@ internal class Scramble : Command
         public void TryWord(string w)
         {
             if (!w.Equals(word, StringComparison.CurrentCultureIgnoreCase)) return;
-            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"FeelsGoodMan the word was \" {word} \" "));
+            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"FeelsGoodMan the word was \" {word} \" ", requiresFilter:true));
             cts.Cancel();
             activeGames.Remove(channelID);
             cts.Dispose();
@@ -130,7 +130,7 @@ internal class Scramble : Command
 
         internal void ExpireGame()
         {
-            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"Awkward time is out, the word was \" {word} \" "));
+            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"Awkward time is out, the word was \" {word} \" ", requiresFilter:true));
             activeGames.Remove(channelID);
             cts.Dispose();
         }

@@ -103,7 +103,7 @@ public static class Browsing
         ]);
         
         options.PageLoadStrategy = PageLoadStrategy.Normal;
-        options.BrowserVersion = "140";
+        options.BrowserVersion = "146";
         
         BotCore.Nlog.Info("ceating driver");
 
@@ -114,7 +114,7 @@ public static class Browsing
             RequestMatcher = (data) => data.Headers?.TryGetValue("user-agent", out _) ?? false,
             RequestTransformer = (data) =>
             {
-                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{Random.Shared.Next(130, 140)}.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(118, 125)}.0.0.0 (Edition Yx 05)";
+                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{Random.Shared.Next(140, 147)}.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(125, 131)}.0.0.0 (Edition Yx 05)";
                 return data;
             }
         };
@@ -149,6 +149,7 @@ public static class Browsing
             }
             catch (Exception e)
             {
+                BotCore.Nlog.Info(e);
                 if (e.GetType() == typeof(NoSuchElementException))
                     return false;
                 throw;
