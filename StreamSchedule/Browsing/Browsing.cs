@@ -114,7 +114,7 @@ public static class Browsing
             RequestMatcher = (data) => data.Headers?.TryGetValue("user-agent", out _) ?? false,
             RequestTransformer = (data) =>
             {
-                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{Random.Shared.Next(140, 147)}.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(125, 131)}.0.0.0 (Edition Yx 05)";
+                data.Headers!["user-agent"] = $"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{Random.Shared.Next(142, 146)}.0.0.0 Safari/537.36 OPR/{Random.Shared.Next(130, 131)}.0.0.0 (Edition Yx 05)";
                 return data;
             }
         };
@@ -123,12 +123,16 @@ public static class Browsing
 
         await driver.Navigate().GoToUrlAsync("https://www.google.com/");
 
-        _ = driver.ExecuteScript("open(\"https://www.twitch.tv/signup/\")");
+        _ = driver.ExecuteScript("open(\"https://www.twitch.tv/login/\")");
 
-        await driver.Manage().Network.StartMonitoring();
+        int tabCounter = 0;
+start:
 
         driver.Manage().Network.AddRequestHandler(userAgentHandler);
+        await driver.Manage().Network.StartMonitoring();
 
+        await Task.Delay(100);
+        
         driver.Manage().Network.NetworkRequestSent += (sender, args) =>
         {
             if (!haveIntegrity && args.RequestHeaders.TryGetValue("Client-Integrity", out integrityToken))
@@ -156,21 +160,31 @@ public static class Browsing
             }
         }, TimeSpan.FromSeconds(10));
         
+        await WaitUntil(() => haveIntegrity && haveDeviceID, TimeSpan.FromSeconds(5));
+
         IWebElement email = driver.FindElement(By.Id("email-input"));
 
         char[] forsenEmail = ['f', 'o', 'r', 's', 'e', 'n', 'b', 'a', 'j'];
-        char[] forsenEmailDomain = ['@', 'f', 'o', 'r', 's', 'e', 'n', '.', 'c', 'o', 'm'];
+        char[] forsenEmailDomain = ['@', 'g', 'm', 'a', 'i', 'l', '.', 'c', 'o', 'm'];
+        char[] adota = ['a', '@', 'a', '.', 'c', 'o', 'm'];
+        
         Random.Shared.Shuffle(forsenEmail);
         
         email.Click();
-        await Task.Delay(Random.Shared.Next(900, 1200));
+        await Task.Delay(Random.Shared.Next(600, 900));
         
-        foreach (char c in forsenEmail)
-        {
-            email.SendKeys(c.ToString());
-            await Task.Delay(Random.Shared.Next(200, 600));
-        }
-        foreach (char c in forsenEmailDomain)
+        // foreach (char c in forsenEmail)
+        // {
+        //     email.SendKeys(c.ToString());
+        //     await Task.Delay(Random.Shared.Next(200, 600));
+        // }
+        // foreach (char c in forsenEmailDomain)
+        // {
+        //     email.SendKeys(c.ToString());
+        //     await Task.Delay(Random.Shared.Next(200, 600));
+        // }
+
+        foreach (char c in adota)
         {
             email.SendKeys(c.ToString());
             await Task.Delay(Random.Shared.Next(200, 600));
@@ -198,8 +212,15 @@ public static class Browsing
         IWebElement login = driver.FindElement(By.Id("signup-username"));
         IWebElement pass = driver.FindElement(By.Id("password-input"));
         
-        pass.Click();
-        await Task.Delay(1200);
+        await Task.Delay(1100);
+        
+        //pass.Click();
+        // for (int i = 0; i < 9; i++)
+        // {
+        //     pass.SendKeys(forsenEmail[Random.Shared.Next(forsenEmail.Length)].ToString());
+        //     await Task.Delay(Random.Shared.Next(200, 400));
+        // }
+        //await Task.Delay(1300);
 
         login.Click();
         await Task.Delay(Random.Shared.Next(900, 1200));
@@ -209,15 +230,23 @@ public static class Browsing
         for (int i = 0; i < forsen.Length; i++)
         {
             login.SendKeys(forsen[Random.Shared.Next(forsen.Length)].ToString());
-            await Task.Delay(Random.Shared.Next(200, 1500));
+            await Task.Delay(Random.Shared.Next(450, 1200));
         }
 
         BotCore.Nlog.Info("waiting for token");
 
-        await WaitUntil(() => haveIntegrity && haveDeviceID, TimeSpan.FromSeconds(5));
-
+        await WaitUntil(() => haveIntegrity && haveDeviceID, TimeSpan.FromSeconds(3));
+        
+        if (string.IsNullOrEmpty(integrityToken) && tabCounter < 3)
+        {
+            await driver.Navigate().GoToUrlAsync("https://www.google.com/");
+            _ = driver.ExecuteScript($"open(\"https://www.twitch.tv/login/?={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}\")");
+            tabCounter++;
+            goto start;
+        }
+        
         await driver.Manage().Network.StopMonitoring();
-
+        
         BotCore.Nlog.Info($"\n {integrityToken} \n {deviceId}");
         driver.Quit();
         return new(integrityToken ?? "", deviceId ?? "");

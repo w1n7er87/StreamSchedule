@@ -25,12 +25,14 @@ internal class Scramble : Command
     
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        if (activeGames.TryGetValue(message.ChannelID, out _))
-            return Task.FromResult(new CommandResult("✋ Awkward a game is already in progress "));
 
         _ = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args);
-        
-        if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Mod) muted = !muted;
+
+        if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Mod)
+        {
+            muted = !muted;
+            return Task.FromResult(Utils.Responses.Ok);
+        }
 
         if (muted) return Task.FromResult(new CommandResult());
         
@@ -46,7 +48,8 @@ internal class Scramble : Command
         int attempts = 0;
         
         List<Token> candidates = [.. context.Tokens.Where(tt => tt.Value.Length == desiredCount).AsNoTracking()];
-
+        List<TokenPair> pairs = context.TokenPairs.AsNoTracking().ToList();
+        
         while (!ok)
         {
             if (candidates.Count == 0)
@@ -59,7 +62,7 @@ internal class Scramble : Command
 
             Token tt = candidates.ElementAt(Random.Shared.Next(candidates.Count));
             
-            IQueryable<TokenPair> usedIn = context.TokenPairs.Where(tp => tp.Count >= 5 && (tp.TokenID == tt.TokenID || tp.NextTokenID == tt.TokenID)).AsNoTracking();
+            List<TokenPair> usedIn = pairs.Where(tp => tp.Count >= 5 && (tp.TokenID == tt.TokenID || tp.NextTokenID == tt.TokenID)).ToList();
 
             if (!usedIn.Any())
             {
