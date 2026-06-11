@@ -49,29 +49,23 @@ internal class Scramble : Command
         string word = "";
         int attempts = 0;
         
-        List<Token> candidates = [.. context.Tokens.Where(tt => tt.Value.Length == desiredCount).AsNoTracking()];
-        List<TokenPair> pairs = context.TokenPairs.AsNoTracking().ToList();
-        
+        List<TokenPair> tokenPairs = context.TokenPairs.AsNoTracking().ToList();
+        IEnumerable<int> validTokensIDS = tokenPairs.Where(tp => tp.Count >= 5).SelectMany(pair => new[] { pair.TokenID, pair.NextTokenID }).Distinct();
+        IEnumerable<Token> validTokens = context.Tokens.Where(t => validTokensIDS.Contains(t.TokenID)).AsNoTracking();
+        List<Token> candidates = validTokens.Where(tt => tt.Value.Length == desiredCount).ToList();
+
         while (!ok)
         {
             if (candidates.Count == 0)
             {
                 desiredCount = Math.Clamp(desiredCount - 1, minCount, maxCount);
+                candidates = validTokens.Where(tt => tt.Value.Length == desiredCount).ToList();
                 attempts++;
-                candidates = [.. context.Tokens.Where(tt => tt.Value.Length == desiredCount).AsNoTracking()];
                 continue;
             }
 
             Token tt = candidates.ElementAt(Random.Shared.Next(candidates.Count));
-            
-            List<TokenPair> usedIn = pairs.Where(tp => tp.Count >= 5 && (tp.TokenID == tt.TokenID || tp.NextTokenID == tt.TokenID)).ToList();
 
-            if (!usedIn.Any())
-            {
-                attempts++;
-                continue;
-            }
-            
             word = tt.Value;
             ok = true;
         }
