@@ -28,10 +28,6 @@ internal class HypeTracker : Command
         User? targetUser;
         try { targetUser = (await BotCore.API.Helix.Users.GetUsersAsync(logins: [channelName])).Users.FirstOrDefault(); }
         catch (Exception e) {BotCore.Nlog.Error(e); targetUser = null; }
-        finally
-        {
-            targetUser = null;
-        }
 
         if (targetUser is null) return Utils.Responses.Fail + "user does not exist";
         if (targetUser.BroadcasterType is not ("affiliate" or "partner")) return Utils.Responses.Fail + "user is not a affiliate or partner";
