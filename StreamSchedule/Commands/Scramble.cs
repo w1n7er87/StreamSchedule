@@ -22,6 +22,14 @@ internal class Scramble : Command
     private static bool muted;
     private const int minCount = 3;
     private const int maxCount = 15;
+    private static readonly List<Token> Tokens;
+    private static readonly List<TokenPair> TokenPairs; 
+
+    static Scramble()
+    {
+        Tokens = context.Tokens.AsNoTracking().ToList(); 
+        TokenPairs = context.TokenPairs.AsNoTracking().ToList();
+    }
     
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -49,17 +57,17 @@ internal class Scramble : Command
         string word = "";
         int attempts = 0;
         
-        List<TokenPair> tokenPairs = context.TokenPairs.AsNoTracking().ToList();
-        IEnumerable<int> validTokensIDS = tokenPairs.Where(tp => tp.Count >= 5).SelectMany(pair => new[] { pair.TokenID, pair.NextTokenID }).Distinct();
-        IEnumerable<Token> validTokens = context.Tokens.Where(t => validTokensIDS.Contains(t.TokenID)).AsNoTracking();
-        List<Token> candidates = validTokens.Where(tt => tt.Value.Length == desiredCount).ToList();
+        BotCore.Nlog.Info($"{Tokens.Count} {TokenPairs.Count}");
+        
+        List<int> validTokensIDS = TokenPairs.Where(tp => tp.Count >= 5).SelectMany(pair => new[] { pair.TokenID, pair.NextTokenID }).Distinct().ToList();
+        List<Token> candidates = Tokens.Where(t => validTokensIDS.Contains(t.TokenID)).Where(tt => tt.Value.Length == desiredCount).ToList();
 
         while (!ok)
         {
             if (candidates.Count == 0)
             {
                 desiredCount = Math.Clamp(desiredCount - 1, minCount, maxCount);
-                candidates = validTokens.Where(tt => tt.Value.Length == desiredCount).ToList();
+                candidates = Tokens.Where(t => validTokensIDS.Contains(t.TokenID)).Where(tt => tt.Value.Length == desiredCount).ToList();
                 attempts++;
                 continue;
             }
