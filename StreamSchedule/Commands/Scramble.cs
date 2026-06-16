@@ -56,9 +56,7 @@ internal class Scramble : Command
         bool ok = false;
         string word = "";
         int attempts = 0;
-        
-        BotCore.Nlog.Info($"{Tokens.Count} {TokenPairs.Count}");
-        
+
         List<int> validTokensIDS = TokenPairs.Where(tp => tp.Count >= 5).SelectMany(pair => new[] { pair.TokenID, pair.NextTokenID }).Distinct().ToList();
         List<Token> candidates = Tokens.Where(t => validTokensIDS.Contains(t.TokenID)).Where(tt => tt.Value.Length == desiredCount).ToList();
 
