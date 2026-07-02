@@ -40,7 +40,7 @@ public static class Markov
         BotCore.Nlog.Info("Loading markov");
         Load();
         _ = new Saver();
-        _ = new Tokenizer();
+        Task.Run(Tokenizer);
         IsReady = true;
     }
 
@@ -56,17 +56,19 @@ public static class Markov
         }
     }
 
-    private sealed class Tokenizer : Periodic
+    private static async Task Tokenizer()
     {
-        protected override Task Update()
+        while (true)
         {
-            if (TokenizationQueue.Count <= 0 || !IsReady) return Task.CompletedTask;
+            if (TokenizationQueue.Count <= 0 || !IsReady)
+            {
+                await Task.Delay(50);
+                continue;
+            }
             TokenizeMessage(TokenizationQueue.Peek());
             TokenizationQueue.Dequeue();
-            return Task.CompletedTask;
         }
     }
-
     
     public static TimeSpan Save()
     {

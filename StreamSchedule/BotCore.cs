@@ -73,7 +73,7 @@ internal static class BotCore
         {
             OutQueuePerChannel.Add(user.Username!, []);
             ChannelLiveState.Add(user.Username!, false);
-            _ = new OutPump(user);
+            Task.Run(() => OutPump(user));
         }
 
         Commands.Commands.InitializeCommands([.. joinedUsers.Select(u => u.Username!)], DBContext);
@@ -93,6 +93,7 @@ internal static class BotCore
         _ = EmoteMonitors.Monitoring.Start;
         _ = Markov.Start;
         _ = Browsing.Browsing.Start;
+        _ = Personality.Personality.Start;
         ExportUtils.UpdateStyles();
     }
 
@@ -145,7 +146,7 @@ internal static class BotCore
         {
             string content = e.ChatMessage.Message.Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", "");
             
-            if (!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
+            if (userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
                 Markov.TokenizationQueue.Enqueue(content);
             
             return;
@@ -190,12 +191,14 @@ internal static class BotCore
 
     private static void MonitorOnLive(object? sender, OnStreamOnlineArgs args)
     {
+        if(args.Channel.Equals("vedal987")) Personality.Personality.Online = true;
         ChannelLiveState[args.Channel] = true;
         Nlog.Info($"{args.Channel} went live");
     }
 
     private static void MonitorOnOffline(object? sender, OnStreamOfflineArgs args)
     {
+        if(args.Channel.Equals("vedal987")) Personality.Personality.Online = false;
         ChannelLiveState[args.Channel] = false;
         Nlog.Info($"{args.Channel} went offline");
     }
@@ -221,21 +224,23 @@ internal static class BotCore
 
     #endregion EVENTS
 
-    private sealed class OutPump(User channel) : Periodic
+    private static async Task OutPump(User channel)
     {
-        private bool sameMessageFlip = false;
-        private long second = Stopwatch.GetTimestamp();
+        bool sameMessageFlip = false;
         
-        protected override Task Update()
+        while (true)
         {
-            if (Stopwatch.GetElapsedTime(second).TotalMilliseconds < 1100) return Task.CompletedTask;
-            if (OutQueuePerChannel[channel.Username!].Count <= 0) return Task.CompletedTask;
+            if (OutQueuePerChannel[channel.Username!].Count <= 0)
+            {
+                await Task.Delay(25);
+                continue;
+            }
+            
             OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
-            _ = SendLongMessage(channel, response.ReplyID,$"{response.Result} {(sameMessageFlip ? "͏" : "")}", response.Result.requiresFilter);
+            _ = await SendLongMessage(channel, response.ReplyID,$"{response.Result} {(sameMessageFlip ? "͏" : "")}", response.Result.requiresFilter);
             sameMessageFlip = !sameMessageFlip;
+            await Task.Delay(1100);
             OutQueuePerChannel[channel.Username!].Dequeue();
-            second = Stopwatch.GetTimestamp();
-            return Task.CompletedTask;
         }
     }
 
