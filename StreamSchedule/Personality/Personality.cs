@@ -30,7 +30,7 @@ public static class Personality
     private static TimeSpan OnlineInterval => new TimeSpan(hours: 0, minutes: Random.Shared.Next(5, 15), seconds: Random.Shared.Next(32));
 
     private static DateTime timeToSpeak = DateTime.UtcNow + TimeSpan.FromMinutes(5);
-    private static readonly Func<string>[] actions = [SpeakOnTopic, SpeakOnTopic, RemindSchedule];
+    private static readonly Func<string>[] actions = [SpeakOnTopic, SpeakOnTopic, SpeakOnTopic, RemindSchedule];
 
     private sealed class SaySomething : Periodic
     {
@@ -79,7 +79,10 @@ public static class Personality
             "finally {0} today "
         ];
         
-        string the = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.UtcNow))?.StreamTitle ?? "no stream";
+        var stream = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.UtcNow));
+        string the = "no stream";
+        if (stream is not null) the = stream.StreamDate.ToDateTime(stream.StreamTime) < DateTime.UtcNow ? the : stream.StreamTitle ?? the;
+
         return string.Format(responses[Random.Shared.Next(responses.Length)], the);
     }
 }
