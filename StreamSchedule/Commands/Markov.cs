@@ -7,9 +7,9 @@ internal class Markov : Command
 {
     public override string Call => "markov";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => $"rnd random, o ordered, c[value(1-{maxTokenCount})]({defaultTokenCount}) token count, q seed, r reverse, i include, f force try no eol";
+    public override string Help => $"w random, o ordered, c[value(1-{maxTokenCount})]({defaultTokenCount}) token count, q seed, r reverse, i include, f force try no eol";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.TwoMinutes);
-    public override string[] Arguments => ["rnd", "o", "c", "m", "f", "q", "r", "i", "count", "load", "save"];
+    public override string[] Arguments => ["w", "o", "c", "m", "f", "q", "r", "i", "count", "load", "save"];
     public override List<string> Aliases { get; set; } = [];
 
     private static bool Muted = false;

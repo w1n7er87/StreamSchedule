@@ -26,11 +26,11 @@ public static class Personality
         }
     }
     
-    private static TimeSpan OfflineInterval => new TimeSpan(hours: 1, minutes: Random.Shared.Next(-15, 45), seconds: Random.Shared.Next(32));
-    private static TimeSpan OnlineInterval => new TimeSpan(hours: 0, minutes: Random.Shared.Next(5, 45), seconds: Random.Shared.Next(32));
+    private static TimeSpan OfflineInterval => new TimeSpan(hours: 1, minutes: Random.Shared.Next(-15, 25), seconds: Random.Shared.Next(32));
+    private static TimeSpan OnlineInterval => new TimeSpan(hours: 0, minutes: Random.Shared.Next(5, 15), seconds: Random.Shared.Next(32));
 
     private static DateTime timeToSpeak = DateTime.UtcNow + TimeSpan.FromMinutes(5);
-    private static readonly Func<string>[] actions = [SpeakOnTopic, RemindSchedule];
+    private static readonly Func<string>[] actions = [SpeakOnTopic, SpeakOnTopic, RemindSchedule];
 
     private sealed class SaySomething : Periodic
     {
@@ -49,7 +49,7 @@ public static class Personality
                 timeToSpeak = DateTime.UtcNow + OfflineInterval;
             }
             BotCore.OutQueuePerChannel["vedal987"].Enqueue(new OutgoingMessage(new CommandResult(result, requiresFilter:true), null));
-            BotCore.Nlog.Info($"said \"{result}\", next line in {timeToSpeak - DateTime.UtcNow} ");
+            BotCore.Nlog.Info($"said \"{result}\", next line at {timeToSpeak.ToLocalTime()} ");
             return Task.CompletedTask;
         }
     }
@@ -64,7 +64,7 @@ public static class Personality
             .OrderByDescending(g => g.count)
             .FirstOrDefault()?.word ?? "uuh";
 
-        return Markov.GenerateSequence(commonWord, Random.Shared.Next(2, 15), Method.ordered);
+        return Markov.GenerateSequence(commonWord, Random.Shared.Next(4, 15), Method.ordered | Method.force);
     }
 
     private static string RemindSchedule()

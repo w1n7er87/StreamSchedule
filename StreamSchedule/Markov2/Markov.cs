@@ -192,29 +192,33 @@ public static class Markov
 
             bool forwardFailed = false;
             bool reverseFailed = false;
-
-            while (generatedLowerHalf.Count + generatedTokens.Count - 1 < maxLength)
+            
+            bool forward = true;
+            int generatedCount = 1;
+            
+            while (generatedCount < maxLength)
             {
                 if (forwardFailed && reverseFailed) break;
-
-                bool forward;
-                if (Random.Shared.Next(101) >= 50)
-                {
-                    forward = true;
-                    if (forwardFailed) forward = false;
-                }
-                else
-                {
-                    forward = false;
-                    if (reverseFailed) forward = true;
-                }
-
+                if (forwardFailed) forward = false;
+                if (reverseFailed) forward = true;
+                
                 if (forward)
-                    forwardFailed = generatedTokens.PickNext(method);
+                {
+                    forwardFailed = generatedTokens.PickNext(method, out bool needExtra, pickLast:(maxLength - generatedCount <= 2));
+                    if (needExtra)
+                    {
+                        forwardFailed = false;
+                        forward = true;
+                        continue;
+                    }
+                }
                 else
-                    reverseFailed = generatedLowerHalf.PickNext(method | Method.reverse);
+                    reverseFailed = generatedLowerHalf.PickNext(method | Method.reverse, out _);
+                
+                generatedCount++;
+                forward = !forward;
             }
-
+            
             generatedLowerHalf.RemoveAt(0);
             generatedLowerHalf.Reverse();
             generatedTokens = [..generatedLowerHalf, ..generatedTokens];
@@ -222,9 +226,13 @@ public static class Markov
         else
         {
             while (generatedTokens.Count < maxLength)
-                if (generatedTokens.PickNext(method))
-                    break;
-
+            {
+                if (generatedTokens.PickNext(method, out bool needExtra, generatedTokens.Count == maxLength - 1) || needExtra)
+                {
+                    if (needExtra) maxLength += 1;
+                    else break;
+                }
+            }
             if (method.HasFlag(Method.reverse)) generatedTokens.Reverse();
         }
 
@@ -235,28 +243,43 @@ public static class Markov
         return result;
     }
 
-    private static bool PickNext(this List<int> sequence, Method method)
+    private static bool PickNext(this List<int> sequence, Method method, out bool needExtra, bool pickLast = false)
     {
         bool reverse = method.HasFlag(Method.reverse);
         bool force = method.HasFlag(Method.force);
-
+        needExtra = false;
+        
         List<TokenPair>? pairs = null;
         if (reverse) ReverseTokenPairLookup.TryGetValue(sequence.Last(), out pairs);
         else TokenPairLookup.TryGetValue(sequence.Last(), out pairs);
         if (pairs is null || pairs.Count == 0) return true;
+
+        if (pickLast) force = false;
+        
         if (force)
         {
             pairs.RemoveAll(tp => tp.NextTokenID == eolID);
             if (pairs.Count == 0) return true;
         }
-
+        
         TokenPair next = method switch
         {
             _ when method.HasFlag(Method.ordered) => Ordered(),
             _ when method.HasFlag(Method.random) => Random(),
             _ => Weighted()
         };
-
+        
+        if (pickLast & !reverse)
+        {
+            TokenPairLookup.TryGetValue(next.NextTokenID, out List<TokenPair>? temp);
+            if (temp is null || temp.Count == 0)
+            {
+                sequence.Add(next.NextTokenID);
+                return true;
+            }
+            if (temp.FirstOrDefault(tp => tp.NextTokenID == eolID) is null) needExtra = true;
+        }
+        
         sequence.Add(reverse ? next.TokenID : next.NextTokenID);
         return false;
 
