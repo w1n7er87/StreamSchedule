@@ -26,7 +26,7 @@ public static class Personality
         }
     }
     
-    private static TimeSpan OfflineInterval => new TimeSpan(hours: 1, minutes: Random.Shared.Next(-15, 25), seconds: Random.Shared.Next(32));
+    private static TimeSpan OfflineInterval => new TimeSpan(hours: 1, minutes: Random.Shared.Next(-25, 25), seconds: Random.Shared.Next(32));
     private static TimeSpan OnlineInterval => new TimeSpan(hours: 0, minutes: Random.Shared.Next(5, 15), seconds: Random.Shared.Next(32));
 
     private static DateTime timeToSpeak = DateTime.UtcNow + TimeSpan.FromMinutes(5);
@@ -57,14 +57,14 @@ public static class Personality
     private static string SpeakOnTopic()
     {
         string commonWord = BotCore.MessageCache
-            .TakeLast(25)
+            .TakeLast(15)
             .SelectMany(m => m.Message.Split(" "))
             .GroupBy(s => s)
             .Select(g => new {word = g.Key, count = g.Count()})
             .OrderByDescending(g => g.count)
             .FirstOrDefault()?.word ?? "uuh";
 
-        return Markov.GenerateSequence(commonWord, Random.Shared.Next(4, 15), Method.ordered | Method.force);
+        return Markov.GenerateSequence(commonWord, Random.Shared.Next(4, 8), Method.ordered | Method.force);
     }
 
     private static string RemindSchedule()
