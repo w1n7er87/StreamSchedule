@@ -26,11 +26,11 @@ public static class Personality
         }
     }
     
-    private static TimeSpan OfflineInterval => new TimeSpan(hours: 1, minutes: Random.Shared.Next(-25, 25), seconds: Random.Shared.Next(32));
+    private static TimeSpan OfflineInterval => new TimeSpan(hours: 0, minutes: 45 + Random.Shared.Next(-15, 25), seconds: Random.Shared.Next(32));
     private static TimeSpan OnlineInterval => new TimeSpan(hours: 0, minutes: Random.Shared.Next(5, 15), seconds: Random.Shared.Next(32));
 
     private static DateTime timeToSpeak = DateTime.UtcNow + TimeSpan.FromMinutes(5);
-    private static readonly Func<string>[] actions = [SpeakOnTopic, SpeakOnTopic, SpeakOnTopic, RemindSchedule];
+    private static readonly Func<string>[] actions = [SpeakOnTopic, SpeakOnTopic, SpeakOnTopic, HugLast, RemindSchedule];
 
     private sealed class SaySomething : Periodic
     {
@@ -84,5 +84,11 @@ public static class Personality
         if (stream is not null) the = stream.StreamDate.ToDateTime(stream.StreamTime) < DateTime.UtcNow ? the : stream.StreamTitle ?? the;
 
         return string.Format(responses[Random.Shared.Next(responses.Length)], the);
+    }
+
+    private static string HugLast()
+    {
+        string username = BotCore.MessageCache.Last().Username;
+        return $"{(Random.Shared.Next(101) >= 50? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!",3)}";
     }
 }
