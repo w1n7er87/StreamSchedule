@@ -24,9 +24,7 @@ public static class Markov
 
     private static DateTime lastSave = DateTime.UtcNow;
     private static readonly TimeSpan saveInterval = TimeSpan.FromMinutes(30);
-
-    private static Random random = new();
-
+    
     static Markov()
     {
         context.Database.EnsureCreated();
@@ -172,16 +170,18 @@ public static class Markov
             }
         }
     }
-
+    
+    private static Func<int, int> Rnd = Random.Shared.Next;
+    
     public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.weighted, int? seed = null)
     {
         if (!IsReady) return "uuh ";
-
-        random = new Random(seed ?? (DateTime.Now.Minute + DateTime.Now.Millisecond) / (DateTime.Now.Hour + 1) );
-
+        
+        Rnd = seed == null ? Random.Shared.Next : new Random(seed ?? 1).Next;
+        
         Token? source = null;
         if (!string.IsNullOrWhiteSpace(firstWord)) source = TokenLookup.FirstOrDefault(t => t.Value.Value.Equals(firstWord)).Value;
-        source ??= TokenLookup[random.Next(0, TokenLookup.Count)];
+        source ??= TokenLookup[Rnd(TokenLookup.Count)];
 
         List<int> generatedTokens = [source.TokenID];
 
@@ -283,9 +283,9 @@ public static class Markov
         sequence.Add(reverse ? next.TokenID : next.NextTokenID);
         return false;
 
-        TokenPair Ordered() => pairs.OrderByDescending(x => x.Count).ElementAt(random.Next(0, random.Next(0, pairs.Count + 1)));
-        TokenPair Weighted_() => pairs.OrderBy(x => x.Count).First(tp => tp.Count >= random.Next(0, (pairs.MaxBy(x => x.Count)?.Count ?? 2) + 1));
-        TokenPair Weighted() => pairs.Select(tp => new { count = tp.Count, pair = tp }).OrderBy(tpc => tpc.count).First(tpc => tpc.count >= random.Next(0, pairs.MaxBy(tp => tp.Count)?.Count ?? 0)).pair;
-        TokenPair Random() => pairs[random.Next(0, pairs.Count)];
+        TokenPair Ordered() => pairs.OrderByDescending(x => x.Count).ElementAt(Rnd(Rnd(pairs.Count + 1)));
+        TokenPair Weighted_() => pairs.OrderBy(x => x.Count).First(tp => tp.Count >= Rnd((pairs.MaxBy(x => x.Count)?.Count ?? 2) + 1));
+        TokenPair Weighted() => pairs.Select(tp => new { count = tp.Count, pair = tp }).OrderBy(tpc => tpc.count).First(tpc => tpc.count >= Rnd(pairs.MaxBy(tp => tp.Count)?.Count ?? 0)).pair;
+        TokenPair Random() => pairs[Rnd(pairs.Count)];
     }
 }
