@@ -19,10 +19,7 @@ public static class Personality
         set
         {
             _online = value;
-            if (value)
-            {
-                timeToSpeak = DateTime.UtcNow + OnlineInterval;
-            }
+            if (value)timeToSpeak = DateTime.UtcNow + OnlineInterval;
         }
     }
     
@@ -73,7 +70,7 @@ public static class Personality
         [
             "did yall know there is {0} today ",
             "yo there is {0} today ",
-            "can't wait for {0} today ",
+            "can't wait for today's {0} ",
             "thank god there is {0} today ",
             "so excited for {0} today ",
             "finally {0} today "

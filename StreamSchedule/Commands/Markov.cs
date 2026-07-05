@@ -35,7 +35,7 @@ internal class Markov : Command
             
             int? seed = args.TryGetValue("q", out string? qq) ? int.TryParse(qq, out int qqq) ? Math.Clamp(qqq, 0, int.MaxValue - 1) : null : null;
             
-            if (args.TryGetValue("rnd", out _)) method |= Method.random;
+            if (args.TryGetValue("w", out _)) method |= Method.random;
             
             if (args.TryGetValue("o", out _)) method |= Method.ordered;
             
