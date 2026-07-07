@@ -275,6 +275,7 @@ public static class Markov
     public static string GenerateSequence(string? firstWord = null, int maxLength = 25, Method method = Method.weighted, int? seed = null)
     {
         if (!Ready) return "uuh ";
+        int initialMaxLength = maxLength;
         
         Rnd = seed == null ? Random.Shared.Next : new Random(seed ?? 1).Next;
         
@@ -308,6 +309,7 @@ public static class Markov
                     {
                         forwardStopped = false;
                         forward = true;
+                        maxLength = Math.Min(initialMaxLength + 5, maxLength + 1);
                         continue;
                     }
                 }
@@ -328,7 +330,7 @@ public static class Markov
             {
                 if (generatedTokens.PickNext(method, out bool needExtra, generatedTokens.Count == maxLength - 1) || needExtra)
                 {
-                    if (needExtra) maxLength += 1;
+                    if (needExtra) maxLength = Math.Min(initialMaxLength + 5, maxLength + 1);
                     else break;
                 }
             }
