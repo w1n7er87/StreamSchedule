@@ -7,9 +7,9 @@ internal class Markov : Command
 {
     public override string Call => "markov";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => $"w random, o ordered, c[value(1-{maxTokenCount})]({defaultTokenCount}) token count, q seed, r reverse, i include, f force try no eol";
+    public override string Help => $"w random o ordered c 1-{maxTokenCount}({defaultTokenCount}) count q seed r reverse i include f force try no eol";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.TwoMinutes);
-    public override string[] Arguments => ["w", "o", "c", "m", "f", "q", "r", "i", "count", "load", "save"];
+    public override string[] Arguments => ["w", "o", "c", "m", "f", "q", "r", "i", "count", "load", "save", "dump", "trim"];
     public override List<string> Aliases { get; set; } = [];
 
     private static bool Muted = false;
@@ -22,6 +22,18 @@ internal class Markov : Command
         {
             string? word = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args).Split(' ').LastOrDefault(x => !string.IsNullOrEmpty(x));
 
+            if (args.TryGetValue("dump", out _) && message.Sender.Privileges >= Privileges.Uuh)
+            {
+                Markov2.Markov.DumpTokenStats(word ?? "", args.TryGetValue("r", out _));
+                return Task.FromResult(Utils.Responses.Ok);
+            }
+
+            if (args.TryGetValue("trim", out _) && message.Sender.Privileges >= Privileges.Uuh)
+            {
+                Markov2.Markov.Cleanup();
+                return Task.FromResult(Utils.Responses.Ok);
+            }
+            
             if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Mod)
             {
                 Muted = !Muted;
@@ -55,7 +67,7 @@ internal class Markov : Command
                 return Task.FromResult(new CommandResult($"{Markov2.Markov.TokenCount} tokens {Markov2.Markov.TokenPairCount} pairs "));
             
             string result = Markov2.Markov.GenerateSequence(word, count, method, seed);
-            return Task.FromResult(new CommandResult(result.Replace("\e", ""), requiresFilter: true));
+            return Task.FromResult(new CommandResult(result, requiresFilter: true));
         }
         catch (Exception e)
         {
