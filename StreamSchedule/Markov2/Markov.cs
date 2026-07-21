@@ -310,6 +310,7 @@ public static class Markov
                         forwardStopped = false;
                         forward = true;
                         maxLength = Math.Min(initialMaxLength + 5, maxLength + 1);
+                        generatedCount++;
                         continue;
                     }
                 }

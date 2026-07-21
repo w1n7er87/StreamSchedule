@@ -52,7 +52,7 @@ internal class Exporter
 
             if (addedDetails.Count != 0)
             {
-                chatResult .Append($"{addedDetails.Count} added 📥 : {string.Join(", ", addedDetails)} ");
+                chatResult.Append($"{addedDetails.Count} added 📥 : {string.Join(", ", addedDetails)} ");
                 html.AppendFormat(Templates.EmotesBlock, "Added", string.Join("\n", addedDetails.Select(Conversions.EmoteToHtml)));
             }
 
