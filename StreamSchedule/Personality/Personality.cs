@@ -85,7 +85,7 @@ public static class Personality
 
     private static string HugLast()
     {
-        string username = BotCore.MessageCache.Last().Username;
-        return $"{(Random.Shared.Next(101) >= 50? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!",3)}";
+        string username = BotCore.MessageCache.TakeLast(1).FirstOrDefault()?.Username ?? "uuh";
+        return $"{(Random.Shared.Next(101) >= 50? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!",4)}";
     }
 }

@@ -29,8 +29,8 @@ internal static class BotCore
     private static LiveStreamMonitorService Monitor { get; set; } = null!;
     private static Dictionary<string, bool> ChannelLiveState { get; set; } = null!;
 
-    public static readonly List<ChatMessage> MessageCache = [];
-    private const int _cacheSize = 800;
+    public static readonly MessageCache MessageCache = new MessageCache(800);
+
     public static int MessageLengthLimit = 278;
 
     private static long _lastSave;
@@ -94,6 +94,7 @@ internal static class BotCore
         _ = Markov.Start;
         _ = Browsing.Browsing.Start;
         _ = Personality.Personality.Start;
+        _ = LLM.Inference.Start();
         ExportUtils.UpdateStyles();
     }
 
@@ -115,9 +116,8 @@ internal static class BotCore
                 User.AddMessagesCounter(userSent, online: 1);
             else
                 User.AddMessagesCounter(userSent, offline: 1);
-            
+
             MessageCache.Add(e.ChatMessage);
-            if (MessageCache.Count > _cacheSize) MessageCache.RemoveAt(0);
         }
         
         ReadOnlySpan<Codepoint> messageAsCodepoints = [.. e.ChatMessage.Message.Codepoints()];

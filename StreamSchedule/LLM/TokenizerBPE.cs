@@ -12,7 +12,7 @@ public static class TokenizerBPE
     public static readonly List<int> CustomTokenIDs = [];
     
     public static int EOMID { get; private set; } = 256;
-
+    public static int TimeID { get; private set; } = 257;
     public static List<int> Encode(string text)
     {
         if (string.IsNullOrEmpty(text)) return [];
@@ -147,7 +147,8 @@ public static class TokenizerBPE
         }
 
         foreach (string customToken in customTokens) { if(_tokenToId.TryGetValue(customToken, out int id)) CustomTokenIDs.Add(id); }
-        
+
+        if (_tokenToId.TryGetValue("[TIME]", out int timeid)) { TimeID = timeid; }
         if (_tokenToId.TryGetValue("[EOM]", out int eomId)) { EOMID = eomId; }
         Console.WriteLine($"Tokenizer loaded {_idToToken.Count} rows.");
         return true;

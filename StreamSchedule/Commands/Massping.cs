@@ -14,8 +14,8 @@ internal class Massping : Command
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string first = message.Content.Split(" ", StringSplitOptions.TrimEntries).FirstOrDefault() ?? "yo ";
-        string names = string.Join(" ", BotCore.MessageCache
-            .Where(m => m.UserType != UserType.Moderator)
+        string names = string.Join(" ", BotCore.MessageCache.GetList()
+            .Where(m => m.UserType != UserType.Moderator && m.BotUsername != "faker")
             .GroupBy(m => m.Username)
             .Select(g => new { name = g.Key, count = g.Count() })
             .OrderByDescending(p => p.count)

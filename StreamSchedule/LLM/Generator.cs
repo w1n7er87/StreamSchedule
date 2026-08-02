@@ -5,7 +5,7 @@ namespace StreamSchedule.LLM;
 
 public static class Generator
 {
-      public static string Generate(Context ctx, List<int> promptInput, int tokensToGenerate, float temperature = 0.7f)
+    public static string Generate(Context ctx, List<int> promptInput, int tokensToGenerate, float temperature = 0.7f)
     {
         if (promptInput.Count == 0) return string.Empty;
         
@@ -72,7 +72,18 @@ public static class Generator
                     break;
                 }
             }
+            
             if (chosenId == TokenizerBPE.EOMID) break;
+            
+            if (chosenId == TokenizerBPE.TimeID)
+            {
+                string currentTimeStr = $"{DateTime.Now:HH:mm:ss}";
+        
+                responseAccumulator.Append(currentTimeStr);
+                List<int> syncTokens = TokenizerBPE.Encode(currentTimeStr);
+                foreach (int t in syncTokens) { Model.PredictNextTokenStep(ctx, t); }
+                continue; 
+            }
 
             byte[] tokenBytes = TokenizerBPE.GetRawBytesFromID(chosenId);
             if (tokenBytes.Length > 0)
@@ -81,7 +92,7 @@ public static class Generator
                 if (charsDecoded > 0) { responseAccumulator.Append(charBuffer, 0, charsDecoded); }
             }
             Model.PredictNextTokenStep(ctx, chosenId);
-            //if (chosenId == TokenizerBPE.EOMID) break;
+            //if (chosenId == TokenizerBPE.EOMID) break;// keep the token
         }
 
         int finalFlushCount = streamDecoder.GetChars(Array.Empty<byte>(), 0, 0, charBuffer, 0, true);
