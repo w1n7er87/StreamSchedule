@@ -73,11 +73,11 @@ public static class Generator
                 }
             }
             
-            if (chosenId == TokenizerBPE.EOMID) break;
+            if (chosenId == TokenizerBPE.EOMID) break; //discard the token
             
             if (chosenId == TokenizerBPE.TimeID)
             {
-                string currentTimeStr = $"{DateTime.Now:HH:mm:ss}";
+                string currentTimeStr = $" {DateTime.Now:HH:mm:ss} ";
         
                 responseAccumulator.Append(currentTimeStr);
                 List<int> syncTokens = TokenizerBPE.Encode(currentTimeStr);

@@ -11,7 +11,6 @@ using TwitchLib.Api.Services;
 using TwitchLib.Api.Services.Events.LiveStreamMonitor;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
-using TwitchLib.Client.Models;
 using Markov = StreamSchedule.Markov2.Markov;
 using OutgoingMessage = StreamSchedule.Data.OutgoingMessage;
 
@@ -24,7 +23,7 @@ internal static class BotCore
     public static TwitchAPI API { get; private set; } = null!;
     public static TwitchClient ChatClient { get; private set; } = null!;
     public static Logger Nlog { get; private set; } = null!;
-    public static bool Silent { get; set; }
+    public static bool Silent { get; set; } = false;
     public static bool AllowedOnline { get; set; } = false;
     private static LiveStreamMonitorService Monitor { get; set; } = null!;
     private static Dictionary<string, bool> ChannelLiveState { get; set; } = null!;
@@ -95,6 +94,7 @@ internal static class BotCore
         _ = Browsing.Browsing.Start;
         _ = Personality.Personality.Start;
         _ = LLM.Inference.Start();
+        
         ExportUtils.UpdateStyles();
     }
 
