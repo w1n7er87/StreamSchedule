@@ -15,15 +15,16 @@ internal class Talk : Command
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
         string clean = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args);
-        
+
         if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Uuh)
         {
             Muted = !Muted;
             return Task.FromResult(Utils.Responses.Ok);
         }
 
+        if (Muted) return Task.FromResult(new CommandResult(""));
         if (!LLM.Inference.AllGood) return Task.FromResult(Utils.Responses.Fail);
-        
+
         float t = args.TryGetValue("t", out string? tt) ? float.TryParse(tt, out t)  ? t : 0.65f : 0.65f;
         string user = "";
         if (args.TryGetValue("as", out string? u))
