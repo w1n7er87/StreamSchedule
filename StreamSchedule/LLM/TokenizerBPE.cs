@@ -8,11 +8,9 @@ public static class TokenizerBPE
     private static readonly Dictionary<int, byte[]> _idToToken = new();
     private static readonly Dictionary<string, int> _tokenToId = new();
     private static readonly Dictionary<(int, int), int> _merges = new();
-    private static string[]? CustomTokens;
+    public static List<string> CustomTokens = [];
     public static readonly List<int> CustomTokenIDs = [];
-    
-    public static int EOMID { get; private set; } = 256;
-    public static int TimeID { get; private set; } = 257;
+    public static readonly Dictionary<string, int> CustomTokenToID = [];
     
     public static List<int> Encode(string text)
     {
@@ -94,25 +92,19 @@ public static class TokenizerBPE
         return Encoding.UTF8.GetString(outputBytes.ToArray());
     }
     
-    public static bool Load(List<string> customTokens)
+    public static bool Load()
     {
         string inputDirectory = AppContext.BaseDirectory+"/save/";
         string vocabPath = Path.Combine(inputDirectory, "tokenizer.vocab");
         string mergesPath = Path.Combine(inputDirectory, "tokenizer.merges");
+        string customTokensPath = Path.Combine(inputDirectory, "tokenizer.customTokens");
 
-        if (!File.Exists(vocabPath) || !File.Exists(mergesPath))
+        if (!File.Exists(vocabPath) || !File.Exists(mergesPath) || !File.Exists(customTokensPath))
         {
-            Console.WriteLine("no save for tokenizer");
+            Console.WriteLine("incomplete or missing save for tokenizer");
             return false;
         }
-
-        if (CustomTokens == null || CustomTokens.Length == 0) CustomTokens = new string[customTokens.Count];
-        customTokens.CopyTo(CustomTokens);
         
-        _idToToken.Clear();
-        _tokenToId.Clear();
-        _merges.Clear();
-
         using (var sr = new StreamReader(vocabPath, Encoding.UTF8))
         {
             while (sr.ReadLine() is { } line)
@@ -139,12 +131,22 @@ public static class TokenizerBPE
                 _merges[(leftId, rightId)] = ruleResultId;
             }
         }
-
-        foreach (string customToken in customTokens) { if(_tokenToId.TryGetValue(customToken, out int id)) CustomTokenIDs.Add(id); }
-
-        if (_tokenToId.TryGetValue("[TIME]", out int timeid)) { TimeID = timeid; }
-        if (_tokenToId.TryGetValue("[EOM]", out int eomId)) { EOMID = eomId; }
-        Console.WriteLine($"Tokenizer loaded {_idToToken.Count} rows.");
+        
+        using (var sr = new StreamReader(customTokensPath, Encoding.UTF8))
+        {
+            CustomTokens = [];
+            while (sr.ReadLine() is { } line)
+            {
+                CustomTokens.Add(line);
+                if (_tokenToId.TryGetValue(line, out int id))
+                {
+                    CustomTokenIDs.Add(id);
+                    CustomTokenToID[line] = id;
+                }
+            }
+        }
+    
+        Console.WriteLine($"Tokenizer loaded {_idToToken.Count} rows. {string.Join(" ",CustomTokens)}");
         return true;
     }
 }

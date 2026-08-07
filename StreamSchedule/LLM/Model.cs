@@ -4,9 +4,9 @@ namespace StreamSchedule.LLM;
 
 public static class Model
 {
-    public const int dim = 1024;
-    public const int layers = 7;
-    public const int vocab = 3072;
+    private static int dim = 1024;
+    private static int layers = 7;
+    private static int vocab = 3072;
     
     public static float[] Embedding { get; set; }
     public static float[] OutputProjection { get; set; }
@@ -34,6 +34,13 @@ public static class Model
         }
     }
 
+    public static void SetDimensions(int d, int l, int v)
+    {
+        dim = d;
+        layers = l;
+        vocab = v;
+    }
+    
     private static void ExecuteLayerForward(Context ctx)
     {
         Span<float> activeX = stackalloc float[dim];

@@ -5,6 +5,16 @@ namespace StreamSchedule.LLM;
 
 public static class Generator
 {
+
+    private static int Eom = 0;
+    private static int Time = 0;
+
+    public static void FillIds()
+    {
+        if (TokenizerBPE.CustomTokenToID.TryGetValue("[EOM]", out int id)) Eom = id;
+        if (TokenizerBPE.CustomTokenToID.TryGetValue("[TIME]", out int time)) Time = time;
+    }
+    
     public static string Generate(Context ctx, List<int> promptInput, int tokensToGenerate, float temperature = 0.7f)
     {
         if (promptInput.Count == 0) return string.Empty;
@@ -45,7 +55,7 @@ public static class Generator
             for (int v = 0; v < ctx.VocabSize; v++)
             {
                 var item = tokenScores[v];
-                if (item.Index >= 32 || item.Index == TokenizerBPE.EOMID)
+                if (item.Index >= 32 || item.Index == Eom)
                 {
                     validScores[validCount++] = (item.Index, item.Prob / globalSum);
                 }
@@ -73,9 +83,9 @@ public static class Generator
                 }
             }
             
-            if (chosenId == TokenizerBPE.EOMID) break; //discard the token
+            if (chosenId == Eom) break; //discard the token
             
-            if (chosenId == TokenizerBPE.TimeID)
+            if (chosenId == Time)
             {
                 string currentTimeStr = $"{DateTime.Now:HH:mm:ss}";
         
@@ -92,7 +102,7 @@ public static class Generator
                 if (charsDecoded > 0) { responseAccumulator.Append(charBuffer, 0, charsDecoded); }
             }
             Model.PredictNextTokenStep(ctx, chosenId);
-            //if (chosenId == TokenizerBPE.EOMID) break;// keep the token
+            //if (chosenId == Eom) break;// keep the token
         }
 
         int finalFlushCount = streamDecoder.GetChars(Array.Empty<byte>(), 0, 0, charBuffer, 0, true);

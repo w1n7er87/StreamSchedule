@@ -7,21 +7,20 @@ public static partial class Inference
 {
     private static readonly Context context;
     public static readonly bool AllGood;
-    private static readonly string[] specialTokens = ["[EOM]",  "[BOM]",  "[SPM]",  "[TIME]", ];
     private static readonly int contextSize = 512;
     
     static Inference()
     {
-        context = new Context(Model.dim, Model.layers, Model.vocab);
-        AllGood = TokenizerBPE.Load(specialTokens.ToList());
-        AllGood = Loader.LoadWeights(Model.dim, Model.layers, Model.vocab);
+        (bool succ, int d, int l, int v) = Loader.LoadWeights();
+        AllGood = succ;
+        if (succ) { Model.SetDimensions(d, l , v); }
+        context = new Context(d, l, v);
+        AllGood = TokenizerBPE.Load();
+        if(AllGood) Generator.FillIds();
+        BotCore.Nlog.Info($"inference model loaded {AllGood} {d}-{l}-{v} {d * l + d * v + d * v} params");
     }
 
-    public static bool Start()
-    {
-        BotCore.Nlog.Info($"inference model loaded {AllGood}");
-        return true;
-    }
+    public static bool Start =>  true;
 
     public static string Answer(string user, string? callerMessageID, string? callerContent, float temperature = 0.65f, int? ctx = null)
     {
@@ -30,7 +29,7 @@ public static partial class Inference
         if (!string.IsNullOrWhiteSpace(callerContent)) BotCore.MessageCache.ReplaceMessage(callerMessageID, null, callerContent);
         else BotCore.MessageCache.Remove(callerMessageID);
         string result = Prompt(temperature, ctxSize, user);
-        foreach (string specialToken in specialTokens) { result = result.Replace(specialToken, ""); }
+        foreach (string specialToken in TokenizerBPE.CustomTokens) { result = result.Replace(specialToken, ""); }
         BotCore.MessageCache.AddFakeMessage(user, result);
         return result;
     }
@@ -38,6 +37,7 @@ public static partial class Inference
     public static string Speak(string user, float temperature = 0.65f)
     {
         string result = Prompt(temperature, contextSize, user);
+        foreach (string specialToken in TokenizerBPE.CustomTokens) { result = result.Replace(specialToken, ""); }
         BotCore.MessageCache.AddFakeMessage(user, result);
         return result;
     }
@@ -112,7 +112,7 @@ public static partial class Inference
     private static string CleanTokens(string message)
     {
         string m = RemoveSpaces().Replace(message, " ");
-        foreach (string specialToken in specialTokens) { m = m.Replace(specialToken, ""); }
+        foreach (string specialToken in TokenizerBPE.CustomTokens) { m = m.Replace(specialToken, ""); }
         return m;
     }
     
