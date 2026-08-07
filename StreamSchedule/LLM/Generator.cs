@@ -31,7 +31,8 @@ public static class Generator
 
         Span<(int Index, float Prob)> tokenScores = stackalloc (int Index, float Prob)[ctx.VocabSize];
         Span<(int Index, float Prob)> validScores = stackalloc (int Index, float Prob)[ctx.VocabSize];
-
+        int lastPredicted = promptInput[^1];
+        
         for (int i = 0; i < tokensToGenerate; i++)
         {
             Span<float> originalLogits = ctx.LogitsScratch.AsSpan(0, ctx.VocabSize);
@@ -43,7 +44,7 @@ public static class Generator
             {
                 float expValue = MathF.Exp((originalLogits[v] - maxLogit) * invExponent);
                 
-                if (TokenizerBPE.CustomTokenIDs.Contains(v)) { expValue *= 0.2f; }
+                if (TokenizerBPE.CustomTokenIDs.Contains(v) || v == lastPredicted) { expValue *= 0.2f; }
 
                 tokenScores[v] = (v, expValue);
                 globalSum += expValue;
@@ -101,6 +102,8 @@ public static class Generator
                 int charsDecoded = streamDecoder.GetChars(tokenBytes, 0, tokenBytes.Length, charBuffer, 0, false);
                 if (charsDecoded > 0) { responseAccumulator.Append(charBuffer, 0, charsDecoded); }
             }
+
+            lastPredicted = chosenId;
             Model.PredictNextTokenStep(ctx, chosenId);
             //if (chosenId == Eom) break;// keep the token
         }
