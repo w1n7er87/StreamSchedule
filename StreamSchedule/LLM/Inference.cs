@@ -7,8 +7,8 @@ public static partial class Inference
 {
     private static readonly Context context;
     public static readonly bool AllGood;
-    private static readonly string[] specialTokens = ["[EOM]", "[U]", "[AUT]", "[TIME]"];
-    private static readonly int contextSize = 2048;
+    private static readonly string[] specialTokens = ["[EOM]",  "[BOM]",  "[SPM]",  "[TIME]", ];
+    private static readonly int contextSize = 512;
     
     static Inference()
     {
@@ -20,50 +20,100 @@ public static partial class Inference
     public static bool Start()
     {
         BotCore.Nlog.Info($"inference model loaded {AllGood}");
-        Model.Loaded = AllGood;
         return true;
     }
 
-    public static string Generate(string user, string? cleanMessage, string? callerMessageID, bool emptyRequest, bool automated, float temperature = 0.65f)
+    public static string Answer(string user, string? callerMessageID, string? callerContent, float temperature = 0.65f, int? ctx = null)
     {
-        List<int> tokenizedPrompt = [];
-        
-        if (!emptyRequest)
-            BotCore.MessageCache.ReplaceMessage(callerMessageID, null, cleanMessage);
-        else
-            BotCore.MessageCache.Remove(callerMessageID);
-        
-        List<ChatMessage> cache = BotCore.MessageCache.GetList();
-        int id = cache.Count - 1;
-        while (tokenizedPrompt.Count < contextSize)
-        {
-            if (cache.Count == 0) break;
-            string m = cache[id].Message;
-            
-            if ((callerMessageID?.Equals(cache[id].Id) ?? false) && emptyRequest)
-            {
-                id--;
-                continue;
-            }
-            
-            m = RemoveSpaces().Replace(RemoveUnicode().Replace(m, ""), " ");
-            foreach (string token in specialTokens) { m = m.Replace(token, " uuh "); }
-            tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[U]{cache[id].Username}: {m} [EOM]"));
-            id--;
-            if(id < 0) break;
-        }
-
-        tokenizedPrompt.AddRange(TokenizerBPE.Encode($"{(automated ? "[AUT]" : "")}[U]{user}: "));
-        string result = Generator.Generate(context, tokenizedPrompt, 50, temperature);
-        foreach (string specialToken in specialTokens) { result = result.Replace(specialToken, ""); }
+        int ctxSize = ctx ?? contextSize;
+        ctxSize = int.Clamp(ctxSize, 64, 4096);
+        if (!string.IsNullOrWhiteSpace(callerContent)) BotCore.MessageCache.ReplaceMessage(callerMessageID, null, callerContent);
+        else BotCore.MessageCache.Remove(callerMessageID);
+        string result = Prompt(temperature, ctxSize, user);
         BotCore.MessageCache.AddFakeMessage(user, result);
-        BotCore.Nlog.Info($"{tokenizedPrompt.Count} tokens generated for prompt ");
-        BotCore.Nlog.Info($"decoded prompt: {TokenizerBPE.Decode(tokenizedPrompt)}");
         return result;
     }
+
+    public static string Speak(string user, float temperature = 0.65f)
+    {
+        string result = Prompt(temperature, contextSize, user);
+        BotCore.MessageCache.AddFakeMessage(user, result);
+        return result;
+    }
+
+    private static string Prompt(float temperature, int ctx, string seedUser = "streamschedule")
+    {
+        List<int> tokenizedPrompt = [];
+
+        List<ChatMessage> cache = BotCore.MessageCache.GetList();
+        int i = cache.Count - 2;
+
+        (string u, string m)? hold = null;
+
+        while (tokenizedPrompt.Count < ctx)
+        {
+            int p = i + 1;
+            if (cache.Count == 0 || i < 0) break;
+
+            ChatMessage m = cache[i];
+            ChatMessage prev = cache[p];
+
+            if (m.Username.Equals(prev.Username))
+            {
+                if (hold is null)
+                {
+                    hold = (m.Username, $"{CleanTokens(m.Message)} [SPM] {CleanTokens(prev.Message)}");
+                    i--;
+                    if (i < 0)
+                    {
+                        tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{hold.Value.u}: {hold.Value.m} [EOM]"));
+                        break;
+                    }
+                    continue;
+                }
+
+                if (!hold.Value.u.Equals(m.Username)) continue;
+                hold = (m.Username, $"{CleanTokens(m.Message)} [SPM] {hold.Value.m}");
+            }
+            else
+            {
+                if (hold is null)
+                {
+                    tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{prev.Username}: {CleanTokens(prev.Message)} [EOM]"));
+                    hold = (m.Username, CleanTokens(m.Message));
+                    i--;
+                    if (i < 0)
+                    {
+                        tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{hold.Value.u}: {hold.Value.m} [EOM]"));
+                        break;
+                    }
+
+                    continue;
+                }
+
+                tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{hold.Value.u}: {hold.Value.m} [EOM]"));
+                hold = (m.Username, CleanTokens(m.Message));
+            }
+
+            i--;
+            if (i >= 0) continue;
+            tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{hold.Value.u}: {hold.Value.m} [EOM]"));
+            break;
+        }
+
+        tokenizedPrompt.AddRange(TokenizerBPE.Encode($"[BOM]@{seedUser}:"));
+        
+        BotCore.Nlog.Info($"{tokenizedPrompt.Count} tokens generated for prompt T:{temperature}");
+        //BotCore.Nlog.Info($"decoded prompt:{TokenizerBPE.Decode(tokenizedPrompt)}");
+        return Generator.Generate(context, tokenizedPrompt, 50, temperature);
+    }
+
+    private static string CleanTokens(string message)
+    {
+        string m = RemoveSpaces().Replace(message, " ");
+        foreach (string specialToken in specialTokens) { m = m.Replace(specialToken, ""); }
+        return m;
+    }
     
-    [GeneratedRegex(@"\p{C}")]
-    private static partial Regex RemoveUnicode();
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex RemoveSpaces();
+    [GeneratedRegex(@"\s+")] private static partial Regex RemoveSpaces();
 }

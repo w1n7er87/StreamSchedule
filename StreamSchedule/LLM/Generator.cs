@@ -54,7 +54,7 @@ public static class Generator
             Span<(int Index, float Prob)> activeSubset = validScores[..validCount];
             activeSubset.Sort((a, b) => b.Prob.CompareTo(a.Prob));
 
-            int topK = Math.Min(5, validCount);
+            int topK = Math.Min(10, validCount);
             float topKSum = 0f;
             for (int k = 0; k < topK; k++) topKSum += activeSubset[k].Prob;
             if (topKSum < 1e-15f) topKSum = 1e-15f;
@@ -77,7 +77,7 @@ public static class Generator
             
             if (chosenId == TokenizerBPE.TimeID)
             {
-                string currentTimeStr = $" {DateTime.Now:HH:mm:ss} ";
+                string currentTimeStr = $"{DateTime.Now:HH:mm:ss}";
         
                 responseAccumulator.Append(currentTimeStr);
                 List<int> syncTokens = TokenizerBPE.Encode(currentTimeStr);

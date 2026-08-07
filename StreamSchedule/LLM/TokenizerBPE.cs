@@ -13,6 +13,7 @@ public static class TokenizerBPE
     
     public static int EOMID { get; private set; } = 256;
     public static int TimeID { get; private set; } = 257;
+    
     public static List<int> Encode(string text)
     {
         if (string.IsNullOrEmpty(text)) return [];
@@ -77,6 +78,8 @@ public static class TokenizerBPE
         return finalizedIds;
     }
 
+    public static byte[] GetRawBytesFromID(int id) => _idToToken.TryGetValue(id, out byte[]? bytes) ? bytes : [];
+
     public static string Decode(List<int> ids)
     {
         if (ids.Count == 0) return string.Empty;
@@ -89,15 +92,6 @@ public static class TokenizerBPE
                 outputBytes.Add((byte)'?'); 
         }
         return Encoding.UTF8.GetString(outputBytes.ToArray());
-    }
-    
-    public static byte[] GetRawBytesFromID(int id) => _idToToken.TryGetValue(id, out byte[]? bytes) ? bytes : [];
-
-    public static byte[] DecodeToBytes(List<int> ids)
-    {
-        List<byte> flatBytes = [];
-        foreach (int id in ids) { flatBytes.AddRange(GetRawBytesFromID(id)); }
-        return flatBytes.ToArray();
     }
     
     public static bool Load(List<string> customTokens)

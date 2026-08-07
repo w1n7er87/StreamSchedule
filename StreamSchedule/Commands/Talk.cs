@@ -4,13 +4,13 @@ namespace StreamSchedule.Commands;
 
 internal class Talk : Command
 {
-    public override string Call => "streamschedule";
+    public override string Call => "talk";
     public override Privileges Privileges => Privileges.Trusted;
     public override string Help => "eerm ";
-    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.TwoMinutes);
-    public override string[] Arguments => ["t", "as", "b", "m"];
+    public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
+    public override string[] Arguments => ["t", "as", "m", "c"];
     public override List<string> Aliases { get; set; } = [];
-    private static bool Muted = true;
+    private static bool Muted = false;
     
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
@@ -25,8 +25,10 @@ internal class Talk : Command
         if (Muted) return Task.FromResult(new CommandResult(""));
         if (!LLM.Inference.AllGood) return Task.FromResult(Utils.Responses.Fail);
 
-        float t = args.TryGetValue("t", out string? tt) ? float.TryParse(tt, out t)  ? t : 0.65f : 0.65f;
-        string user = "";
+        float t = args.TryGetValue("t", out string? tt) ? float.TryParse(tt, out t)  ? t : 0.75f : 0.75f;
+        t = float.Clamp(t, 0.01f, 3f);
+        string user;
+        
         if (args.TryGetValue("as", out string? u))
         {
             u = u.ToLower();
@@ -37,10 +39,8 @@ internal class Talk : Command
             user = "streamschedule";
         }
         
-        string result = LLM.Inference.Generate(user, $"@{user} {clean}", message.ID, string.IsNullOrWhiteSpace(clean), automated: args.TryGetValue("b", out _), temperature: t);
-        
-        BotCore.Nlog.Info($"t:{t}|u:{user}:\n{result}");
-
+        int? contextSize = args.TryGetValue("c", out string? cc) ? int.TryParse(cc, out int ccc) ? ccc : null : null;
+        string result = LLM.Inference.Answer(user, message.ID, clean, t, contextSize);
         return Task.FromResult(new CommandResult(result, requiresFilter: true, reply: false));
     }
 }
