@@ -26,10 +26,11 @@ public static partial class Inference
     public static string Answer(string user, string? callerMessageID, string? callerContent, float temperature = 0.65f, int? ctx = null)
     {
         int ctxSize = ctx ?? contextSize;
-        ctxSize = int.Clamp(ctxSize, 64, 4096);
+        ctxSize = int.Clamp(ctxSize, 64, 2048);
         if (!string.IsNullOrWhiteSpace(callerContent)) BotCore.MessageCache.ReplaceMessage(callerMessageID, null, callerContent);
         else BotCore.MessageCache.Remove(callerMessageID);
         string result = Prompt(temperature, ctxSize, user);
+        foreach (string specialToken in specialTokens) { result = result.Replace(specialToken, ""); }
         BotCore.MessageCache.AddFakeMessage(user, result);
         return result;
     }
