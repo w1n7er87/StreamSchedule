@@ -250,6 +250,8 @@ internal static class BotCore
             ? Utils.Filter(message).Split(' ', StringSplitOptions.TrimEntries)
             : message.Split(' ', StringSplitOptions.TrimEntries);
         
+        if (requiresFilter) replyID = null;
+        
         string accumulatedBelowLimit = "";
 
         foreach (string part in parts)
