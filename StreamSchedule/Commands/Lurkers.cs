@@ -27,6 +27,6 @@ internal class Lurkers : Command
             chatter = $", and @{ch} is one of them";
         }
 
-        return new($"{chatterCount} lurkers{chatter} uuh");
+        return new($"{chatterCount} lurkers{chatter} uuh", requiresFilter: true);
     }
 }
