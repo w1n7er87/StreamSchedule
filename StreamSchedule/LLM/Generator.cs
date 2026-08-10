@@ -1,18 +1,27 @@
 using System.Numerics.Tensors;
+using System.Reflection;
 using System.Text;
 
 namespace StreamSchedule.LLM;
 
 public static class Generator
 {
-
     private static int Eom;
-    private static int Time;
 
+    private static readonly Dictionary<int, Tool> Tools = [];
+    
     public static void FillIds()
     {
         if (TokenizerBPE.CustomTokenToID.TryGetValue("[EOM]", out int id)) Eom = id;
-        if (TokenizerBPE.CustomTokenToID.TryGetValue("[TIME]", out int time)) Time = time;
+        
+        List<Type> tools = [.. Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(Tool)))];
+
+        foreach (Type tool in tools)
+        {
+            Tool? t = (Tool?)Activator.CreateInstance(tool);
+            if (t is not null && TokenizerBPE.CustomTokens.Contains(t.Token))
+                Tools[TokenizerBPE.CustomTokenToID[t.Token]] = t;
+        }
     }
     
     public static string Generate(Context ctx, List<int> promptInput, int tokensToGenerate, float temperature = 0.7f)
@@ -68,7 +77,7 @@ public static class Generator
             {
                 float expValue = MathF.Exp((originalLogits[v] - maxLogit) * invExponent);
                 
-                if (TokenizerBPE.CustomTokenIDs.Contains(v)) { expValue *= 0.2f; }
+                if (TokenizerBPE.CustomTokenIDs.Contains(v) && v!= Eom) { expValue *= 0.2f; }
 
                 tokenScores[v] = (v, expValue);
                 globalSum += expValue;
@@ -109,17 +118,16 @@ public static class Generator
             }
             
             if (chosenId == Eom) break; //discard the token
-            
-            if (chosenId == Time)
+
+            if (Tools.TryGetValue(chosenId, out Tool? t))
             {
-                string currentTimeStr = $"{DateTime.Now:HH:mm:ss}";
-        
-                responseAccumulator.Append(currentTimeStr);
-                List<int> syncTokens = TokenizerBPE.Encode(currentTimeStr);
-                foreach (int t in syncTokens) { Model.PredictNextTokenStep(ctx, t); }
+                string toolResult = t.Execute();
+                List<int> syncTokens = TokenizerBPE.Encode(toolResult);
+                foreach (int token in syncTokens) { Model.PredictNextTokenStep(ctx, token); }
+                responseAccumulator.Append(toolResult);
                 continue;
             }
-
+  
             byte[] tokenBytes = TokenizerBPE.GetRawBytesFromID(chosenId);
             if (tokenBytes.Length > 0)
             {
@@ -132,7 +140,6 @@ public static class Generator
             else
             {
                 for (int h = 0; h < recentTokensHistory.Length - 1; h++) { recentTokensHistory[h] = recentTokensHistory[h + 1]; }
-                
                 recentTokensHistory[^1] = chosenId;
             }
             Model.PredictNextTokenStep(ctx, chosenId);
