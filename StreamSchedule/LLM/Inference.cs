@@ -7,8 +7,10 @@ public static partial class Inference
 {
     private static readonly Context context;
     public static readonly bool AllGood;
-    private static readonly int contextSize = 512;
-    
+    public const int baseContext = 256;
+    public const int minContext = 48;
+    public const int maxContext = 1024;
+
     static Inference()
     {
         (bool succ, int d, int l, int v) = Loader.LoadWeights();
@@ -22,13 +24,13 @@ public static partial class Inference
 
     public static bool Start =>  true;
 
-    public static string Answer(string user, string? callerMessageID, string? callerContent, float temperature = 0.65f, int? ctx = null)
+    public static string Answer(string user, bool shorM,  string? callerMessageID, string? callerContent, float temperature = 0.65f, int? ctx = null)
     {
-        int ctxSize = ctx ?? contextSize;
-        ctxSize = int.Clamp(ctxSize, 64, 2048);
+        int ctxSize = ctx ?? baseContext;
+        ctxSize = int.Clamp(ctxSize, minContext, maxContext);
         if (!string.IsNullOrWhiteSpace(callerContent)) BotCore.MessageCache.ReplaceMessage(callerMessageID, null, callerContent);
         else BotCore.MessageCache.Remove(callerMessageID);
-        string result = Prompt(temperature, ctxSize, user);
+        string result = BuildAndPrompt(temperature, ctxSize, shorM, user);
         foreach (string specialToken in TokenizerBPE.CustomTokens) { result = result.Replace(specialToken, ""); }
         BotCore.MessageCache.AddFakeMessage(user, result);
         return result;
@@ -36,16 +38,17 @@ public static partial class Inference
 
     public static string Speak(string user, float temperature = 0.65f)
     {
-        string result = Prompt(temperature, contextSize, user);
+        string result = BuildAndPrompt(temperature, baseContext, true, user);
         foreach (string specialToken in TokenizerBPE.CustomTokens) { result = result.Replace(specialToken, ""); }
         BotCore.MessageCache.AddFakeMessage(user, result);
         return result;
     }
 
-    private static string Prompt(float temperature, int ctx, string seedUser = "streamschedule")
+    private static string BuildAndPrompt(float temperature, int ctx, bool shrt, string seedUser = "streamschedule")
     {
         List<int> tokenizedPrompt = [];
-
+        List<string> preTokenization = [];
+        
         List<ChatMessage> cache = BotCore.MessageCache.GetList();
         int i = cache.Count - 2;
 
@@ -67,12 +70,11 @@ public static partial class Inference
                     i--;
                     if (i < 0)
                     {
-                        tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{hold.Value.u}: {hold.Value.m} [EOM]"));
+                        preTokenization.Add($"@{hold.Value.u}: {hold.Value.m}");
                         break;
                     }
                     continue;
                 }
-
                 if (!hold.Value.u.Equals(m.Username)) continue;
                 hold = (m.Username, $"{CleanTokens(m.Message)} [SPM] {hold.Value.m}");
             }
@@ -80,32 +82,35 @@ public static partial class Inference
             {
                 if (hold is null)
                 {
-                    tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{prev.Username}: {CleanTokens(prev.Message)} [EOM]"));
+                    preTokenization.Add($"@{prev.Username}: {CleanTokens(prev.Message)}");
                     hold = (m.Username, CleanTokens(m.Message));
                     i--;
                     if (i < 0)
                     {
-                        tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{hold.Value.u}: {hold.Value.m} [EOM]"));
+                        preTokenization.Add($"@{hold.Value.u}: {hold.Value.m}");
                         break;
                     }
-
                     continue;
                 }
-
-                tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{hold.Value.u}: {hold.Value.m} [EOM]"));
+                preTokenization.Add($"@{hold.Value.u}: {hold.Value.m}");
                 hold = (m.Username, CleanTokens(m.Message));
             }
 
             i--;
             if (i >= 0) continue;
-            tokenizedPrompt.InsertRange(0, TokenizerBPE.Encode($"[BOM]@{hold.Value.u}: {hold.Value.m} [EOM]"));
+            preTokenization.Add($"@{hold.Value.u}: {hold.Value.m}");
             break;
         }
 
-        tokenizedPrompt.AddRange(TokenizerBPE.Encode($"[BOM]@{seedUser}:"));
+        for (int j = 0; j < preTokenization.Count; j++) { preTokenization[j] = LengthToken(preTokenization[j]) + " [EOM]"; }
+
+        preTokenization.Reverse();
+        tokenizedPrompt = TokenizerBPE.Encode(string.Join(" ", preTokenization));
         
+        string length = shrt? "[SHR]" : "[LNG]";
+        tokenizedPrompt.AddRange(TokenizerBPE.Encode($" {length} @{seedUser}: "));
         BotCore.Nlog.Info($"{tokenizedPrompt.Count} tokens generated for prompt T:{temperature}");
-        //BotCore.Nlog.Info($"decoded prompt:{TokenizerBPE.Decode(tokenizedPrompt)}");
+        BotCore.Nlog.Info($"decoded prompt:{TokenizerBPE.Decode(tokenizedPrompt)}");
         return Generator.Generate(context, tokenizedPrompt, 50, temperature);
     }
 
@@ -115,6 +120,8 @@ public static partial class Inference
         foreach (string specialToken in TokenizerBPE.CustomTokens) { m = m.Replace(specialToken, ""); }
         return m;
     }
-    
+
+    private static string LengthToken(string message) => message.Insert(0, message.Length > 70 ? "[LNG] " : "[SHR] ");
+
     [GeneratedRegex(@"\s+")] private static partial Regex RemoveSpaces();
 }

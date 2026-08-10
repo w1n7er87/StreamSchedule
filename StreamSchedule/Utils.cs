@@ -44,17 +44,17 @@ internal static class Utils
         return true;
     }
 
-    internal static string Filter(string input)
+    internal static string Filter(string input, out bool positive)
     {
+        positive = false;
         string result = input;
         foreach (PermittedTerm term in BotCore.DBContext.PermittedTerms.AsNoTracking().ToList())
         {
             string tt = term.Term;
             if (!term.Noreplace) tt = tt.Replace("_", " ");
-            result = result.Replace(tt, term.Alternative,
-                term.Anycase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+            positive = result.Contains(tt);
+            result = result.Replace(tt, term.Alternative, term.Anycase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
-
         return result;
     }
 

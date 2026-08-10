@@ -6,8 +6,8 @@ namespace StreamSchedule.LLM;
 public static class Generator
 {
 
-    private static int Eom = 0;
-    private static int Time = 0;
+    private static int Eom;
+    private static int Time;
 
     public static void FillIds()
     {
@@ -31,11 +31,25 @@ public static class Generator
 
         Span<(int Index, float Prob)> tokenScores = stackalloc (int Index, float Prob)[ctx.VocabSize];
         Span<(int Index, float Prob)> validScores = stackalloc (int Index, float Prob)[ctx.VocabSize];
-        int lastPredicted = promptInput[^1];
+
+        float repetitionPenalty = 1.2f;
+        
+        Span<int> recentTokensHistory = stackalloc int[6];
+        int historyCount = 0;
         
         for (int i = 0; i < tokensToGenerate; i++)
         {
             Span<float> originalLogits = ctx.LogitsScratch.AsSpan(0, ctx.VocabSize);
+            
+            for (int h = 0; h < historyCount; h++)
+            {
+                int repeatedId = recentTokensHistory[h];
+                
+                if (TokenizerBPE.CustomTokenIDs.Contains(repeatedId)) continue;
+
+                float logit = originalLogits[repeatedId];
+                originalLogits[repeatedId] = logit > 0f ? logit / repetitionPenalty : logit * repetitionPenalty;
+            }
             
             float maxLogit = TensorPrimitives.Max(originalLogits);
             float globalSum = 0f;
@@ -44,7 +58,7 @@ public static class Generator
             {
                 float expValue = MathF.Exp((originalLogits[v] - maxLogit) * invExponent);
                 
-                if (TokenizerBPE.CustomTokenIDs.Contains(v) || v == lastPredicted) { expValue *= 0.2f; }
+                if (TokenizerBPE.CustomTokenIDs.Contains(v)) { expValue *= 0.2f; }
 
                 tokenScores[v] = (v, expValue);
                 globalSum += expValue;
@@ -93,7 +107,7 @@ public static class Generator
                 responseAccumulator.Append(currentTimeStr);
                 List<int> syncTokens = TokenizerBPE.Encode(currentTimeStr);
                 foreach (int t in syncTokens) { Model.PredictNextTokenStep(ctx, t); }
-                continue; 
+                continue;
             }
 
             byte[] tokenBytes = TokenizerBPE.GetRawBytesFromID(chosenId);
@@ -103,7 +117,14 @@ public static class Generator
                 if (charsDecoded > 0) { responseAccumulator.Append(charBuffer, 0, charsDecoded); }
             }
 
-            lastPredicted = chosenId;
+            if (historyCount < recentTokensHistory.Length)
+                recentTokensHistory[historyCount++] = chosenId;
+            else
+            {
+                for (int h = 0; h < recentTokensHistory.Length - 1; h++) { recentTokensHistory[h] = recentTokensHistory[h + 1]; }
+                
+                recentTokensHistory[^1] = chosenId;
+            }
             Model.PredictNextTokenStep(ctx, chosenId);
             //if (chosenId == Eom) break;// keep the token
         }
@@ -113,5 +134,4 @@ public static class Generator
 
         return responseAccumulator.ToString();
     }
-
 }

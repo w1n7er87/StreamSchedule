@@ -247,10 +247,12 @@ internal static class BotCore
     private static async Task<bool> SendLongMessage(User channel, string? replyID, string message, bool requiresFilter = false)
     {
         string[] parts = requiresFilter
-            ? Utils.Filter(message).Split(' ', StringSplitOptions.TrimEntries)
+            ? Utils.Filter(message, out _).Split(' ', StringSplitOptions.TrimEntries)
             : message.Split(' ', StringSplitOptions.TrimEntries);
-        
-        if (requiresFilter) replyID = null;
+
+        _ = Utils.Filter(MessageCache.Find(m => m.Id.Equals(replyID))?.Username ?? "", out bool positive);
+            
+        if (positive) replyID = null;
         
         string accumulatedBelowLimit = "";
 
