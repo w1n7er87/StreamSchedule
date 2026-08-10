@@ -33,10 +33,12 @@ public static class Generator
         Span<(int Index, float Prob)> validScores = stackalloc (int Index, float Prob)[ctx.VocabSize];
 
         float repetitionPenalty = 1.2f;
-        
         Span<int> recentTokensHistory = stackalloc int[6];
         int historyCount = 0;
         
+        int terminationOffset = 10;
+        int softRampStartTokenIndex = tokensToGenerate - terminationOffset;
+
         for (int i = 0; i < tokensToGenerate; i++)
         {
             Span<float> originalLogits = ctx.LogitsScratch.AsSpan(0, ctx.VocabSize);
@@ -49,6 +51,14 @@ public static class Generator
 
                 float logit = originalLogits[repeatedId];
                 originalLogits[repeatedId] = logit > 0f ? logit / repetitionPenalty : logit * repetitionPenalty;
+            }
+            
+            if (i >= softRampStartTokenIndex)
+            {
+                float runwayProgress = (float)(i - softRampStartTokenIndex + 1) / terminationOffset;
+                float currentEom = originalLogits[Eom];
+                if (currentEom > 0f) originalLogits[Eom] = currentEom * (1.0f + runwayProgress * 2.0f);
+                else originalLogits[Eom] = currentEom + (runwayProgress * 15.0f);
             }
             
             float maxLogit = TensorPrimitives.Max(originalLogits);
@@ -126,7 +136,6 @@ public static class Generator
                 recentTokensHistory[^1] = chosenId;
             }
             Model.PredictNextTokenStep(ctx, chosenId);
-            //if (chosenId == Eom) break;// keep the token
         }
 
         int finalFlushCount = streamDecoder.GetChars(Array.Empty<byte>(), 0, 0, charBuffer, 0, true);
