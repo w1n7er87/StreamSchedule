@@ -95,7 +95,7 @@ internal static partial class BotCore
         _ = EmoteMonitors.Monitoring.Start;
         _ = Markov.Start;
         _ = Browsing.Browsing.Start;
-        _ = Personality.Personality.Start;
+        //_ = Personality.Personality.Start;
         _ = LLM.Inference.Start;
         
         ExportUtils.UpdateStyles();
