@@ -209,7 +209,7 @@ public static partial class Markov
     
     private static Task TokenizeMessage(string message)
     {
-        message = MyRegex().Replace(Questons().Replace(message, "???"), "!!!");
+        message = MyRegex().Replace(Questions().Replace(message, "???"), "!!!");
         
         List<string> words = message.Split(' ').Prepend("\r").ToList();
         for (int i = 0; i < words.Count; i++)
@@ -275,7 +275,7 @@ public static partial class Markov
     private static Func<int, int> Rnd = Random.Shared.Next;
     private static Func<double> Rndd = Random.Shared.NextDouble;
     
-    public static string GenerateSequence(string? firstWord = null, int k = 9999, float temperature = 1f, int maxLength = 25, Method method = Method.weighted, int? seed = null)
+    public static string GenerateSequence(string? firstWord = null, int k = 9999, float temperature = 1f, int maxLength = 25, Method method = Method.none, int? seed = null)
     {
         if (!Ready) return "uuh ";
 
@@ -426,8 +426,6 @@ public static partial class Markov
         }
     }
 
-    [GeneratedRegex(@"\?{4,}")]
-    private static partial Regex Questons();
-    [GeneratedRegex(@"!{4,}")]
-    private static partial Regex MyRegex();
+    [GeneratedRegex(@"\?{4,}")] private static partial Regex Questions();
+    [GeneratedRegex(@"!{4,}")] private static partial Regex MyRegex();
 }

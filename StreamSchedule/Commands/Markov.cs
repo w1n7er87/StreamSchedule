@@ -50,7 +50,7 @@ internal class Markov : Command
 
             int? seed = args.TryGetValue("q", out string? qq) ? int.TryParse(qq, out int qqq) ? Math.Clamp(qqq, 0, int.MaxValue - 1) : null : null;
             
-            Method method = Method.weighted;
+            Method method = Method.none;
 
             if (args.TryGetValue("r", out _)) method |= Method.reverse;
 

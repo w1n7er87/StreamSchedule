@@ -61,7 +61,7 @@ public static class Personality
             .OrderByDescending(g => g.count)
             .FirstOrDefault()?.word ?? "uuh";
 
-        return Markov.GenerateSequence(commonWord, maxLength: Random.Shared.Next(4, 8), method: Method.ordered | Method.force);
+        return Markov.GenerateSequence(commonWord, maxLength: Random.Shared.Next(4, 8), method: Method.force, temperature:2f);
     }
 
     private static string RemindSchedule()
@@ -86,7 +86,7 @@ public static class Personality
     private static string HugLast()
     {
         string username = BotCore.MessageCache.TakeLast(1).FirstOrDefault()?.Username ?? "uuh";
-        return $"{(Random.Shared.Next(101) >= 50? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!",4)}";
+        return $"{(Random.Shared.Next(101) >= 50 ? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!", maxLength: 4, temperature: 2f)}";
     }
 
     private static string Talk()
