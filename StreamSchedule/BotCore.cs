@@ -174,7 +174,9 @@ internal static partial class BotCore
 
         if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
 
-        OutQueuePerChannel[e.ChatMessage.Channel].Enqueue(new(response, e.ChatMessage.ChatReply?.ParentMsgId ?? e.ChatMessage.Id));
+        string? repyid = userSent.Privileges == Privileges.Banned ? null : e.ChatMessage?.ChatReply?.ParentMsgId ?? e.ChatMessage?.Id;
+        
+        OutQueuePerChannel[e.ChatMessage!.Channel].Enqueue(new(response, repyid));
     }
 
     #region EVENTS
@@ -241,7 +243,7 @@ internal static partial class BotCore
             : message.Split(' ', StringSplitOptions.TrimEntries);
 
         _ = Utils.Filter(MessageCache.Find(m => m.Id.Equals(replyID))?.Username ?? "", out bool positive);
-            
+
         if (positive) replyID = null;
         
         string accumulatedBelowLimit = "";
