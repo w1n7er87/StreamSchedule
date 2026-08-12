@@ -7,7 +7,6 @@ namespace StreamSchedule.LLM;
 public static class Generator
 {
     private static int Eom;
-
     private static readonly Dictionary<int, Tool> Tools = [];
     
     public static void FillIds()
@@ -89,10 +88,8 @@ public static class Generator
             for (int v = 0; v < ctx.VocabSize; v++)
             {
                 var item = tokenScores[v];
-                if (item.Index >= 32 || item.Index == Eom)
-                {
-                    validScores[validCount++] = (item.Index, item.Prob / globalSum);
-                }
+                
+                if (item.Index >= 32 || item.Index == Eom) { validScores[validCount++] = (item.Index, item.Prob / globalSum); }
             }
 
             Span<(int Index, float Prob)> activeSubset = validScores[..validCount];
@@ -116,8 +113,8 @@ public static class Generator
                     break;
                 }
             }
-            
-            if (chosenId == Eom) break; //discard the token
+
+            if (chosenId == Eom) break;
 
             if (Tools.TryGetValue(chosenId, out Tool? t))
             {

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using NeoSmart.Unicode;
 using NLog;
 using StreamSchedule.Commands;
@@ -16,7 +17,7 @@ using OutgoingMessage = StreamSchedule.Data.OutgoingMessage;
 
 namespace StreamSchedule;
 
-internal static class BotCore
+internal static partial class BotCore
 {
     public static DatabaseContext DBContext { get; private set; } = null!;
     public static PagesContext PagesDB { get; private set; } = null!;
@@ -36,6 +37,8 @@ internal static class BotCore
 
     public const string BotID = "871501999";
 
+    public const string Invisible = "͏";
+    
     public static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
 
     private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
@@ -119,8 +122,10 @@ internal static class BotCore
 
             MessageCache.Add(e.ChatMessage);
         }
+
+        string m = ExtraSpaces().Replace(e.ChatMessage.Message, " ").Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", "").Replace(Invisible, "");
         
-        ReadOnlySpan<Codepoint> messageAsCodepoints = [.. e.ChatMessage.Message.Codepoints()];
+        ReadOnlySpan<Codepoint> messageAsCodepoints = [.. m.Codepoints()];
 
         string? replyID = null;
         if (e.ChatMessage.ChatReply != null)
@@ -130,24 +135,22 @@ internal static class BotCore
             {
                 // stripping leading mandatory @username in reply messages 
                 // this sometimes throws array index for some reason, still can't figure out why 
-                messageAsCodepoints = messageAsCodepoints[(e.ChatMessage.Message.Split(" ")[0].Codepoints().Count() + 1)..];
+                messageAsCodepoints = messageAsCodepoints[(m.Split(" ")[0].Codepoints().Count() + 1)..];
             }
             catch (Exception ex)
             {
-                Nlog.Error($"[{e.ChatMessage.ChatReply.ParentDisplayName}|{e.ChatMessage.ChatReply.ParentUserLogin}] {e.ChatMessage.Message} {ex}");
+                Nlog.Error($"[{e.ChatMessage.ChatReply.ParentDisplayName}|{e.ChatMessage.ChatReply.ParentUserLogin}] {m} {ex}");
                 return;
             }
         }
 
         if(!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned)
-            Scramble.CheckWord(new(userSent, e.ChatMessage.Message.Split(" ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? "", e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
+            Scramble.CheckWord(new(userSent, m.Split(" ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? "", e.ChatMessage.Id, replyID, e.ChatMessage.RoomId, e.ChatMessage.Channel));
 
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
-            string content = e.ChatMessage.Message.Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", "");
-            
             if (userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
-                Markov.TokenizationQueue.Enqueue(content);
+                Markov.TokenizationQueue.Enqueue(m);
             
             return;
         }
@@ -164,15 +167,11 @@ internal static class BotCore
         if (userSent.Privileges < cc.Privileges) return;
         
         if (cc.PersonalCooldowns.TryGetValue(userSent.Id, out Cooldown? cooldown))
-        {
             if(!cooldown.TryExtend()) return;
-        }
         else
-        {
             cc.PersonalCooldowns.Add(userSent.Id, new Cooldown(userSent, cc.Cooldown));
-        }
         
-        trimmedMessage = trimmedMessage[requestedCommand.Length..].Replace("\U000e0000", "").Replace("\u034f", "").Replace(" ͏", "").Trim();
+        trimmedMessage = trimmedMessage[requestedCommand.Length..].Trim();
         
         Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{cc.Call}]:[{trimmedMessage}]");
 
@@ -237,7 +236,7 @@ internal static class BotCore
             }
             
             OutgoingMessage response = OutQueuePerChannel[channel.Username!].Peek();
-            _ = await SendLongMessage(channel, response.ReplyID,$"{response.Result} {(sameMessageFlip ? "͏" : "")}", response.Result.requiresFilter);
+            _ = await SendLongMessage(channel, response.ReplyID,$"{response.Result} {(sameMessageFlip ? Invisible : "")}", response.Result.requiresFilter);
             sameMessageFlip = !sameMessageFlip;
             await Task.Delay(1100);
             OutQueuePerChannel[channel.Username!].Dequeue();
@@ -293,4 +292,6 @@ internal static class BotCore
             else ChatClient.SendMessage(channel.Username, msg);
         }
     }
+
+    [GeneratedRegex(@"\s+")] private static partial Regex ExtraSpaces();
 }
