@@ -11,7 +11,7 @@ internal class Scramble : Command
 {
     public override string Call => "unscramble";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => $"scramble, try to get a word of [c] length ({minCount} - {maxCount})";
+    public override string Help => $"{(muted ? " muted " : "")}scramble, try to get a word of [c] length ({minCount} - {maxCount})";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.HalfAMinute);
     public override string[] Arguments => ["c", "m"];
     public override List<string> Aliases { get; set; } = [];
@@ -19,7 +19,7 @@ internal class Scramble : Command
     private static readonly Dictionary<string, ActiveGame> activeGames = [];
     private static readonly MarkovContext context = new(new DbContextOptionsBuilder<MarkovContext>().UseSqlite("Data Source=Markov2.data").Options);
     private static readonly Random random = new();
-    private static bool muted;
+    private static bool muted = true;
     private const int minCount = 3;
     private const int maxCount = 15;
     private static readonly List<Token> Tokens;
@@ -38,7 +38,7 @@ internal class Scramble : Command
         
         _ = Commands.RetrieveArguments(Arguments, message.Content, out Dictionary<string, string> args);
 
-        if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Mod)
+        if (args.TryGetValue("m", out _) && message.Sender.Privileges >= Privileges.Uuh)
         {
             muted = !muted;
             return Task.FromResult(Utils.Responses.Ok);

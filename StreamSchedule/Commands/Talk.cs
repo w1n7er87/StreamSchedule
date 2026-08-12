@@ -7,7 +7,7 @@ internal class Talk : Command
 {
     public override string Call => "talk";
     public override Privileges Privileges => Privileges.Trusted;
-    public override string Help => $"have a chat a with real frontier AGI (t temp, as chatter, c context {Inference.minContext} - {Inference.maxContext}, l ask nicely for a longer message. )";
+    public override string Help => $"{(Muted ? " muted " : "")}have a chat a with real frontier AGI (t temp, as chatter, c context {Inference.minContext} - {Inference.maxContext}, l ask nicely for a longer message. )";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
     public override string[] Arguments => ["t", "as", "m", "c", "l"];
     public override List<string> Aliases { get; set; } = [];

@@ -61,7 +61,7 @@ public static class Personality
             .OrderByDescending(g => g.count)
             .FirstOrDefault()?.word ?? "uuh";
 
-        return Markov.GenerateSequence(commonWord, Random.Shared.Next(4, 8), Method.ordered | Method.force);
+        return Markov.GenerateSequence(commonWord, maxLength: Random.Shared.Next(4, 8), method: Method.ordered | Method.force);
     }
 
     private static string RemindSchedule()
