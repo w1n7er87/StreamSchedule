@@ -131,17 +131,8 @@ internal static partial class BotCore
         if (e.ChatMessage.ChatReply != null)
         {
             replyID = e.ChatMessage.ChatReply.ParentMsgId;
-            try
-            {
-                // stripping leading mandatory @username in reply messages 
-                // this sometimes throws array index for some reason, still can't figure out why 
-                messageAsCodepoints = messageAsCodepoints[(m.Split(" ")[0].Codepoints().Count() + 1)..];
-            }
-            catch (Exception ex)
-            {
-                Nlog.Error($"[{e.ChatMessage.ChatReply.ParentDisplayName}|{e.ChatMessage.ChatReply.ParentUserLogin}] {m} {ex}");
-                return;
-            }
+            int startID = Math.Min(m.Split(" ")[0].Codepoints().Count() + 1, messageAsCodepoints.Length);
+            messageAsCodepoints = messageAsCodepoints[startID..];
         }
 
         if(!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned)
