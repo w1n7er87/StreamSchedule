@@ -67,7 +67,7 @@ internal class HypeTracker : Command
                 {
                     ActiveMonitors.Remove(monitor);
                     BotCore.Nlog.Info($"{monitor.ChannelName} monitor has expired after {Stopwatch.GetElapsedTime(monitor.Started):hh'h 'mm'm '}");
-                    BotCore.OutQueuePerChannel[monitor.OutputChannelName].Enqueue(new CommandResult($"hype train monitor for @{monitor.ChannelName} has expired after {Stopwatch.GetElapsedTime(monitor.Started):hh'h 'mm'm '} @{monitor.RequestedBy}"));
+                    BotCore.EnqueueMessage(monitor.OutputChannelName, true, new CommandResult($"hype train monitor for @{monitor.ChannelName} has expired after {Stopwatch.GetElapsedTime(monitor.Started):hh'h 'mm'm '} @{monitor.RequestedBy}"));
                     return;
                 }
 
@@ -81,7 +81,7 @@ internal class HypeTracker : Command
                     {
                         tracked = current;
                         BotCore.Nlog.Info($"{monitor.ChannelName} hype train started, tracking it now");
-                        BotCore.OutQueuePerChannel[monitor.OutputChannelName].Enqueue(new CommandResult($"active hype train in @{monitor.ChannelName}  @{monitor.RequestedBy}"));
+                        BotCore.EnqueueMessage(monitor.OutputChannelName, true, new CommandResult($"active hype train in @{monitor.ChannelName}  @{monitor.RequestedBy}"));
                     }
                     continue;
                 }
@@ -91,7 +91,7 @@ internal class HypeTracker : Command
                     string summary = $"hype train in @{monitor.ChannelName} has ended: {HypeTrainSummary(tracked)} @{monitor.RequestedBy}";
                     ActiveMonitors.Remove(monitor);
                     BotCore.Nlog.Info(summary);
-                    BotCore.OutQueuePerChannel[monitor.OutputChannelName].Enqueue(new CommandResult(summary));
+                    BotCore.EnqueueMessage(monitor.OutputChannelName, true, new CommandResult(summary));
                     return;
                 }
 

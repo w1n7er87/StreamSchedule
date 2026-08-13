@@ -22,26 +22,44 @@ public static partial class Inference
         BotCore.Nlog.Info($"inference model loaded {AllGood} {d}-{l}-{v} {d * l + d * v + d * v} params");
     }
 
-    public static bool Start =>  true;
+    public static bool Start => true;
 
-    public static string Answer(string user, bool shorM,  string? callerMessageID, string? callerContent, float temperature = 0.65f, int? ctx = null)
+    public static string[] Answer(string user, bool shorM,  string? callerMessageID, string? callerContent, float temperature = 0.65f, int? ctx = null)
     {
         int ctxSize = ctx ?? baseContext;
         ctxSize = int.Clamp(ctxSize, minContext, maxContext);
         if (!string.IsNullOrWhiteSpace(callerContent)) BotCore.MessageCache.ReplaceMessage(callerMessageID, null, callerContent);
         else BotCore.MessageCache.Remove(callerMessageID);
         string result = BuildAndPrompt(temperature, ctxSize, shorM, user);
-        foreach (string specialToken in TokenizerBPE.CustomTokens) { result = result.Replace(specialToken, ""); }
         BotCore.MessageCache.AddFakeMessage(user, result);
-        return result;
+
+        List<string> results = result.Split("[SPM]").ToList();
+
+        foreach (string specialToken in TokenizerBPE.CustomTokens)
+        {
+            for (int i = 0; i < results.Count; i++)
+            {
+                results[i] = results[i].Replace(specialToken, "");
+            }
+        }
+        return results.ToArray();
     }
 
-    public static string Speak(string user, float temperature = 0.65f)
+    public static string[] Speak(string user, float temperature = 0.65f)
     {
         string result = BuildAndPrompt(temperature, baseContext, true, user);
-        foreach (string specialToken in TokenizerBPE.CustomTokens) { result = result.Replace(specialToken, ""); }
         BotCore.MessageCache.AddFakeMessage(user, result);
-        return result;
+        
+        List<string> results = result.Split("[SPM]").ToList();
+
+        foreach (string specialToken in TokenizerBPE.CustomTokens)
+        {
+            for (int i = 0; i < results.Count; i++)
+            {
+                results[i] = results[i].Replace(specialToken, "");
+            }
+        }
+        return results.ToArray();
     }
 
     private static string BuildAndPrompt(float temperature, int ctx, bool shrt, string seedUser = "streamschedule")
@@ -116,7 +134,7 @@ public static partial class Inference
 
     private static string CleanTokens(string message)
     {
-        string m = RemoveSpaces().Replace(message, " ");
+        string m = Exclamations().Replace(Questions().Replace(RemoveSpaces().Replace(message, " "), "???"), "!!!");
         foreach (string specialToken in TokenizerBPE.CustomTokens) { m = m.Replace(specialToken, ""); }
         return m;
     }
@@ -124,4 +142,6 @@ public static partial class Inference
     private static string LengthToken(string message) => message.Insert(0, message.Length > 70 ? "[LNG] " : "[SHR] ");
 
     [GeneratedRegex(@"\s+")] private static partial Regex RemoveSpaces();
+    [GeneratedRegex(@"\?{4,}")] private static partial Regex Questions();
+    [GeneratedRegex(@"!{4,}")] private static partial Regex Exclamations();
 }

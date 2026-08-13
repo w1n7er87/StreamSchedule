@@ -209,7 +209,7 @@ public static partial class Markov
     
     private static Task TokenizeMessage(string message)
     {
-        message = MyRegex().Replace(Questions().Replace(message, "???"), "!!!");
+        message = Exclamations().Replace(Questions().Replace(message, "???"), "!!!");
         
         List<string> words = message.Split(' ').Prepend("\r").ToList();
         for (int i = 0; i < words.Count; i++)
@@ -427,5 +427,5 @@ public static partial class Markov
     }
 
     [GeneratedRegex(@"\?{4,}")] private static partial Regex Questions();
-    [GeneratedRegex(@"!{4,}")] private static partial Regex MyRegex();
+    [GeneratedRegex(@"!{4,}")] private static partial Regex Exclamations();
 }

@@ -39,7 +39,7 @@ internal static partial class BotCore
 
     public const string Invisible = "͏";
     
-    public static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
+    private static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
 
     private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
     {
@@ -156,15 +156,15 @@ internal static partial class BotCore
         ICommand? cc = Commands.Commands.AllCommands.FirstOrDefault(x => x.Call == requestedCommand || x.Aliases.Contains(requestedCommand));
         if (cc is null) return;
         if (userSent.Privileges < cc.Privileges) return;
-        
+
         if (cc.PersonalCooldowns.TryGetValue(userSent.Id, out Cooldown? cooldown))
             if(!cooldown.TryExtend()) return;
         else
             cc.PersonalCooldowns.Add(userSent.Id, new Cooldown(userSent, cc.Cooldown));
-        
+
         trimmedMessage = trimmedMessage[requestedCommand.Length..].Trim();
-        
-        Nlog.Info($"{(Silent ? "*silent* " : "")}({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{cc.Call}]:[{trimmedMessage}]");
+
+        Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{e.ChatMessage.Username}]:[{cc.Call}]:[{trimmedMessage}]");
 
         start = Stopwatch.GetTimestamp();
 
@@ -172,11 +172,9 @@ internal static partial class BotCore
 
         Nlog.Info($"({Stopwatch.GetElapsedTime(start).TotalMilliseconds} ms) [{response}]");
 
-        if (string.IsNullOrEmpty(response.ToString()) || Silent) return;
-
         string? repyid = userSent.Privileges == Privileges.Banned ? null : e.ChatMessage?.ChatReply?.ParentMsgId ?? e.ChatMessage?.Id;
-        
-        OutQueuePerChannel[e.ChatMessage!.Channel].Enqueue(new(response, repyid));
+
+        EnqueueMessage(e.ChatMessage!.Channel, false, new OutgoingMessage(response, repyid));
     }
 
     #region EVENTS
@@ -200,7 +198,7 @@ internal static partial class BotCore
     private static void ChatClientOnGifted(object? sender, OnGiftedSubscriptionArgs e)
     {
         if (e.GiftedSubscription.MsgParamRecipientUserName.Equals(ChatClient.TwitchUsername.ToLower()))
-            OutQueuePerChannel[e.Channel].Enqueue(new CommandResult($"Thanks for the sub, {e.GiftedSubscription.Login} PogChamp", false));
+            EnqueueMessage(e.Channel, true, new CommandResult($"Thanks for the sub, {e.GiftedSubscription.Login} PogChamp"));
     }
 
     private static void ChatClientOnJoinedChannel(object? sender, OnJoinedChannelArgs e) { Nlog.Info($"Joined {e.Channel}"); }
@@ -211,11 +209,36 @@ internal static partial class BotCore
     {
         if (!e.RawIRC.Contains("automod", StringComparison.InvariantCultureIgnoreCase) && !e.RawIRC.Contains("moderation", StringComparison.InvariantCultureIgnoreCase)) return;
         Nlog.Info($"{e.RawIRC} {e.Channel} {e.Location}");
-        OutQueuePerChannel[e.Channel].Enqueue(new CommandResult("moderation 1984 ", false));
+        EnqueueMessage(e.Channel, false, new CommandResult("moderation 1984 "));
     }
 
     #endregion EVENTS
 
+    public static void EnqueueMessage(string channelName, bool ignoreSilent = true, params List<OutgoingMessage> messages)
+    {
+        if (!OutQueuePerChannel.TryGetValue(channelName, out Queue<OutgoingMessage>? channel))
+        {
+            Nlog.Info($"tried to send message to {channelName}, but there is no q for it");
+            return;
+        }
+
+        if (Silent && !ignoreSilent)
+        {
+            Nlog.Info($"*beep* {messages.Count} silent messages enqueued {string.Join("\n", messages.Select(m => m.Result))}");
+            return;
+        }
+
+        foreach (OutgoingMessage outgoingMessage in messages)
+        {
+            if (string.IsNullOrWhiteSpace(outgoingMessage.Result.ToString()))
+            {
+                Nlog.Info("enqued message was empty");
+                continue;
+            }
+            channel.Enqueue(outgoingMessage);
+        }
+    }
+    
     private static async Task OutPump(User channel)
     {
         bool sameMessageFlip = false;

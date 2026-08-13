@@ -27,14 +27,14 @@ public static class Personality
     private static TimeSpan OnlineInterval => new TimeSpan(hours: 0, minutes: Random.Shared.Next(5, 15), seconds: Random.Shared.Next(32));
 
     private static DateTime timeToSpeak = DateTime.UtcNow + TimeSpan.FromMinutes(5);
-    private static readonly Func<string>[] actions = [SpeakOnTopic, SpeakOnTopic, SpeakOnTopic, HugLast, RemindSchedule, Talk, Talk, Talk, Talk];
+    private static readonly Func<string[]>[] actions = [SpeakOnTopic, SpeakOnTopic, SpeakOnTopic, HugLast, RemindSchedule, Talk, Talk, Talk, Talk];
 
     private sealed class SaySomething : Periodic
     {
         protected override Task Update()
         {
             if (DateTime.UtcNow < timeToSpeak) return Task.CompletedTask;
-            string result;
+            string[] result;
             if (Online)
             {
                 result = SpeakOnTopic();
@@ -45,13 +45,14 @@ public static class Personality
                 result = actions[Random.Shared.Next(actions.Length)]();
                 timeToSpeak = DateTime.UtcNow + OfflineInterval;
             }
-            BotCore.OutQueuePerChannel["vedal987"].Enqueue(new OutgoingMessage(new CommandResult(result, requiresFilter:true), null));
+
+            BotCore.EnqueueMessage("vedal987", false, result.Select(r => new OutgoingMessage(r, null)).ToList());
             BotCore.Nlog.Info($"said \"{result}\", next line at {timeToSpeak.ToLocalTime()} ");
             return Task.CompletedTask;
         }
     }
 
-    private static string SpeakOnTopic()
+    private static string[] SpeakOnTopic()
     {
         string commonWord = BotCore.MessageCache
             .TakeLast(15)
@@ -61,10 +62,10 @@ public static class Personality
             .OrderByDescending(g => g.count)
             .FirstOrDefault()?.word ?? "uuh";
 
-        return Markov.GenerateSequence(commonWord, maxLength: Random.Shared.Next(4, 8), method: Method.force, temperature:2f);
+        return [Markov.GenerateSequence(commonWord, maxLength: Random.Shared.Next(4, 8), method: Method.force, temperature:2f)];
     }
 
-    private static string RemindSchedule()
+    private static string[] RemindSchedule()
     {
         string[] responses =
         [
@@ -80,19 +81,19 @@ public static class Personality
         string the = "no stream";
         if (stream is not null) the = stream.StreamDate.ToDateTime(stream.StreamTime) < DateTime.UtcNow ? the : stream.StreamTitle ?? the;
 
-        return string.Format(responses[Random.Shared.Next(responses.Length)], the);
+        return [string.Format(responses[Random.Shared.Next(responses.Length)], the)];
     }
 
-    private static string HugLast()
+    private static string[] HugLast()
     {
         string username = BotCore.MessageCache.TakeLast(1).FirstOrDefault()?.Username ?? "uuh";
-        return $"{(Random.Shared.Next(101) >= 50 ? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!", maxLength: 4, temperature: 2f)}";
+        return [$"{(Random.Shared.Next(101) >= 50 ? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!", maxLength: 4, temperature: 2f)}"];
     }
 
-    private static string Talk()
+    private static string[] Talk()
     {
         List<string> names = BotCore.MessageCache.TakeLast(25).Select(m => m.Username).ToList();
-        if (names.Count == 0) return "Awkward ";
+        if (names.Count == 0 || !LLM.Inference.AllGood) return ["Awkward "];
         return LLM.Inference.Speak(names[Random.Shared.Next(names.Count)], 0.9f);
     }
 }

@@ -102,7 +102,7 @@ internal class Scramble : Command
             game.TryWord(message.Content.Split(" ").FirstOrDefault()?.ToLower() ?? "") ;
     }
     
-    private class ActiveGame
+    private sealed class ActiveGame
     {
         private ActiveGame()
         {
@@ -127,7 +127,7 @@ internal class Scramble : Command
         public void TryWord(string w)
         {
             if (!w.Equals(word, StringComparison.CurrentCultureIgnoreCase)) return;
-            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"FeelsGoodMan the word was \" {word} \" ", requiresFilter:true));
+            BotCore.EnqueueMessage(channelName, false, new CommandResult($"FeelsGoodMan the word was \" {word} \" ", requiresFilter:true));
             cts.Cancel();
             activeGames.Remove(channelID);
             cts.Dispose();
@@ -135,7 +135,7 @@ internal class Scramble : Command
 
         internal void ExpireGame()
         {
-            BotCore.OutQueuePerChannel[channelName].Enqueue(new CommandResult($"Awkward time is out, the word was \" {word} \" ", requiresFilter:true));
+            BotCore.EnqueueMessage(channelName, false, new CommandResult($"Awkward time is out, the word was \" {word} \" ", requiresFilter:true));
             activeGames.Remove(channelID);
             cts.Dispose();
         }

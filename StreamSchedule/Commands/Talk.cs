@@ -43,9 +43,9 @@ internal class Talk : Command
         bool shrt = !args.TryGetValue("l", out _);
 
         int? contextSize = args.TryGetValue("c", out string? cc) ? int.TryParse(cc, out int ccc) ? ccc : null : null;
-        string result = Inference.Answer(user, shrt, message.ID, clean, t, contextSize);
-        BotCore.Nlog.Info(result);
-        //return Task.FromResult(new CommandResult(result, requiresFilter: true, reply: false));
+        string[] result = Inference.Answer(user, shrt, message.ID, clean, t, contextSize);
+        BotCore.Nlog.Info(string.Join(" ", result));
+        BotCore.EnqueueMessage(message.ChannelName,false, result.Select(r => new OutgoingMessage(r, null)).ToList());
         return Task.FromResult(new CommandResult(""));
     }
 }

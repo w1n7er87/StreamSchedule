@@ -96,8 +96,8 @@ public static class Monitoring
             if (removed.Count != 0) response += $"{removed.Count} removed: {string.Join(" ", removed)} ";
             if (added.Count != 0) response += $"{added.Count} added: {string.Join(" ", added)} ";
 
-            BotCore.OutQueuePerChannel["w1n7er"].Enqueue(new CommandResult(response, false));
-            BotCore.OutQueuePerChannel["vedal987"].Enqueue(new CommandResult(response, false));
+            BotCore.EnqueueMessage("w1n7er", true, new CommandResult(response, false));
+            BotCore.EnqueueMessage("vedal987",true, new CommandResult(response, false));
 
             GlobalEmoteTokens = newGlobalEmoteTokens;
         }

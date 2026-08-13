@@ -14,7 +14,7 @@ internal class Update : Command
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {
-        BotCore.OutQueuePerChannel[message.ChannelName].Enqueue(new CommandResult("📆 🛠️ ", false));
+        BotCore.EnqueueMessage(message.ChannelName, true, new CommandResult("📆 🛠️ ", false));
 
         _ = Markov2.Markov.Save();
         await BotCore.DBContext.SaveChangesAsync();

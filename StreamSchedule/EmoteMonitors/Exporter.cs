@@ -78,7 +78,7 @@ internal class Exporter
     private static void ExportToChat(EmoteMonitorChannel channelSettings, StringBuilder content)
     {
         content.AppendJoin(" ", channelSettings.UpdateSubscribersUsers.Select(x => "@" + BotCore.DBContext.Users.FirstOrDefault(u => u.Id == x)?.Username));
-        BotCore.OutQueuePerChannel[channelSettings.OutputChannelName].Enqueue(new CommandResult(content, false));
+        BotCore.EnqueueMessage(channelSettings.OutputChannelName, true,  new CommandResult(content, false));
     }
 
     private static async Task<string> ExportToWeb(EmoteMonitorChannel channelSettings, StringBuilder content)
