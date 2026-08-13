@@ -31,8 +31,7 @@ public sealed class Cooldown
     
     public bool TryExtend()
     {
-        if (user.Privileges < Privileges.Mod && !Expired)
-            return false;
+        if (user.Privileges < Privileges.Mod && !Expired) return false;
 
         if (DateTime.Now > lastUsedAt + lastCooldown * ResetMultiplier)
         {
@@ -44,8 +43,7 @@ public sealed class Cooldown
         lastCooldown += (baseCooldown / 3) * useCount;
         expiresAt = lastUsedAt + lastCooldown;
         useCount++;
-
-        BotCore.Nlog.Info($"{user.Username} c:{useCount} {expiresAt - lastUsedAt} {baseCooldown}");
+        
         return true;
     }
 }

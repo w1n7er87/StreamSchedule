@@ -95,7 +95,7 @@ internal static partial class BotCore
         _ = EmoteMonitors.Monitoring.Start;
         _ = Markov.Start;
         _ = Browsing.Browsing.Start;
-        //_ = Personality.Personality.Start;
+        _ = Personality.Personality.Start;
         _ = LLM.Inference.Start;
         
         ExportUtils.UpdateStyles();
@@ -157,10 +157,8 @@ internal static partial class BotCore
         if (cc is null) return;
         if (userSent.Privileges < cc.Privileges) return;
 
-        if (cc.PersonalCooldowns.TryGetValue(userSent.Id, out Cooldown? cooldown))
-            if(!cooldown.TryExtend()) return;
-        else
-            cc.PersonalCooldowns.Add(userSent.Id, new Cooldown(userSent, cc.Cooldown));
+        if (cc.PersonalCooldowns.TryGetValue(userSent.Id, out Cooldown? cooldown)) { if(!cooldown.TryExtend()) return; }
+        else cc.PersonalCooldowns.Add(userSent.Id, new Cooldown(userSent, cc.Cooldown));
 
         trimmedMessage = trimmedMessage[requestedCommand.Length..].Trim();
 
