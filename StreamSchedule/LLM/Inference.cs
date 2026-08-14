@@ -7,7 +7,7 @@ public static partial class Inference
 {
     private static readonly Context context;
     public static readonly bool AllGood;
-    public const int baseContext = 256;
+    public const int baseContext = 320;
     public const int minContext = 48;
     public const int maxContext = 1024;
 
@@ -19,7 +19,7 @@ public static partial class Inference
         context = new Context(d, l, v);
         AllGood = TokenizerBPE.Load();
         if(AllGood) Generator.FillIds();
-        BotCore.Nlog.Info($"inference model loaded {AllGood} {d}-{l}-{v} {d * l + d * v + d * v} params");
+        BotCore.Nlog.Info($"inference model loaded {AllGood} {d}-{l}-{v} {Model.DimensionCount:N0} params");
     }
 
     public static bool Start => true;
@@ -33,16 +33,13 @@ public static partial class Inference
         string result = BuildAndPrompt(temperature, ctxSize, shorM, user);
         BotCore.MessageCache.AddFakeMessage(user, result);
 
-        List<string> results = result.Split("[SPM]").ToList();
+        string[] results = result.Split("[SPM]");
 
         foreach (string specialToken in TokenizerBPE.CustomTokens)
         {
-            for (int i = 0; i < results.Count; i++)
-            {
-                results[i] = results[i].Replace(specialToken, "");
-            }
+            for (int i = 0; i < results.Length; i++) results[i] = results[i].Replace(specialToken, "");
         }
-        return results.ToArray();
+        return results;
     }
 
     public static string[] Speak(string user, float temperature = 0.65f)
@@ -50,86 +47,58 @@ public static partial class Inference
         string result = BuildAndPrompt(temperature, baseContext, true, user);
         BotCore.MessageCache.AddFakeMessage(user, result);
         
-        List<string> results = result.Split("[SPM]").ToList();
+        string[] results = result.Split("[SPM]");
 
         foreach (string specialToken in TokenizerBPE.CustomTokens)
         {
-            for (int i = 0; i < results.Count; i++)
-            {
-                results[i] = results[i].Replace(specialToken, "");
-            }
+            for (int i = 0; i < results.Length; i++) results[i] = results[i].Replace(specialToken, "");
         }
-        return results.ToArray();
+        return results;
     }
 
     private static string BuildAndPrompt(float temperature, int ctx, bool shrt, string seedUser = "streamschedule")
     {
         List<int> tokenizedPrompt = [];
-        List<string> preTokenization = [];
-        
-        List<ChatMessage> cache = BotCore.MessageCache.GetList();
-        int i = cache.Count - 2;
 
-        (string u, string m)? hold = null;
+        List<ChatMessage> cache = BotCore.MessageCache.ToList();
+        cache.Reverse();
 
-        while (tokenizedPrompt.Count < ctx)
+        (string user, string message)? stash = null;
+
+        for (int i = 0; i < cache.Count; i++) 
         {
-            int p = i + 1;
-            if (cache.Count == 0 || i < 0) break;
-
-            ChatMessage m = cache[i];
-            ChatMessage prev = cache[p];
-
-            if (m.Username.Equals(prev.Username))
+            string mm = CleanTokens(cache[i].Message);
+            if (i == 0)
             {
-                if (hold is null)
-                {
-                    hold = (m.Username, $"{CleanTokens(m.Message)} [SPM] {CleanTokens(prev.Message)}");
-                    i--;
-                    if (i < 0)
-                    {
-                        preTokenization.Add($"@{hold.Value.u}: {hold.Value.m}");
-                        break;
-                    }
-                    continue;
-                }
-                if (!hold.Value.u.Equals(m.Username)) continue;
-                hold = (m.Username, $"{CleanTokens(m.Message)} [SPM] {hold.Value.m}");
+                stash = (cache[i].Username, mm);
+                if (cache.Count == 1) prependPrompt(Format(stash));
+                continue;
+            }
+
+            if (cache[i].Username.Equals(stash!.Value.user))
+            {
+                stash = (cache[i].Username, $"{mm} [SPM] {stash.Value.message}");
             }
             else
             {
-                if (hold is null)
-                {
-                    preTokenization.Add($"@{prev.Username}: {CleanTokens(prev.Message)}");
-                    hold = (m.Username, CleanTokens(m.Message));
-                    i--;
-                    if (i < 0)
-                    {
-                        preTokenization.Add($"@{hold.Value.u}: {hold.Value.m}");
-                        break;
-                    }
-                    continue;
-                }
-                preTokenization.Add($"@{hold.Value.u}: {hold.Value.m}");
-                hold = (m.Username, CleanTokens(m.Message));
+                if (prependPrompt(Format(stash))) break;
+                stash = (cache[i].Username, mm);
             }
 
-            i--;
-            if (i >= 0) continue;
-            preTokenization.Add($"@{hold.Value.u}: {hold.Value.m}");
-            break;
+            if (i == cache.Count - 1) { prependPrompt(Format(stash)); }
         }
 
-        for (int j = 0; j < preTokenization.Count; j++) { preTokenization[j] = LengthToken(preTokenization[j]) + " [EOM]"; }
-
-        preTokenization.Reverse();
-        tokenizedPrompt = TokenizerBPE.Encode(string.Join(" ", preTokenization));
-        
-        string length = shrt? "[SHR]" : "[LNG]";
-        tokenizedPrompt.AddRange(TokenizerBPE.Encode($" {length} @{seedUser}: "));
+        string length = shrt ? "[SHR]" : "[LNG]";
+        tokenizedPrompt.AddRange(TokenizerBPE.Encode($"{length} @{seedUser}: "));
         BotCore.Nlog.Info($"{tokenizedPrompt.Count} tokens generated for prompt T:{temperature}");
         BotCore.Nlog.Info($"decoded prompt:{TokenizerBPE.Decode(tokenizedPrompt)}");
         return Generator.Generate(context, tokenizedPrompt, 50, temperature);
+
+        bool prependPrompt(string formatted)
+        {
+            tokenizedPrompt = [..TokenizerBPE.Encode(formatted), ..tokenizedPrompt];
+            return tokenizedPrompt.Count > ctx;
+        }
     }
 
     private static string CleanTokens(string message)
@@ -140,6 +109,8 @@ public static partial class Inference
     }
 
     private static string LengthToken(string message) => message.Insert(0, message.Length > 70 ? "[LNG] " : "[SHR] ");
+
+    private static string Format((string user, string message)? userMessage) => LengthToken($"@{userMessage?.user!}: {userMessage?.message!} [EOM] ");
 
     [GeneratedRegex(@"\s+")] private static partial Regex RemoveSpaces();
     [GeneratedRegex(@"\?{4,}")] private static partial Regex Questions();

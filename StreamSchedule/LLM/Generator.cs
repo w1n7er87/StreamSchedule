@@ -8,7 +8,7 @@ public static class Generator
 {
     private static int Eom;
     private static readonly Dictionary<int, Tool> Tools = [];
-    
+    private const int K = 6;
     public static void FillIds()
     {
         if (TokenizerBPE.CustomTokenToID.TryGetValue("[EOM]", out int id)) Eom = id;
@@ -95,7 +95,7 @@ public static class Generator
             Span<(int Index, float Prob)> activeSubset = validScores[..validCount];
             activeSubset.Sort((a, b) => b.Prob.CompareTo(a.Prob));
 
-            int topK = Math.Min(10, validCount);
+            int topK = Math.Min(K, validCount);
             float topKSum = 0f;
             for (int k = 0; k < topK; k++) topKSum += activeSubset[k].Prob;
             if (topKSum < 1e-15f) topKSum = 1e-15f;

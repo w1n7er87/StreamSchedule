@@ -7,7 +7,7 @@ public static class Model
     private static int dim = 1024;
     private static int layers = 7;
     private static int vocab = 3072;
-    
+    public static int DimensionCount => 4 * dim * layers + dim * vocab + dim * vocab;
     public static float[] Embedding { get; set; }
     public static float[] OutputProjection { get; set; }
     public static float[] OutputBiases { get; set; }

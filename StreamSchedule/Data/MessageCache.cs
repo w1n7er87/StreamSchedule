@@ -41,14 +41,9 @@ public class MessageCache
         }
     }
 
-    public List<ChatMessage> GetList()
+    public List<ChatMessage> ToList()
     {
-        lock (locker)
-        {
-            ChatMessage[] result = new ChatMessage[cache.Count];
-            cache.CopyTo(result);
-            return result.ToList();
-        }
+        lock (locker) { return cache.ToList(); }
     }
 
     public ChatMessage? Find(Predicate<ChatMessage> match)
@@ -83,5 +78,6 @@ public class MessageCache
             cache.RemoveAll(m => m.Id.Equals(id));
         }
     }
+    
     public void AddFakeMessage(string user, string content) => Add(new ChatMessage("faker", "871501999", user, user, "FFFFFF", System.Drawing.Color.White, new EmoteSet("", ""), content, UserType.Viewer, "vedal987", "", false, 0, "", false, false, false, false, false, false, false, Noisy.NotSet, "", "", [], null, 0, 0));
 }
