@@ -7,6 +7,7 @@ public class Context
 
     public readonly float[][] StatesA;
     public readonly float[][] StatesB;
+    public readonly float[][] StatesX;
     public readonly LayerScratchpad[] LayerScratches;
     public readonly float[] CurrentInput;
     public readonly float[] LayerOutput;
@@ -19,12 +20,14 @@ public class Context
 
         StatesA = new float[layers][];
         StatesB = new float[layers][];
+        StatesX = new float[layers][];
         LayerScratches = new LayerScratchpad[layers];
 
         for (int i = 0; i < layers; i++)
         {
             StatesA[i] = new float[dim];
             StatesB[i] = new float[dim];
+            StatesX[i] = new float[dim];
             LayerScratches[i] = new LayerScratchpad(dim);
         }
 
@@ -50,6 +53,7 @@ public class Context
         {
             Array.Clear(StatesA[i], 0, StatesA.Length);
             Array.Clear(StatesB[i], 0, StatesB.Length);
+            Array.Clear(StatesX[i], 0, StatesX.Length);
         }
         Array.Clear(CurrentInput, 0, CurrentInput.Length);
         Array.Clear(LayerOutput, 0, LayerOutput.Length);

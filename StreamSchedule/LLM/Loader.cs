@@ -36,18 +36,21 @@ public static class Loader
         Model.WDecay = new float[l][];
         Model.WKey = new float[l][];
         Model.WValue = new float[l][];
-
+        Model.WMix = new float[l][];
+        
         for (int i = 0; i < l; i++)
         {
             Model.WAccept[i] = new float[d];
             Model.WDecay[i] = new float[d];
             Model.WKey[i] = new float[d];
             Model.WValue[i] = new float[d];
+            Model.WMix[i] = new float[d];
+            
             for (int j = 0; j < d; j++) Model.WAccept[i][j] = modelReader.ReadSingle();
             for (int j = 0; j < d; j++) Model.WDecay[i][j] = modelReader.ReadSingle();
             for (int j = 0; j < d; j++) Model.WKey[i][j] = modelReader.ReadSingle();
             for (int j = 0; j < d; j++) Model.WValue[i][j] = modelReader.ReadSingle();
-
+            for (int j = 0; j < d; j++) Model.WMix[i][j] = modelReader.ReadSingle();
         }
         return (true, d, l, v);
     }

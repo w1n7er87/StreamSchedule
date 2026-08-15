@@ -7,7 +7,7 @@ public static class Model
     private static int dim = 1024;
     private static int layers = 7;
     private static int vocab = 3072;
-    public static int DimensionCount => 4 * dim * layers + dim * vocab + dim * vocab;
+    public static int DimensionCount => 5 * dim * layers + dim * vocab + dim * vocab;
     public static float[] Embedding { get; set; }
     public static float[] OutputProjection { get; set; }
     public static float[] OutputBiases { get; set; }
@@ -15,7 +15,7 @@ public static class Model
     public static float[][] WKey { get; set; }
     public static float[][] WValue { get; set; }
     public static float[][] WDecay { get; set; }
-
+    public static float[][] WMix { get; set; }
     static Model()
     {
         Embedding = new float[dim * vocab];
@@ -25,12 +25,14 @@ public static class Model
         WKey = new float[layers][];
         WValue = new float[layers][];
         WDecay = new float[layers][];
+        WMix = new float[layers][];
         for (int i = 0; i < layers; i++)
         {
             WAccept[i] = new float[dim];
             WKey[i] = new float[dim];
             WValue[i] = new float[dim];
             WDecay[i] = new float[dim];
+            WMix[i] = new float[dim];
         }
     }
 
@@ -40,7 +42,7 @@ public static class Model
         layers = l;
         vocab = v;
     }
-    
+
     private static void ExecuteLayerForward(Context ctx)
     {
         Span<float> activeX = stackalloc float[dim];
@@ -53,15 +55,23 @@ public static class Model
             var scratch = ctx.LayerScratches[l];
             Span<float> stateA = ctx.StatesA[l].AsSpan(0, dim);
             Span<float> stateB = ctx.StatesB[l].AsSpan(0, dim);
+            Span<float> stateX = ctx.StatesX[l].AsSpan(0, dim);
             ReadOnlySpan<float> wAccept = WAccept[l].AsSpan(0, dim);
             ReadOnlySpan<float> wKey = WKey[l].AsSpan(0, dim);
             ReadOnlySpan<float> wValue = WValue[l].AsSpan(0, dim);
             ReadOnlySpan<float> wDecay = WDecay[l].AsSpan(0, dim);
-            TensorPrimitives.Multiply(normOutput, wAccept, scratch.AcceptGate);
+            ReadOnlySpan<float> wMix = WMix[l].AsSpan(0, dim);
+            TensorPrimitives.Subtract(wMix, 1.0f, scratch.Temp2);
+            TensorPrimitives.Negate(scratch.Temp2, scratch.Temp2);
+            TensorPrimitives.Multiply(stateX, scratch.Temp2, scratch.Temp1);
+            TensorPrimitives.Multiply(normOutput, wMix, scratch.Temp2);
+            TensorPrimitives.Add(scratch.Temp1, scratch.Temp2, scratch.Temp1);
+            normOutput.CopyTo(stateX);
+            TensorPrimitives.Multiply(scratch.Temp1, wAccept, scratch.AcceptGate);
             TensorPrimitives.Sigmoid(scratch.AcceptGate, scratch.AcceptGate);
-            TensorPrimitives.Multiply(normOutput, wKey, scratch.Key);
+            TensorPrimitives.Multiply(scratch.Temp1, wKey, scratch.Key);
             TensorPrimitives.Clamp(scratch.Key, -1.0f, 1.0f, scratch.Key);
-            TensorPrimitives.Multiply(normOutput, wValue, scratch.Value);
+            TensorPrimitives.Multiply(scratch.Temp1, wValue, scratch.Value);
             TensorPrimitives.Clamp(scratch.Value, -1.0f, 1.0f, scratch.Value);
             TensorPrimitives.Exp(scratch.Key, scratch.ExpKey);
             TensorPrimitives.Multiply(scratch.ExpKey, scratch.Value, scratch.Temp1);
@@ -82,7 +92,6 @@ public static class Model
             TensorPrimitives.Add(activeX, normOutput, activeX);
         }
 
-        // Push the finalized network state calculation back onto CurrentInput for logit evaluation
         activeX.CopyTo(ctx.CurrentInput.AsSpan(0, dim));
     }
 
