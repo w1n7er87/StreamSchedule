@@ -27,7 +27,7 @@ public static class Generator
     {
         if (promptInput.Count == 0) return string.Empty;
         
-        ctx.ResetStates();
+        ctx.ClearContext();
         foreach (int token in promptInput) { Model.PredictNextTokenStep(ctx, token); }
 
         var rand = Random.Shared;
@@ -44,7 +44,7 @@ public static class Generator
         Span<int> recentTokensHistory = stackalloc int[6];
         int historyCount = 0;
         
-        int terminationOffset = 10;
+        int terminationOffset = 5;
         int softRampStartTokenIndex = tokensToGenerate - terminationOffset;
 
         for (int i = 0; i < tokensToGenerate; i++)
@@ -76,7 +76,7 @@ public static class Generator
             {
                 float expValue = MathF.Exp((originalLogits[v] - maxLogit) * invExponent);
                 
-                if (TokenizerBPE.CustomTokenIDs.Contains(v) && v!= Eom) { expValue *= 0.2f; }
+                //if (TokenizerBPE.CustomTokenIDs.Contains(v) && v!= Eom) { expValue *= 0.2f; }
 
                 tokenScores[v] = (v, expValue);
                 globalSum += expValue;
@@ -114,7 +114,7 @@ public static class Generator
                 }
             }
 
-            if (chosenId == Eom) break;
+            //if (chosenId == Eom) break;
 
             if (Tools.TryGetValue(chosenId, out Tool? t))
             {
@@ -142,7 +142,7 @@ public static class Generator
             Model.PredictNextTokenStep(ctx, chosenId);
         }
 
-        int finalFlushCount = streamDecoder.GetChars(Array.Empty<byte>(), 0, 0, charBuffer, 0, true);
+        int finalFlushCount = streamDecoder.GetChars([], 0, 0, charBuffer, 0, true);
         if (finalFlushCount > 0) { responseAccumulator.Append(charBuffer, 0, finalFlushCount); }
 
         return responseAccumulator.ToString();

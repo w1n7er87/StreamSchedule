@@ -23,6 +23,7 @@ public static class Program
 
         try
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             string pagesDBLocation = Environment.GetEnvironmentVariable("STREAM_SCHEDULE_PAGES", EnvironmentVariableTarget.User) ?? "";
 
             int[] channelIDs = [85498365, 78135490, 871501999];

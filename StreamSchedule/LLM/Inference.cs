@@ -13,13 +13,12 @@ public static partial class Inference
 
     static Inference()
     {
-        (bool succ, int d, int l, int v) = Loader.LoadWeights();
+        (bool succ, int d, int l, int v, long dim) = Loader.LoadWeights();
         AllGood = succ;
-        if (succ) { Model.SetDimensions(d, l , v); }
-        context = new Context(d, l, v);
         AllGood = TokenizerBPE.Load();
         if(AllGood) Generator.FillIds();
-        BotCore.Nlog.Info($"inference model loaded {AllGood} {d}-{l}-{v} {Model.DimensionCount:N0} params");
+        context = new Context(d, l, v);
+        BotCore.Nlog.Info($"inference model loaded {AllGood} {d}-{l}-{v} {Model.ParamCount:N0} params");
     }
 
     public static bool Start => true;

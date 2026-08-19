@@ -4,54 +4,55 @@ public static class Loader
 {
     private static readonly string directoryPath = Path.Combine(AppContext.BaseDirectory, "save");
     private const string ModelFileName = "model.bin";
-
-    public static (bool succ, int d, int l, int v) LoadWeights()
+    
+    public static (bool succ, int d, int l, int v, long count) LoadWeights()
     {
         string modelPath = Path.Combine(directoryPath, ModelFileName);
         if (!Directory.Exists(directoryPath) || !File.Exists(modelPath))
         {
-            Console.WriteLine($"no save for weights");
-            return (false, 0, 0, 0);
+            Console.WriteLine("no save for weights");
+            return (false, 0, 0, 0, 0);
         }
-
+        
+        long paramCount = 0;
+        
         using var modelReader = new BinaryReader(File.OpenRead(modelPath));
-
+        
         int d = modelReader.ReadInt32();
         int l = modelReader.ReadInt32();
         int v = modelReader.ReadInt32();
-
-        long totalOutputElements = (long)v * d;
-        Model.OutputProjection = new float[totalOutputElements];
-        Model.OutputBiases = new float[v];
-
-        for (long i = 0; i < totalOutputElements; i++) { Model.OutputProjection[i] = modelReader.ReadSingle(); }
-        for (int i = 0; i < v; i++) { Model.OutputBiases[i] = modelReader.ReadSingle(); }
-
-        long totalEmbedElements = (long)v * d;
-        Model.Embedding = new float[totalEmbedElements];
-
-        for (long i = 0; i < totalEmbedElements; i++) { Model.Embedding[i] = modelReader.ReadSingle(); }
-
-        Model.WAccept = new float[l][];
-        Model.WDecay = new float[l][];
-        Model.WKey = new float[l][];
-        Model.WValue = new float[l][];
-        Model.WMix = new float[l][];
+        Model.Initialize(d, l, v);
         
+        paramCount += ReadArray(modelReader, Model.OutputProjection);
+        paramCount += ReadArray(modelReader, Model.OutputBiases);
+        paramCount += ReadArray(modelReader, Model.Embedding);
+
         for (int i = 0; i < l; i++)
         {
-            Model.WAccept[i] = new float[d];
-            Model.WDecay[i] = new float[d];
-            Model.WKey[i] = new float[d];
-            Model.WValue[i] = new float[d];
-            Model.WMix[i] = new float[d];
-            
-            for (int j = 0; j < d; j++) Model.WAccept[i][j] = modelReader.ReadSingle();
-            for (int j = 0; j < d; j++) Model.WDecay[i][j] = modelReader.ReadSingle();
-            for (int j = 0; j < d; j++) Model.WKey[i][j] = modelReader.ReadSingle();
-            for (int j = 0; j < d; j++) Model.WValue[i][j] = modelReader.ReadSingle();
-            for (int j = 0; j < d; j++) Model.WMix[i][j] = modelReader.ReadSingle();
+            paramCount += ReadArray(modelReader, Model.TM_WAccept[i]);
+            paramCount += ReadArray(modelReader, Model.TM_WKey[i]);
+            paramCount += ReadArray(modelReader, Model.TM_WValue[i]);
+            paramCount += ReadArray(modelReader, Model.TM_WDecay[i]);
+            paramCount += ReadArray(modelReader, Model.TM_WBonus[i]);
+            paramCount += ReadArray(modelReader, Model.TM_WMixK[i]);
+            paramCount += ReadArray(modelReader, Model.TM_WMixV[i]);
+            paramCount += ReadArray(modelReader, Model.TM_WMixR[i]);
+            paramCount += ReadArray(modelReader, Model.TM_LNWeight[i]);
+            paramCount += ReadArray(modelReader, Model.TM_LNBias[i]);
+            paramCount += ReadArray(modelReader, Model.CM_WKey[i]);
+            paramCount += ReadArray(modelReader, Model.CM_WValue[i]);
+            paramCount += ReadArray(modelReader, Model.CM_WReception[i]);
+            paramCount += ReadArray(modelReader, Model.CM_WMixK[i]);
+            paramCount += ReadArray(modelReader, Model.CM_WMixR[i]);
         }
-        return (true, d, l, v);
+        Model.CalculateDecay();
+        Model.ParamCount = paramCount;
+        return (true, d, l, v, paramCount);
+    }
+
+    private static long ReadArray(BinaryReader reader, float[] destination)
+    {
+        for (long i = 0; i < destination.LongLength; i++) { destination[i] = reader.ReadSingle(); }
+        return destination.LongLength;
     }
 }

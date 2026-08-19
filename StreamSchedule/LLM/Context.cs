@@ -2,61 +2,71 @@ namespace StreamSchedule.LLM;
 
 public class Context
 {
-    public readonly int Layers;
     public readonly int VocabSize;
-
-    public readonly float[][] StatesA;
-    public readonly float[][] StatesB;
-    public readonly float[][] StatesX;
-    public readonly LayerScratchpad[] LayerScratches;
     public readonly float[] CurrentInput;
-    public readonly float[] LayerOutput;
     public readonly float[] LogitsScratch;
+    public readonly float[][] StatesTimeX;
+    public readonly float[][] StatesChannelX;
+    public readonly float[][] StatesNum;
+    public readonly float[][] StatesDen;
+    public readonly float[][] StatesMax;
+    public readonly float[] ScratchDimB;
+    public readonly float[] ScratchDim4;
+    public readonly float[] ScratchMixK;
+    public readonly float[] ScratchMixV;
+    public readonly float[] ScratchMixR;
+    public readonly float[] ScratchGateR;
+    public readonly float[] ScratchGateK;
+    public readonly float[] ScratchGateV;
+    public readonly float[] ScratchTMOut;
 
-    public Context(int dim, int layers, int vocabSize)
+    public Context(int d, int l, int v)
     {
-        Layers = layers;
-        VocabSize = vocabSize;
+        VocabSize = v;
+        CurrentInput = new float[d];
+        LogitsScratch = new float[v];
 
-        StatesA = new float[layers][];
-        StatesB = new float[layers][];
-        StatesX = new float[layers][];
-        LayerScratches = new LayerScratchpad[layers];
+        StatesTimeX = new float[l][];
+        StatesChannelX = new float[l][];
+        StatesNum = new float[l][];
+        StatesDen = new float[l][];
+        StatesMax = new float[l][];
 
-        for (int i = 0; i < layers; i++)
+        for (int i = 0; i < l; i++)
         {
-            StatesA[i] = new float[dim];
-            StatesB[i] = new float[dim];
-            StatesX[i] = new float[dim];
-            LayerScratches[i] = new LayerScratchpad(dim);
+            StatesTimeX[i] = new float[d];
+            StatesChannelX[i] = new float[d];
+            StatesNum[i] = new float[d];
+            StatesDen[i] = new float[d];
+            StatesMax[i] = new float[d];
+            Array.Fill(StatesMax[i], -1e30f);
         }
 
-        CurrentInput = new float[dim];
-        LayerOutput = new float[dim];
-        LogitsScratch = new float[vocabSize];
+        ScratchDimB = new float[d];
+        ScratchDim4 = new float[d * 4];
+        ScratchMixK = new float[d];
+        ScratchMixV = new float[d];
+        ScratchMixR = new float[d];
+
+        ScratchGateR = new float[d];
+        ScratchGateK = new float[d];
+        ScratchGateV = new float[d];
+
+        ScratchTMOut = new float[d];
     }
 
-    public class LayerScratchpad(int dim)
+    public void ClearContext()
     {
-        public readonly float[] Temp1 = new float[dim];
-        public readonly float[] Temp2 = new float[dim];
-        public readonly float[] AcceptGate = new float[dim];
-        public readonly float[] Key = new float[dim];
-        public readonly float[] Value = new float[dim];
-        public readonly float[] ExpKey = new float[dim];
-        public readonly float[] DecayFactor = new float[dim];
-    }
-
-    public void ResetStates()
-    {
-        for (int i = 0; i < StatesA.Length; i++)
-        {
-            Array.Clear(StatesA[i], 0, StatesA.Length);
-            Array.Clear(StatesB[i], 0, StatesB.Length);
-            Array.Clear(StatesX[i], 0, StatesX.Length);
-        }
         Array.Clear(CurrentInput, 0, CurrentInput.Length);
-        Array.Clear(LayerOutput, 0, LayerOutput.Length);
         Array.Clear(LogitsScratch, 0, LogitsScratch.Length);
+
+        for (int i = 0; i < StatesTimeX.Length; i++)
+        {
+            Array.Clear(StatesTimeX[i], 0, StatesTimeX[i].Length);
+            Array.Clear(StatesChannelX[i], 0, StatesChannelX[i].Length);
+            Array.Clear(StatesNum[i], 0, StatesNum[i].Length);
+            Array.Clear(StatesDen[i], 0, StatesDen[i].Length);
+            Array.Fill(StatesMax[i], -1e30f);
+        }
     }
 }
