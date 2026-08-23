@@ -41,7 +41,12 @@ public static class Browsing
     {
         while (true)
         {
-            if (DateTime.Now <= NextUpdate) continue;
+            if (DateTime.Now <= NextUpdate)
+            {
+                await Task.Delay(TimeSpan.FromMinutes(3));
+                continue;
+            }
+            
             try
             {
                 CancellationTokenSource cts = new();
