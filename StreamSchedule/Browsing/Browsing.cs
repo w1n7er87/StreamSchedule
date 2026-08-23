@@ -41,10 +41,14 @@ public static class Browsing
     {
         while (true)
         {
-            if (DateTime.Now > NextUpdate)
+            if (DateTime.Now <= NextUpdate) continue;
+            try
             {
+                CancellationTokenSource cts = new();
+                cts.CancelAfter(TimeSpan.FromMinutes(4));
+                
                 BotCore.Nlog.Info("Obtaining new integrity ... ");
-                Integrity i = await ObtainIntegrity();
+                Integrity i = await ObtainIntegrity(cts.Token);
 
                 if (await GraphQLClient.VerifyIntegrity(i))
                 {
@@ -59,14 +63,20 @@ public static class Browsing
                     continue;
                 }
                 BotCore.Nlog.Info("the token was bad, retrying in 3m ... ");
+                await Task.Delay(TimeSpan.FromMinutes(3));
             }
-            await Task.Delay(TimeSpan.FromMinutes(3));
+            catch (Exception e)
+            {
+                BotCore.Nlog.Error($"Exception during Integrity attempt: {e}, retrying in 3m ");
+                await Task.Delay(TimeSpan.FromMinutes(3));
+            }
+
         }
     }
 
     public static void ScheduleUpdate() => NextUpdate = DateTime.UtcNow;
 
-    private static async Task<Integrity> ObtainIntegrity()
+    private static async Task<Integrity> ObtainIntegrity(CancellationToken ct)
     {
         bool haveIntegrity = false;
         bool haveDeviceID = false;
@@ -101,10 +111,10 @@ public static class Browsing
             "--ash-no-nudges",
             //"headless"
         ]);
-        
+
         options.PageLoadStrategy = PageLoadStrategy.Normal;
         options.BrowserVersion = "146";
-        
+
         BotCore.Nlog.Info("ceating driver");
 
         ChromeDriver driver = new(options);
@@ -131,7 +141,7 @@ start:
         driver.Manage().Network.AddRequestHandler(userAgentHandler);
         await driver.Manage().Network.StartMonitoring();
 
-        await Task.Delay(100);
+        await Task.Delay(100, ct);
         
         driver.Manage().Network.NetworkRequestSent += (sender, args) =>
         {
@@ -158,9 +168,9 @@ start:
                     return false;
                 throw;
             }
-        }, TimeSpan.FromSeconds(10));
+        }, TimeSpan.FromSeconds(10), ct);
         
-        await WaitUntil(() => haveIntegrity && haveDeviceID, TimeSpan.FromSeconds(5));
+        await WaitUntil(() => haveIntegrity && haveDeviceID, TimeSpan.FromSeconds(5), ct);
 
         IWebElement email = driver.FindElement(By.Id("email-input"));
 
@@ -171,7 +181,7 @@ start:
         Random.Shared.Shuffle(forsenEmail);
         
         email.Click();
-        await Task.Delay(Random.Shared.Next(600, 900));
+        await Task.Delay(Random.Shared.Next(600, 900), ct);
         
         // foreach (char c in forsenEmail)
         // {
@@ -187,7 +197,7 @@ start:
         foreach (char c in adota)
         {
             email.SendKeys(c.ToString());
-            await Task.Delay(Random.Shared.Next(200, 600));
+            await Task.Delay(Random.Shared.Next(200, 600), ct);
         }
         
         IWebElement? submitButton = driver.FindElements(By.TagName("button")).FirstOrDefault(x => (x.GetAttribute("data-a-target") ?? "") == "passport-signup-button");
@@ -207,12 +217,12 @@ start:
                     return false;
                 throw;
             }
-        }, TimeSpan.FromSeconds(10));
+        }, TimeSpan.FromSeconds(10), ct);
         
         IWebElement login = driver.FindElement(By.Id("signup-username"));
         IWebElement pass = driver.FindElement(By.Id("password-input"));
         
-        await Task.Delay(1100);
+        await Task.Delay(1100, ct);
         
         //pass.Click();
         // for (int i = 0; i < 9; i++)
@@ -223,19 +233,19 @@ start:
         //await Task.Delay(1300);
 
         login.Click();
-        await Task.Delay(Random.Shared.Next(900, 1200));
+        await Task.Delay(Random.Shared.Next(900, 1200), ct);
 
         char[] forsen = ['f', 'o', 'r', 's', 'e', 'n'];
 
         for (int i = 0; i < forsen.Length; i++)
         {
             login.SendKeys(forsen[Random.Shared.Next(forsen.Length)].ToString());
-            await Task.Delay(Random.Shared.Next(450, 1200));
+            await Task.Delay(Random.Shared.Next(450, 1200), ct);
         }
 
         BotCore.Nlog.Info("waiting for token");
 
-        await WaitUntil(() => haveIntegrity && haveDeviceID, TimeSpan.FromSeconds(3));
+        await WaitUntil(() => haveIntegrity && haveDeviceID, TimeSpan.FromSeconds(3), ct);
         
         if (string.IsNullOrEmpty(integrityToken) && tabCounter < 3)
         {
@@ -252,9 +262,9 @@ start:
         return new(integrityToken ?? "", deviceId ?? "");
     }
 
-    private static async Task WaitUntil(Func<bool> f, TimeSpan timeOut)
+    private static async Task WaitUntil(Func<bool> f, TimeSpan timeOut, CancellationToken ct)
     {
         long start = Stopwatch.GetTimestamp();
-        while (!f() && Stopwatch.GetElapsedTime(start) < timeOut) await Task.Delay(200);
+        while (!f() && Stopwatch.GetElapsedTime(start) < timeOut) await Task.Delay(200, ct);
     }
 }
