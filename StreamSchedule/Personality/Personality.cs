@@ -26,7 +26,7 @@ public static class Personality
     private static TimeSpan OnlineInterval => new TimeSpan(hours: 0, minutes: Random.Shared.Next(5, 15), seconds: Random.Shared.Next(32));
 
     private static DateTime timeToSpeak = DateTime.UtcNow + TimeSpan.FromMinutes(5);
-    private static readonly Func<string[]>[] actions = [SpeakOnTopic, SpeakOnTopic, SpeakOnTopic, HugLast, RemindSchedule];
+    private static readonly Func<string[]>[] actions = [SpeakOnTopic, SpeakOnTopic, SpeakOnTopic, HugLast, RemindSchedule, Talk, Talk, Talk, Talk];
 
     private sealed class SaySomething : Periodic
     {
@@ -73,5 +73,12 @@ public static class Personality
     {
         string username = BotCore.MessageCache.TakeLast(1).FirstOrDefault()?.Username ?? "uuh";
         return [$"{(Random.Shared.Next(101) >= 50 ? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!", maxLength: 4, temperature: 2f)}"];
+    }
+
+    private static string[] Talk()
+    {
+        List<string> names = BotCore.MessageCache.TakeLast(25).Select(m => m.Username).ToList();
+        if (names.Count == 0 || !LLM.Inference.AllGood) return ["Awkward "];
+        return LLM.Inference.Speak(names[Random.Shared.Next(names.Count)], 0.9f);
     }
 }

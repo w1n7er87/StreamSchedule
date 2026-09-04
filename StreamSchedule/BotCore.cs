@@ -96,7 +96,8 @@ internal static partial class BotCore
         _ = Markov.Start;
         _ = Browsing.Browsing.Start;
         _ = Personality.Personality.Start;
-
+        _ = LLM.Inference.Start;
+        
         ExportUtils.UpdateStyles();
     }
 
