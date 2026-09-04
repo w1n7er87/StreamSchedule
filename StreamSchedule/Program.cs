@@ -13,7 +13,7 @@ public static class Program
 
     private static void Main()
     {
-        AppDomain.CurrentDomain.UnhandledException += (sender, e) => logger.Fatal(e.ExceptionObject.ToString());
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) => logger.Fatal(e.ExceptionObject.ToString() ?? "oop");
 
         if (EF.IsDesignTime)
         {

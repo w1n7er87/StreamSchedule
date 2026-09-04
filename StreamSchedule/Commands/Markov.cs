@@ -42,9 +42,9 @@ internal class Markov : Command
 
             if(Muted) return Task.FromResult(new CommandResult(""));
             
-            float temperature = args.TryGetValue("t", out string? tt) ? float.TryParse(tt, out temperature)  ? temperature : 0.75f : 0.75f;
+            float temperature = args.TryGetValue("t", out string? tt) ? float.TryParse(tt, out temperature)  ? temperature : 10f : 10f;
             
-            int k = args.TryGetValue("k", out string? kk) ? int.TryParse(kk, out k)  ? k : 10 : 10;
+            int k = args.TryGetValue("k", out string? kk) ? int.TryParse(kk, out k)  ? k : 99 : 99;
 
             int count = args.TryGetValue("c", out string? cc)? int.TryParse(cc, out int ccc)? Math.Clamp(ccc, 1, maxTokenCount) : defaultTokenCount : defaultTokenCount;
 

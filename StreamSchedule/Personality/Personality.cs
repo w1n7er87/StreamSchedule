@@ -1,6 +1,7 @@
 using StreamSchedule.Data;
 using StreamSchedule.Markov2;
 using Markov = StreamSchedule.Markov2.Markov;
+using Stream = StreamSchedule.Data.Models.Stream;
 
 namespace StreamSchedule.Personality;
 
@@ -61,9 +62,9 @@ public static class Personality
     {
         string[] responses = ["did yall know there is {0} today ", "yo there is {0} today ", "can't wait for today's {0} ", "thank god there is {0} today ", "so excited for {0} today ", "finally {0} today "];
 
-        var stream = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.UtcNow));
+        Stream? stream = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.UtcNow));
         string the = "no stream";
-        if (stream is not null) the = stream.StreamDate.ToDateTime(stream.StreamTime) < DateTime.UtcNow ? the : stream.StreamTitle ?? the;
+        if (stream is not null) the = new DateTime(stream.StreamDate, stream.StreamTime) < DateTime.UtcNow ? the : stream.StreamTitle ?? the;
 
         return [string.Format(responses[Random.Shared.Next(responses.Length)], the)];
     }

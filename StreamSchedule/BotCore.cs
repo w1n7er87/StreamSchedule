@@ -235,7 +235,7 @@ internal static partial class BotCore
             channel.Enqueue(outgoingMessage);
         }
     }
-    
+
     private static async Task OutPump(User channel)
     {
         bool sameMessageFlip = false;
