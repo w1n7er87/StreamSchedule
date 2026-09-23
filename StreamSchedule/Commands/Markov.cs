@@ -12,7 +12,7 @@ internal class Markov : Command
     public override string[] Arguments => ["k", "t", "c", "m", "f", "q", "r", "i", "count", "load", "save", "dump", "trim"];
     public override List<string> Aliases { get; set; } = [];
 
-    private static bool Muted = true;
+    private static bool Muted = false;
     private const int maxTokenCount = 75;
     private const int defaultTokenCount = 12;
 

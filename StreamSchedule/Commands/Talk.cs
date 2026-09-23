@@ -6,12 +6,12 @@ namespace StreamSchedule.Commands;
 internal class Talk : Command
 {
     public override string Call => "talk";
-    public override Privileges Privileges => Privileges.Trusted;
+    public override Privileges Privileges => Privileges.Uuh;
     public override string Help => $"{(Muted ? " muted " : "")}have a chat a with real frontier AGI (t temp, as chatter (bot by default), c context {Inference.minContext} - {Inference.maxContext}, l ask nicely for a longer message. ) current model {Model.ParamCount:NO} params ";
     public override TimeSpan Cooldown => TimeSpan.FromSeconds((int)Cooldowns.Longer);
     public override string[] Arguments => ["t", "as", "m", "c", "l"];
     public override List<string> Aliases { get; set; } = [];
-    private static bool Muted = false;
+    private static bool Muted = true;
     
     public override Task<CommandResult> Handle(UniversalMessageInfo message)
     {
