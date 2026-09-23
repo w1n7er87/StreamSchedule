@@ -15,7 +15,7 @@ public static partial class Inference
     {
         (bool succ, int d, int l, int v, long dim) = Loader.LoadWeights();
         AllGood = succ;
-        AllGood = TokenizerBPE.Load();
+        AllGood = succ && TokenizerBPE.Load();
         if(AllGood) Generator.FillIds();
         context = new Context(d, l, v);
         BotCore.Nlog.Info($"inference model loaded {AllGood} {d}-{l}-{v} {Model.ParamCount:N0} params");

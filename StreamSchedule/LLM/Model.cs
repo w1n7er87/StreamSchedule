@@ -8,7 +8,7 @@ public static class Model
     private static int layers = 1;
     private static int vocab = 1;
     public static long ParamCount = 0;
-    
+
     public static float[] Embedding;
     public static float[] OutputProjection;
     public static float[] OutputBiases;
@@ -48,12 +48,19 @@ public static class Model
         TM_WMixR = AllocateLayers(d);
         TM_LNWeight = AllocateLayers(d);
         TM_LNBias = AllocateLayers(d);
-        CM_WKey = AllocateLayers(d * 4 * d);
-        CM_WValue = AllocateLayers(d * d * 4);
+        CM_WKey = AllocateLayers(d * 2 * d);
+        CM_WValue = AllocateLayers(d * d * 2);
         CM_WReception = AllocateLayers(d * d);
         CM_WMixK = AllocateLayers(d);
         CM_WMixR = AllocateLayers(d);
         BoundDecay = new float[l][];
+    }
+
+    private static float[][] AllocateLayers(int size)
+    {
+        float[][] arr = new float[layers][];
+        for (int i = 0; i < layers; i++) arr[i] = new float[size];
+        return arr;
     }
 
     public static void CalculateDecay()
@@ -64,16 +71,9 @@ public static class Model
             for (int j = 0; j < dim; j++)
             {
                 float sigmoidDecay = 1.0f / (1.0f + MathF.Exp(-TM_WDecay[i][j]));
-                BoundDecay[i][j] = -(sigmoidDecay * 6.0f);
+                BoundDecay[i][j] = (sigmoidDecay * 6.0f);
             }
         }
-    }
-    
-    private static float[][] AllocateLayers(int size)
-    {
-        float[][] arr = new float[layers][];
-        for (int i = 0; i < layers; i++) arr[i] = new float[size];
-        return arr;
     }
 
     private static void ExecuteLayerForward(Context ctx)
@@ -81,7 +81,7 @@ public static class Model
         Span<float> x = ctx.CurrentInput.AsSpan(0, dim);
 
         Span<float> scratchDim = ctx.ScratchDimB.AsSpan(0, dim);
-        Span<float> scratchDim4 = ctx.ScratchDim4.AsSpan(0, dim * 4);
+        Span<float> scratchDim4 = ctx.ScratchDim4.AsSpan(0, dim * 2);
 
         Span<float> kX = ctx.ScratchMixK.AsSpan(0, dim);
         Span<float> vX = ctx.ScratchMixV.AsSpan(0, dim);
@@ -98,9 +98,14 @@ public static class Model
             Span<float> denState = ctx.StatesDen[l].AsSpan(0, dim);
             Span<float> maxState = ctx.StatesMax[l].AsSpan(0, dim);
 
+            ApplyParameterFreeLayerNorm(x, scratchDim);
+
             ComputeMix(x, stateTimeX, TM_WMixK[l], kX);
             ComputeMix(x, stateTimeX, TM_WMixV[l], vX);
             ComputeMix(x, stateTimeX, TM_WMixR[l], rX);
+
+            Span<float> originalXHoldingBuffer = ctx.ScratchXBuffer.AsSpan(0, dim);
+            x.CopyTo(originalXHoldingBuffer);
 
             MatrixVectorMultiply(rX, TM_WAccept[l], gateR, dim, dim);
             TensorPrimitives.Sigmoid(gateR, gateR);
@@ -115,43 +120,53 @@ public static class Model
                 float kt = gateK[i];
                 float vt = gateV[i];
                 float bonus = bonusWeights[i];
-                
                 float maxCurrent = MathF.Max(maxState[i], kt + bonus);
-                float expMaxOld = MathF.Exp(maxState[i] - maxCurrent);
-                float expCurrent = MathF.Exp(kt + bonus - maxCurrent);
+                float expMaxOldDiff = MathF.Max(-30.0f, MathF.Min(0.0f, maxState[i] - maxCurrent));
+                float expCurrentDiff = MathF.Max(-30.0f, MathF.Min(0.0f, (kt + bonus) - maxCurrent));
+                float expMaxOld = MathF.Exp(expMaxOldDiff);
+                float expCurrent = MathF.Exp(expCurrentDiff);
 
                 float num = expMaxOld * numState[i] + expCurrent * vt;
                 float den = expMaxOld * denState[i] + expCurrent;
 
-                if (MathF.Abs(den) < 1e-9f) den = 1e-9f;
+                if (den < 1e-6f) den = 1e-6f;
                 tmOutput[i] = num / den;
-                
+
                 float boundedDecay = BoundDecay[l][i];
 
-                float maxNext = MathF.Max(maxState[i] + boundedDecay, kt);
-                float expDecay = MathF.Exp(maxState[i] + boundedDecay - maxNext);
-                float expK = MathF.Exp(kt - maxNext);
+                float historyDecayed = maxState[i] - boundedDecay;
+                float maxNext = MathF.Max(historyDecayed, kt);
 
-                numState[i] = expDecay * numState[i] + expK * vt;
-                denState[i] = expDecay * denState[i] + expK;
+                float expDecayDiff = MathF.Max(-30.0f, MathF.Min(0.0f, historyDecayed - maxNext));
+                float expKDiff = MathF.Max(-30.0f, MathF.Min(0.0f, kt - maxNext));
+                float expDecay = MathF.Exp(expDecayDiff);
+                float expK = MathF.Exp(expKDiff);
+                float nextNum = expDecay * numState[i] + expK * vt;
+                float nextDen = expDecay * denState[i] + expK;
+                if (nextDen < 1e-6f) nextDen = 1e-6f;
+                if (maxNext < -1e20f) maxNext = -1e20f;
+                if (maxNext > 1e20f) maxNext = 1e20f;
+                numState[i] = nextNum;
+                denState[i] = nextDen;
                 maxState[i] = maxNext;
             }
 
-            x.CopyTo(stateTimeX);
+            originalXHoldingBuffer.CopyTo(stateTimeX);
 
             TensorPrimitives.Multiply(gateR, tmOutput, tmOutput);
             ApplyLayerNorm(tmOutput, TM_LNWeight[l], TM_LNBias[l], scratchDim);
             TensorPrimitives.Add(x, scratchDim, x);
+            ApplyParameterFreeLayerNorm(x, scratchDim);
             Span<float> stateChannelX = ctx.StatesChannelX[l].AsSpan(0, dim);
             ComputeMix(x, stateChannelX, CM_WMixK[l], kX);
             ComputeMix(x, stateChannelX, CM_WMixR[l], rX);
             x.CopyTo(stateChannelX);
             MatrixVectorMultiply(rX, CM_WReception[l], gateR, dim, dim);
             TensorPrimitives.Sigmoid(gateR, gateR);
-            MatrixVectorMultiply(kX, CM_WKey[l], scratchDim4, dim * 4, dim);
+            MatrixVectorMultiply(kX, CM_WKey[l], scratchDim4, dim * 2, dim);
             TensorPrimitives.Max(scratchDim4, 0.0f, scratchDim4);
             TensorPrimitives.Multiply(scratchDim4, scratchDim4, scratchDim4);
-            MatrixVectorMultiply(scratchDim4, CM_WValue[l], scratchDim, dim, dim * 4);
+            MatrixVectorMultiply(scratchDim4, CM_WValue[l], scratchDim, dim, dim * 2);
             TensorPrimitives.Multiply(gateR, scratchDim, scratchDim);
             TensorPrimitives.Add(x, scratchDim, x);
         }
@@ -181,6 +196,19 @@ public static class Model
         float invStdDev = 1.0f / MathF.Sqrt(variance + 1e-5f);
 
         for (int i = 0; i < dim; i++) { output[i] = (input[i] - mean) * invStdDev * weight[i] + bias[i]; }
+    }
+
+    private static void ApplyParameterFreeLayerNorm(Span<float> x, Span<float> scratch, float epsilon = 1e-5f)
+    {
+        int n = x.Length;
+        float sum = TensorPrimitives.Sum(x);
+        float mean = sum / n;
+        TensorPrimitives.Subtract(x, mean, scratch);
+        TensorPrimitives.Multiply(scratch, scratch, x);
+        float sumSq = TensorPrimitives.Sum(x);
+        float variance = sumSq / n;
+        float invStdDev = 1.0f / MathF.Sqrt(variance + epsilon);
+        TensorPrimitives.Multiply(scratch, invStdDev, x);
     }
 
     public static void PredictNextTokenStep(Context ctx, int currentTokenId)

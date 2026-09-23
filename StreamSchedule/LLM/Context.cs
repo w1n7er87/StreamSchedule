@@ -18,6 +18,7 @@ public class Context
     public readonly float[] ScratchGateR;
     public readonly float[] ScratchGateK;
     public readonly float[] ScratchGateV;
+    public readonly float[] ScratchXBuffer;
     public readonly float[] ScratchTMOut;
 
     public Context(int d, int l, int v)
@@ -43,11 +44,11 @@ public class Context
         }
 
         ScratchDimB = new float[d];
-        ScratchDim4 = new float[d * 4];
+        ScratchDim4 = new float[d * 2];
         ScratchMixK = new float[d];
         ScratchMixV = new float[d];
         ScratchMixR = new float[d];
-
+        ScratchXBuffer = new float[d];
         ScratchGateR = new float[d];
         ScratchGateK = new float[d];
         ScratchGateV = new float[d];

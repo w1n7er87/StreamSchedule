@@ -8,10 +8,10 @@ public static class TokenizerBPE
     private static readonly Dictionary<int, byte[]> _idToToken = new();
     private static readonly Dictionary<string, int> _tokenToId = new();
     private static readonly Dictionary<(int, int), int> _merges = new();
-    public static List<string> CustomTokens = [];
+    public static readonly List<string> CustomTokens = [];
     public static readonly List<int> CustomTokenIDs = [];
     public static readonly Dictionary<string, int> CustomTokenToID = [];
-    
+
     public static List<int> Encode(string text)
     {
         if (string.IsNullOrEmpty(text)) return [];
@@ -134,7 +134,6 @@ public static class TokenizerBPE
         
         using (var sr = new StreamReader(customTokensPath, Encoding.UTF8))
         {
-            CustomTokens = [];
             while (sr.ReadLine() is { } line)
             {
                 CustomTokens.Add(line);
