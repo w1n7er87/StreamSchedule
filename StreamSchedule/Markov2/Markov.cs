@@ -13,6 +13,9 @@ public static partial class Markov
     private static Dictionary<int, List<TokenPair>> TokenPairLookup = [];
     private static Dictionary<int, List<TokenPair>> ReverseTokenPairLookup = [];
 
+    private static Func<int, int> Rnd = Random.Shared.Next;
+    private static Func<double> Rndd = Random.Shared.NextDouble;
+
     public static int TokenCount => TokenLookup.Count;
     public static int TokenPairCount => context.TokenPairs.Count();
 
@@ -26,7 +29,9 @@ public static partial class Markov
 
     private static DateTime lastSave = DateTime.UtcNow;
     private static readonly TimeSpan saveInterval = TimeSpan.FromMinutes(30);
-    
+
+    private const int absoluteMaxCount = 125;
+
     static Markov()
     {
         context.Database.EnsureCreated();
@@ -56,7 +61,7 @@ public static partial class Markov
             await context.SaveChangesAsync();
         }
         else eolID = eol.TokenID;
-        
+
         Load();
         _ = new Saver();
         Task.Run(Tokenizer);
@@ -84,11 +89,12 @@ public static partial class Markov
                 await Task.Delay(50);
                 continue;
             }
+
             await TokenizeMessage(TokenizationQueue.Peek());
             TokenizationQueue.Dequeue();
         }
     }
-    
+
     public static TimeSpan Save()
     {
         Ready = false;
@@ -109,9 +115,9 @@ public static partial class Markov
         TokenLookup = [];
         TokenPairLookup = [];
         ReverseTokenPairLookup = [];
-        
+
         IEnumerable<TokenPair> pairs = context.TokenPairs.AsNoTracking().ToList();
-        
+
         ILookup<int, TokenPair> tokenPairsPerToken = pairs.ToLookup(t => t.TokenID);
         ILookup<int, TokenPair> tokenPairsPerNext = pairs.ToLookup(t => t.NextTokenID);
 
@@ -127,7 +133,7 @@ public static partial class Markov
         Ready = true;
         return elapsed;
     }
-    
+
     public static void DumpTokenStats(string token, bool reverse)
     {
         if (!Ready) return;
@@ -141,7 +147,7 @@ public static partial class Markov
         string result = "\n";
         if (reverse)
         {
-            foreach (var tokenID in pairs.Select(p => new { id = p.TokenID, count = p.Count, tpID = p.ID}).OrderBy(pp => pp.count))
+            foreach (var tokenID in pairs.Select(p => new { id = p.TokenID, count = p.Count, tpID = p.ID }).OrderBy(pp => pp.count))
             {
                 Token tt = TokenLookup[tokenID.id];
                 result += $"{tokenID.count} - (pair id: {tokenID.tpID} token id:{tt.TokenID}) - {tt.Value} {t.Value} \r\n ";
@@ -149,12 +155,13 @@ public static partial class Markov
         }
         else
         {
-            foreach (var tokenID in pairs.Select(p => new { id = p.NextTokenID, count = p.Count, tpID = p.ID}).OrderBy(pp => pp.count))
+            foreach (var tokenID in pairs.Select(p => new { id = p.NextTokenID, count = p.Count, tpID = p.ID }).OrderBy(pp => pp.count))
             {
                 Token tt = TokenLookup[tokenID.id];
                 result += $"{tokenID.count} - (pair id: {tokenID.tpID} token id:{tt.TokenID}) - {t.Value} {tt.Value} \r\n ";
             }
         }
+
         BotCore.Nlog.Info(result + $"{pairs.Count} total");
     }
 
@@ -164,7 +171,7 @@ public static partial class Markov
         int c = 0;
 
         for (int i = 0; i < TokenPairLookup.Count; i++)
-        {        
+        {
             bool clean = false;
 
             while (!clean)
@@ -181,15 +188,13 @@ public static partial class Markov
                         if (tokenPair.NextTokenID != pair.NextTokenID) continue;
                         if (tokenPair.ID == pair.ID) continue;
                         clean = false;
-                        
-                        if (context.Entry(tokenPair).State == EntityState.Detached)
-                            context.TokenPairs.Attach(tokenPair);
+
+                        if (context.Entry(tokenPair).State == EntityState.Detached) context.TokenPairs.Attach(tokenPair);
 
                         tokenPair.Count += pair.Count;
 
-                        if (context.Entry(pair).State == EntityState.Detached)
-                            context.TokenPairs.Attach(pair);
-                        
+                        if (context.Entry(pair).State == EntityState.Detached) context.TokenPairs.Attach(pair);
+
                         tokenPairs.Remove(pair);
                         context.TokenPairs.Remove(pair);
                         c++;
@@ -202,15 +207,15 @@ public static partial class Markov
 
         Save();
         Load();
-        
+
         BotCore.Nlog.Info($"ok {c}");
         Ready = true;
     }
-    
+
     private static Task TokenizeMessage(string message)
     {
         message = Exclamations().Replace(Questions().Replace(message, "???"), "!!!");
-        
+
         List<string> words = message.Split(' ').Prepend("\r").ToList();
         for (int i = 0; i < words.Count; i++)
         {
@@ -236,10 +241,8 @@ public static partial class Markov
                 TokenPairLookup.Add(current.TokenID, [tp]);
                 context.TokenPairs.Add(tp);
 
-                if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
-                    tempReverse.Add(tp);
-                else
-                    ReverseTokenPairLookup.Add(next.TokenID, [tp]);
+                if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse)) tempReverse.Add(tp);
+                else ReverseTokenPairLookup.Add(next.TokenID, [tp]);
 
                 continue;
             }
@@ -249,32 +252,25 @@ public static partial class Markov
             if (pairWithNext is null)
             {
                 pairWithNext = new TokenPair(current.TokenID, next.TokenID, 1);
-                
-                if (pairsOfCurrent is not null)
-                    pairsOfCurrent.Add(pairWithNext);
-                else
-                    TokenPairLookup.Add(current.TokenID, [pairWithNext]);
 
-                if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse))
-                    tempReverse.Add(pairWithNext);
-                else
-                    ReverseTokenPairLookup.Add(next.TokenID, [pairWithNext]);
-                
+                if (pairsOfCurrent is not null) pairsOfCurrent.Add(pairWithNext);
+                else TokenPairLookup.Add(current.TokenID, [pairWithNext]);
+
+                if (ReverseTokenPairLookup.TryGetValue(next.TokenID, out List<TokenPair>? tempReverse)) tempReverse.Add(pairWithNext);
+                else ReverseTokenPairLookup.Add(next.TokenID, [pairWithNext]);
+
                 context.TokenPairs.Add(pairWithNext);
             }
             else
             {
-                if (context.Entry(pairWithNext).State == EntityState.Detached)
-                    context.TokenPairs.Attach(pairWithNext);
+                if (context.Entry(pairWithNext).State == EntityState.Detached) context.TokenPairs.Attach(pairWithNext);
                 pairWithNext.Count++;
             }
         }
+
         return Task.CompletedTask;
     }
-    
-    private static Func<int, int> Rnd = Random.Shared.Next;
-    private static Func<double> Rndd = Random.Shared.NextDouble;
-    
+
     public static string GenerateSequence(string? firstWord = null, int k = 9999, float temperature = 1f, int maxLength = 25, Method method = Method.none, int? seed = null)
     {
         if (!Ready) return "uuh ";
@@ -293,38 +289,30 @@ public static partial class Markov
             List<int> generatedLowerHalf = [source.TokenID];
             method &= ~Method.reverse;
 
-            bool forwardStopped = false;
-            bool reverseStopped = false;
-            
-            bool forward = true;
-            int generatedCount = 1;
-            
-            while (generatedCount < maxLength)
-            {
-                if (forwardStopped && reverseStopped) break;
-                if (forwardStopped) forward = false;
-                if (reverseStopped) forward = true;
+            int generatedForward = 1;
+            int generatedBackward = 0;
+            int maxLengthForward = maxLength / 2;
+            int maxLengthReverse = maxLength / 2;
 
-                if (forward)
-                    forwardStopped = generatedTokens.PickNext(method, generatedCount, maxLength, k, temperature);
-                else
-                    reverseStopped = generatedLowerHalf.PickNext(method | Method.reverse, generatedCount, maxLength, k, temperature);
+            if (maxLength % 2 != 0) maxLengthForward++;
 
-                generatedCount++;
-                forward = !forward;
-            }
-            
+            while (generatedForward < maxLengthForward)
+                if (generatedTokens.PickNextForward(method, generatedTokens.Count, ref maxLengthForward, k, temperature)) break;
+                else generatedForward++;
+
+            while (generatedBackward < maxLengthReverse)
+                if (generatedLowerHalf.PickNextReverse(method, generatedLowerHalf.Count, ref maxLengthReverse, k, temperature)) break;
+                else generatedBackward++;
+
             generatedLowerHalf.RemoveAt(0);
             generatedLowerHalf.Reverse();
-            generatedTokens = [..generatedLowerHalf, ..generatedTokens];
+            generatedTokens = [.. generatedLowerHalf, .. generatedTokens];
         }
         else
         {
             while (generatedTokens.Count < maxLength)
-            {
-                if (generatedTokens.PickNext(method,  generatedTokens.Count, maxLength, k, temperature)) break;
-            }
-            
+                if (generatedTokens.PickNextForward(method, generatedTokens.Count, ref maxLength, k, temperature)) break;
+
             if (method.HasFlag(Method.reverse)) generatedTokens.Reverse();
         }
 
@@ -335,97 +323,111 @@ public static partial class Markov
         return result.Replace("\e", "").Replace("\r", "");
     }
 
-    private static bool PickNext(this List<int> sequence, Method method, int count, int outOf, int k, double temperature)
+    private static bool PickNextForward(this List<int> sequence, Method method, int count, ref int targetCount, int k, double temperature)
     {
-        bool reverse = method.HasFlag(Method.reverse);
         bool force = method.HasFlag(Method.force);
 
-        List<TokenPair>? pairsWithLastInSequence = null;
-        if (reverse)
+        TokenPairLookup.TryGetValue(sequence.Last(), out List<TokenPair>? pairsWithLastInSequence);
+        if (pairsWithLastInSequence is null || pairsWithLastInSequence.Count == 0) return true;
+        if (force)
         {
-            ReverseTokenPairLookup.TryGetValue(sequence.Last(), out pairsWithLastInSequence);
-            if (pairsWithLastInSequence is null || pairsWithLastInSequence.Count == 0) return true;
-            if (force)
+            pairsWithLastInSequence = pairsWithLastInSequence.Where(tp => tp.NextTokenID != eolID).ToList();
+            if (pairsWithLastInSequence.Count == 0)
             {
-                pairsWithLastInSequence = pairsWithLastInSequence.Where(tp => tp.TokenID != bolID).ToList();
-                if (pairsWithLastInSequence.Count == 0)
-                {
-                    sequence.Add(bolID);
-                    return true;
-                }
+                sequence.Add(eolID);
+                return true;
             }
         }
-        else
-        {
-            TokenPairLookup.TryGetValue(sequence.Last(), out pairsWithLastInSequence);
-            if (pairsWithLastInSequence is null || pairsWithLastInSequence.Count == 0) return true;
-            if (force)
-            {
-                pairsWithLastInSequence = pairsWithLastInSequence.Where(tp => tp.NextTokenID != eolID).ToList();
-                if (pairsWithLastInSequence.Count == 0)
-                {
-                    sequence.Add(eolID);
-                    return true;
-                }
-            }
-        }
-        
-        TokenPair pairWithNext = SampleTopKWithTemperature();
 
-        sequence.Add(reverse ? pairWithNext.TokenID : pairWithNext.NextTokenID);
+        TokenPair pairWithNext = SampleTopKWithTemperature(pairsWithLastInSequence, targetCount, temperature, count, force, k, false);
+
+        sequence.Add(pairWithNext.NextTokenID);
+
+        if (targetCount - count == 1)
+        {
+            TokenPairLookup.TryGetValue(sequence.Last(), out List<TokenPair>? pairsWithSelected);
+            pairsWithSelected ??= [];
+            if (pairsWithSelected.Count != 0 && pairsWithSelected.All(tp => tp.NextTokenID != eolID)) targetCount = Math.Min(absoluteMaxCount, targetCount + 1);
+        }
+
         return false;
-        
-        TokenPair SampleTopKWithTemperature()
-        {
-            var scoredPairs = pairsWithLastInSequence
-                .Select(p => new { Pair = p, Score = Math.Exp(Math.Log(p.Count) / temperature) })
-                .OrderByDescending(x => x.Score)
-                .ToList();
-            
-            int terminationOffset = 3;
-            int softRampStartTokenIndex = outOf - terminationOffset;
-
-            int actualK = Math.Min(k, scoredPairs.Count);
-            var topKPairs = scoredPairs.Take(actualK).ToList();
-            
-            if (!force && count >= softRampStartTokenIndex && outOf > terminationOffset)
-            {
-                float runwayProgress = (float)(count - softRampStartTokenIndex + 1) / terminationOffset;
-                var masterEolItem = reverse ?
-                    scoredPairs.FirstOrDefault(x => x.Pair.TokenID == bolID)
-                    :scoredPairs.FirstOrDefault(x => x.Pair.NextTokenID == eolID);
-
-                if (masterEolItem != null)
-                {
-                    double currentEom = masterEolItem.Score;
-                    double boostedScore = currentEom > 0.0 ? currentEom * (1.0f + runwayProgress * 2.0f) : currentEom + (runwayProgress * 15.0f);
-
-                    var boostedEolItem = masterEolItem with { Score = boostedScore };
-
-                    int existingIndex = reverse ? 
-                        topKPairs.FindIndex(x => x.Pair.TokenID == bolID)
-                        : topKPairs.FindIndex(x => x.Pair.NextTokenID == eolID);
-
-                    if (existingIndex >= 0)
-                        topKPairs[existingIndex] = boostedEolItem; 
-                    else
-                        topKPairs.Add(boostedEolItem);
-                }
-            }
-
-            double totalScore = topKPairs.Sum(x => x.Score);
-            double rndTarget = Rndd() * totalScore;
-            double currentSum = 0;
-
-            foreach (var item in topKPairs)
-            {
-                currentSum += item.Score;
-                if (currentSum >= rndTarget) { return item.Pair; }
-            }
-            return topKPairs.Last().Pair;
-        }
     }
 
-    [GeneratedRegex(@"\?{4,}")] private static partial Regex Questions();
-    [GeneratedRegex(@"!{4,}")] private static partial Regex Exclamations();
+    private static bool PickNextReverse(this List<int> sequence, Method method, int count, ref int targetCount, int k, double temperature)
+    {
+        bool force = method.HasFlag(Method.force);
+
+        ReverseTokenPairLookup.TryGetValue(sequence.Last(), out List<TokenPair>? pairsWithLastInSequence);
+        if (pairsWithLastInSequence is null || pairsWithLastInSequence.Count == 0) return true;
+        if (force)
+        {
+            pairsWithLastInSequence = pairsWithLastInSequence.Where(tp => tp.TokenID != bolID).ToList();
+            if (pairsWithLastInSequence.Count == 0)
+            {
+                sequence.Add(bolID);
+                return true;
+            }
+        }
+
+        TokenPair pairWithNext = SampleTopKWithTemperature(pairsWithLastInSequence, targetCount, temperature, count, force, k, true);
+
+        sequence.Add(pairWithNext.TokenID);
+
+        if (targetCount - count == 1)
+        {
+            ReverseTokenPairLookup.TryGetValue(sequence.Last(), out List<TokenPair>? pairsWithSelected);
+            pairsWithSelected ??= [];
+            if (pairsWithSelected.Count != 0 && pairsWithSelected.All(tp => tp.TokenID != bolID)) targetCount = Math.Min(absoluteMaxCount, targetCount + 1);
+        }
+
+        return false;
+    }
+
+    private static TokenPair SampleTopKWithTemperature(List<TokenPair> pairsWithLastInSequence, int max, double temperature, int count, bool force, int k, bool reverse)
+    {
+        var scoredPairs = pairsWithLastInSequence.Select(p => new { Pair = p, Score = Math.Exp(Math.Log(p.Count) / temperature) }).OrderByDescending(x => x.Score).ToList();
+
+        int terminationOffset = 6;
+        int softRampStartTokenIndex = max - terminationOffset;
+
+        int actualK = Math.Min(k, scoredPairs.Count);
+        var topKPairs = scoredPairs.Take(actualK).ToList();
+
+        if (!force && count >= softRampStartTokenIndex && max > terminationOffset)
+        {
+            float runwayProgress = (float)(count - softRampStartTokenIndex + 1) / terminationOffset;
+            var masterEolItem = reverse ? scoredPairs.FirstOrDefault(x => x.Pair.TokenID == bolID) : scoredPairs.FirstOrDefault(x => x.Pair.NextTokenID == eolID);
+
+            if (masterEolItem != null)
+            {
+                double currentEom = masterEolItem.Score;
+                double boostedScore = currentEom > 0.0 ? currentEom * (1.0f + runwayProgress * 2.0f) : currentEom + (runwayProgress * 15.0f);
+
+                var boostedEolItem = masterEolItem with { Score = boostedScore };
+
+                int existingIndex = reverse ? topKPairs.FindIndex(x => x.Pair.TokenID == bolID) : topKPairs.FindIndex(x => x.Pair.NextTokenID == eolID);
+
+                if (existingIndex >= 0) topKPairs[existingIndex] = boostedEolItem;
+                else topKPairs.Add(boostedEolItem);
+            }
+        }
+
+        double totalScore = topKPairs.Sum(x => x.Score);
+        double rndTarget = Rndd() * totalScore;
+        double currentSum = 0;
+
+        foreach (var item in topKPairs)
+        {
+            currentSum += item.Score;
+            if (currentSum >= rndTarget) { return item.Pair; }
+        }
+
+        return topKPairs.Last().Pair;
+    }
+
+    [GeneratedRegex(@"\?{4,}")]
+    private static partial Regex Questions();
+
+    [GeneratedRegex(@"!{4,}")]
+    private static partial Regex Exclamations();
 }
