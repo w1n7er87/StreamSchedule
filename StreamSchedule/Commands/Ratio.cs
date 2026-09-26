@@ -26,6 +26,6 @@ internal class Ratio : Command
 
         RatioScore ratioScore = Userscore.GetRatioAndScore(target);
 
-        return Task.FromResult(result + $"messages: {target.MessagesOffline}/{target.MessagesOnline} ({MathF.Round(ratioScore.ratio, 3)}), chat score: {MathF.Round(ratioScore.score, 3)} ");
+        return Task.FromResult(result + $"messages: off:{target.MessagesOffline}/on:{target.MessagesOnline} ({target.MessagesOffline + target.MessagesOnline}) ({MathF.Round(ratioScore.ratio, 3)}), chat score: {MathF.Round(ratioScore.score, 3)} ");
     }
 }

@@ -7,7 +7,7 @@ namespace StreamSchedule.Markov2;
 
 public static partial class Markov
 {
-    public static readonly Queue<string> TokenizationQueue = new();
+    public static readonly Queue<string> TokenizationQueue = new(3_500_000);
 
     private static Dictionary<int, Token> TokenLookup = [];
     private static Dictionary<int, List<TokenPair>> TokenPairLookup = [];
@@ -84,14 +84,22 @@ public static partial class Markov
     {
         while (true)
         {
-            if (TokenizationQueue.Count <= 0 || !Ready)
+            try
             {
-                await Task.Delay(50);
-                continue;
-            }
+                if (TokenizationQueue.Count <= 0 || !Ready)
+                {
+                    await Task.Delay(50);
+                    continue;
+                }
 
-            await TokenizeMessage(TokenizationQueue.Peek());
-            TokenizationQueue.Dequeue();
+                await TokenizeMessage(TokenizationQueue.Peek());
+                TokenizationQueue.Dequeue();
+            }
+            catch (Exception e)
+            {
+                BotCore.Nlog.Error("Tokenizer had an exception: " + e);
+                TokenizationQueue.Dequeue();
+            }
         }
     }
 
@@ -214,9 +222,11 @@ public static partial class Markov
 
     private static Task TokenizeMessage(string message)
     {
-        message = Exclamations().Replace(Questions().Replace(message, "???"), "!!!");
-
+        message = Spaces().Replace(Exclamations().Replace(Questions().Replace(message, "???"), "!!!"), " ").Replace("\r", "").Replace("\e", "");
+        if(string.IsNullOrWhiteSpace(message)) return Task.CompletedTask;
+        
         List<string> words = message.Split(' ').Prepend("\r").ToList();
+        
         for (int i = 0; i < words.Count; i++)
         {
             string nextWord = (i + 1 >= words.Count) ? "\e" : words[i + 1];
@@ -297,11 +307,11 @@ public static partial class Markov
             if (maxLength % 2 != 0) maxLengthForward++;
 
             while (generatedForward < maxLengthForward)
-                if (generatedTokens.PickNextForward(method, generatedTokens.Count, ref maxLengthForward, k, temperature)) break;
+                if (generatedTokens.PickNextForward(method, generatedForward, ref maxLengthForward, k, temperature)) break;
                 else generatedForward++;
 
             while (generatedBackward < maxLengthReverse)
-                if (generatedLowerHalf.PickNextReverse(method, generatedLowerHalf.Count, ref maxLengthReverse, k, temperature)) break;
+                if (generatedLowerHalf.PickNextReverse(method, generatedBackward, ref maxLengthReverse, k, temperature)) break;
                 else generatedBackward++;
 
             generatedLowerHalf.RemoveAt(0);
@@ -430,4 +440,7 @@ public static partial class Markov
 
     [GeneratedRegex(@"!{4,}")]
     private static partial Regex Exclamations();
+    
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex Spaces();
 }

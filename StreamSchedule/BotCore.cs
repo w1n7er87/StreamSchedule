@@ -97,7 +97,7 @@ internal static partial class BotCore
         _ = Browsing.Browsing.Start;
         _ = Personality.Personality.Start;
         _ = LLM.Inference.Start;
-        
+
         ExportUtils.UpdateStyles();
     }
 
@@ -142,7 +142,7 @@ internal static partial class BotCore
         {
             if (!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
                 Markov.TokenizationQueue.Enqueue(m);
-            
+
             return;
         }
         

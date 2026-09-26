@@ -55,17 +55,19 @@ public class User
         u.MessagesOffline += offline;
     }
 
-    internal static bool TryGetUser(string username, out User user, string? id = null)
+    internal static bool TryGetUser(string username, out User user, string? id = null, DatabaseContext? context = null)
     {
         username = username.ToLower().Replace("@", "");
-
+        
+        context ??= BotCore.DBContext;
+        
         if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(id))
         {
             user = new();
             return false;
         }
 
-        User? u = BotCore.DBContext.Users.FirstOrDefault(x =>
+        User? u = context.Users.FirstOrDefault(x =>
             id == null ? x.Username == username : x.Id == int.Parse(id));
 
         if (u is not null)
@@ -74,7 +76,7 @@ public class User
             return true;
         }
 
-        User? byOldName = BotCore.DBContext.Users
+        User? byOldName = context.Users
             .Where(x => x.PreviousUsernames != null)
             .FirstOrDefault(x => x.PreviousUsernames!.Contains(username));
 
