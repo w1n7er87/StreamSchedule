@@ -2,7 +2,7 @@ using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class SetSilent : Command
+internal sealed class SetSilent : Command
 {
     public override string Call => "silent";
     public override Privileges Privileges => Privileges.Mod;

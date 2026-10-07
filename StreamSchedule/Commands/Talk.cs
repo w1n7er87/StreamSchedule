@@ -3,7 +3,7 @@ using StreamSchedule.LLM;
 
 namespace StreamSchedule.Commands;
 
-internal class Talk : Command
+internal sealed class Talk : Command
 {
     public override string Call => "talk";
     public override Privileges Privileges => Privileges.Uuh;

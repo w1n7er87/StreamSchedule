@@ -3,7 +3,7 @@ using StreamSchedule.Data.Models;
 
 namespace StreamSchedule.Commands;
 
-internal class EvaluateUsers : Command
+internal sealed class EvaluateUsers : Command
 {
     public override string Call => "evaluate";
     public override Privileges Privileges => Privileges.Uuh;
@@ -12,7 +12,7 @@ internal class EvaluateUsers : Command
     public override string[] Arguments => ["s"];
     public override List<string> Aliases { get; set; } = [];
 
-    private static float DefaultCutoffScore => 3.2f;
+    private static float DefaultCutoffScore => 3.5f;
 
     public override async Task<CommandResult> Handle(UniversalMessageInfo message)
     {

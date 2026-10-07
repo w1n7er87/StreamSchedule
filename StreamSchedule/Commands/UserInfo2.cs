@@ -25,10 +25,10 @@ internal class UserInfo2 : Command
 
         bool idProvided = false;
         int userIDNumber = 0;
+
         if (!string.IsNullOrWhiteSpace(split[0]))
         {
-            if (split[0].StartsWith('#'))
-                idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
+            if (split[0].StartsWith('#')) idProvided = int.TryParse(split[0].Replace("#", "").Replace("@", ""), out userIDNumber);
 
             if (!idProvided) targetUsername = split[0].Replace("#", "").Replace("@", "");
         }
@@ -37,8 +37,21 @@ internal class UserInfo2 : Command
         if (idProvided) userErrorAndNameAvailable = await GraphQLClient.GetUserByID(userIDNumber.ToString());
         else userErrorAndNameAvailable = await GraphQLClient.GetUserOrReasonByLogin(targetUsername);
 
+        if (userErrorAndNameAvailable.User is null && !(userErrorAndNameAvailable.IsUsernameAvailable ?? false))
+        {
+            if (idProvided) return new("user does not exist");
+
+            int? id = BotCore.DBContext.Users.FirstOrDefault(u => u.Username!.Equals(targetUsername) || u.PreviousUsernames!.Contains(targetUsername))?.Id;
+
+            if (id is null or 0) return new("user does not exist");
+
+            userErrorAndNameAvailable = await GraphQLClient.GetUserByID(id.ToString()!);
+        }
+
         string usernameAvailable = userErrorAndNameAvailable.IsUsernameAvailable ?? false ? " yet" : "";
-        if (userErrorAndNameAvailable.User is null) return new($"user does not exist{usernameAvailable}");
+
+        if (userErrorAndNameAvailable.User is null) return new($"user does not exist{usernameAvailable} ");
+
         User user = userErrorAndNameAvailable.User;
 
         string generalInfo = GetGeneralInfo(userErrorAndNameAvailable);

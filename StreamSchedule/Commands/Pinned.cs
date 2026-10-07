@@ -4,7 +4,7 @@ using StreamSchedule.GraphQL.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class Pinned : Command
+internal sealed class Pinned : Command
 {
     public override string Call => "pinned";
     public override Privileges Privileges => Privileges.None;

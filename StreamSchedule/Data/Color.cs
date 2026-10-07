@@ -16,7 +16,13 @@ public struct Color(float r = 0, float g = 0, float b = 0, float a = 0)
         return new Color() { r = Convert.ToInt32(hex[..2], 16) / 255f, g = Convert.ToInt32(hex[2..4], 16) / 255f, b = Convert.ToInt32(hex[4..6], 16) / 255f};
     }
 
-    public string ToHex() => $"{(int)(r * 255):X}{(int)(g * 255):X}{(int)(b * 255):X}";
+    public readonly string ToHex()
+    {
+        string rr = r == 0 ? "00" : $"{(int)(r * 255):X}";
+        string gg = g == 0 ? "00" : $"{(int)(g * 255):X}";
+        string bb = b == 0 ? "00" : $"{(int)(b * 255):X}";
+        return $"{rr}{gg}{bb}";
+    }
 
     public static float DistanceSquared(Color left, Color right) => (left.r - right.r) * (left.r - right.r) + (left.g - right.g) * (left.g - right.g) + (left.b - right.b) * (left.b - right.b);
     public static float Distance(Color left, Color right) => MathF.Sqrt(DistanceSquared(left, right));

@@ -3,7 +3,7 @@ using StreamSchedule.Data.Models;
 
 namespace StreamSchedule.Commands;
 
-internal class CommandManagement : Command
+internal sealed class CommandManagement : Command
 {
     public override string Call => "cmd";
     public override Privileges Privileges => Privileges.Mod;

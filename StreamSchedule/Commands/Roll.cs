@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-internal class Roll : Command
+internal sealed class Roll : Command
 {
     public override string Call => "roll";
     public override Privileges Privileges => Privileges.None;

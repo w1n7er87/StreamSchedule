@@ -3,7 +3,7 @@ using StreamSchedule.Data.Models;
 
 namespace StreamSchedule.Commands;
 
-internal class Ratio : Command
+internal sealed class Ratio : Command
 {
     public override string Call => "score";
     public override Privileges Privileges => Privileges.None;
@@ -26,6 +26,6 @@ internal class Ratio : Command
 
         RatioScore ratioScore = Userscore.GetRatioAndScore(target);
 
-        return Task.FromResult(result + $"messages: off:{target.MessagesOffline}/on:{target.MessagesOnline} ({target.MessagesOffline + target.MessagesOnline}) ({MathF.Round(ratioScore.ratio, 3)}), chat score: {MathF.Round(ratioScore.score, 3)} ");
+        return Task.FromResult(result + $"messages: off: {target.MessagesOffline:N0} /on: {target.MessagesOnline:N0} ({target.MessagesOffline + target.MessagesOnline:N0}) ({MathF.Round(ratioScore.ratio, 3)}), chat score: {MathF.Round(ratioScore.score, 3)} ");
     }
 }

@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-internal class AddStream : Command
+internal sealed class AddStream : Command
 {
     public override string Call => "sets";
     public override Privileges Privileges => Privileges.Mod;

@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-internal class ClearDay : Command
+internal sealed class ClearDay : Command
 {
     public override string Call => "clearday";
     public override Privileges Privileges => Privileges.Mod;

@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-internal class Buh : Command
+internal sealed class Buh : Command
 {
     public override string Call => "buh";
     public override Privileges Privileges => Privileges.None;

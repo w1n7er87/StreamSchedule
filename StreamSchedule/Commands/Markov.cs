@@ -3,7 +3,7 @@ using StreamSchedule.Markov2;
 
 namespace StreamSchedule.Commands;
 
-internal class Markov : Command
+internal sealed class Markov : Command
 {
     public override string Call => "markov";
     public override Privileges Privileges => Privileges.Trusted;
@@ -42,7 +42,7 @@ internal class Markov : Command
 
             if(Muted) return Task.FromResult(new CommandResult(""));
             
-            float temperature = args.TryGetValue("t", out string? tt) ? float.TryParse(tt, out temperature)  ? temperature : 10f : 10f;
+            float temperature = args.TryGetValue("t", out string? tt) ? float.TryParse(tt, out temperature)  ? temperature : 3f : 3f;
             
             int k = args.TryGetValue("k", out string? kk) ? int.TryParse(kk, out k)  ? k : 99 : 99;
 

@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-internal class Time : Command
+internal sealed class Time : Command
 {
     public override string Call => "time";
     public override Privileges Privileges => Privileges.None;

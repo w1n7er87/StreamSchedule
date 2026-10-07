@@ -28,7 +28,7 @@ public static class Personality
     private static TimeSpan OnlineInterval => new TimeSpan(hours: 0, minutes: Random.Shared.Next(5, 15), seconds: Random.Shared.Next(32));
 
     private static DateTime timeToSpeak = DateTime.UtcNow + TimeSpan.FromMinutes(5);
-    private static readonly Func<Task<string[]>>[] actions = [SpeakOnTopic, SpeakOnTopic, SpeakOnTopic, HugLast, RemindSchedule, PingLurker];
+    private static readonly Func<Task<string[]>>[] actions = [SpeakOnTopic, SpeakOnTopic, SpeakOnTopic, HugLast, RemindSchedule, PingLurker, PingLurker];
 
     private sealed class SaySomething : Periodic
     {
@@ -61,19 +61,37 @@ public static class Personality
 
     private static async Task<string[]> RemindSchedule()
     {
-        string[] responses = ["did yall know there is {0} today ", "yo there is {0} today ", "can't wait for today's {0} ", "thank god there is {0} today ", "so excited for {0} today ", "finally {0} today "];
+        string[] responses = [
+            "did yall know there is {0} {1} ",
+            "yo there is {0} {1} ",
+            "can't wait for {0} {1} ",
+            "thank god there is {0} {1} ",
+            "so excited for {0} {1} ",
+            "finally {0} {1} ",
+            "chat, get ready for the epic {0} {1} "];
+
 
         Stream? stream = BotCore.DBContext.Streams.FirstOrDefault(s => s.StreamDate == DateOnly.FromDateTime(DateTime.UtcNow));
-        string the = "no stream";
-        if (stream is not null) the = new DateTime(stream.StreamDate, stream.StreamTime) < DateTime.UtcNow ? the : stream.StreamTitle ?? the;
 
-        return [string.Format(responses[Random.Shared.Next(responses.Length)], the)];
+        string time = "today";
+        string the = "no stream";
+
+        if (stream is not null)
+        {
+            DateTime fullDate = new DateTime(stream.StreamDate, stream.StreamTime).ToLocalTime();
+            TimeSpan span = fullDate - DateTime.Now;
+
+            the = new DateTime(stream.StreamDate, stream.StreamTime) < DateTime.UtcNow ? the : stream.StreamTitle ?? the;
+            time = $"in {(span.Hours != 0 ? span.Hours + "h " : "")}{span:m'm 's's '}";
+        }
+
+        return [string.Format(responses[Random.Shared.Next(responses.Length)], the, time)];
     }
 
     private static async Task<string[]> HugLast()
     {
         string username = BotCore.MessageCache.TakeLast(1).FirstOrDefault()?.Username ?? "uuh";
-        return [$"{(Random.Shared.Next(101) >= 50 ? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!", maxLength: 4, temperature: 2f)}"];
+        return [$"{(Random.Shared.Next(101) >= 50 ? "HUGGIES " : "catKISS ")} {username} {Markov.GenerateSequence("Hey!", maxLength: Random.Shared.Next(4, 10), temperature: float.Clamp(Random.Shared.NextSingle() * 3f, 0.3f, 3f))}"];
     }
 
     private static async Task<string[]> Talk()
@@ -85,8 +103,19 @@ public static class Personality
 
     private static async Task<string[]> PingLurker()
     {
-        string[] lines = ["sus i see you lurking over there {0} ", "WeirdDude can y'all believe that {0} is just reading chat and not typing anything? ", "uuh i see what you are doing over there {0} "];
-        string[] starters = ["Fishinge let's see what do we have here . . . ", "uuh . . . ", "CaitThinking let's see . . . ", "", ""];
+        string[] starters = [
+            "Fishinge let's see what do we have here . . . ",
+            "uuh . . . ",
+            "CaitThinking let's see . . . ",
+            "modCheck ",
+            "", ""];
+
+        string[] lines = [
+            "sus i see you lurking over there {0} ",
+            "WeirdDude can y'all believe that {0} is just reading chat and not typing anything? ",
+            "uuh i see what you are doing over there {0} ",
+            "MONKA {0} is watching us ",
+            "catAsk can you tell us a deez nuts joke {0} ?"];
 
         (_, ChattersInfo? chatterGroups) = await GraphQLClient.GetChattersCount("85498365");
 

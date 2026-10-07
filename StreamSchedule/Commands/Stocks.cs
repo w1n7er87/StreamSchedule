@@ -4,7 +4,7 @@ using StreamSchedule.Stocks.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class Stocks : Command
+internal sealed class Stocks : Command
 {
     public override string Call => "stocks";
     public override Privileges Privileges => Privileges.None;

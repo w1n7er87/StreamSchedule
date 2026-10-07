@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace StreamSchedule.Commands;
 
-internal class Update : Command
+internal sealed class Update : Command
 {
     public override string Call => "updates";
     public override Privileges Privileges => Privileges.Uuh;

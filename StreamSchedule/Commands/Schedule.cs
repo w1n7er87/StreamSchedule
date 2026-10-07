@@ -5,7 +5,7 @@ using Stream = StreamSchedule.Data.Models.Stream;
 
 namespace StreamSchedule.Commands;
 
-internal class Schedule : Command
+internal sealed class Schedule : Command
 {
     public override string Call => "schedule";
     public override Privileges Privileges => Privileges.None;

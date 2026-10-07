@@ -3,7 +3,7 @@ using System.Text;
 
 namespace StreamSchedule.Commands;
 
-internal class GetCommands : Command
+internal sealed class GetCommands : Command
 {
     public override string Call => "commands";
     public override Privileges Privileges => Privileges.Banned;

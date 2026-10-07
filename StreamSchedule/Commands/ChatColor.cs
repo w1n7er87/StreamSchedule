@@ -2,7 +2,7 @@ using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class ChatColor : Command
+internal sealed class ChatColor : Command
 {
     public override string Call => "chatcolor";
     public override Privileges Privileges => Privileges.None;

@@ -3,7 +3,7 @@ using StreamSchedule.Data.Models;
 
 namespace StreamSchedule.Commands;
 
-internal class CheckCD : Command
+internal sealed class CheckCD : Command
 {
     public override string Call => "checkcd";
     public override Privileges Privileges => Privileges.None;

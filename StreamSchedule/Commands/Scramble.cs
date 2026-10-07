@@ -7,7 +7,7 @@ using StreamSchedule.Markov2.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class Scramble : Command
+internal sealed class Scramble : Command
 {
     public override string Call => "unscramble";
     public override Privileges Privileges => Privileges.Trusted;

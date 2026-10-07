@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-internal class SetMessageLengthLimit : Command
+internal sealed class SetMessageLengthLimit : Command
 {
     public override string Call => "setlimit";
     public override Privileges Privileges => Privileges.Uuh;

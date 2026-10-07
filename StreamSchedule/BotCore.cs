@@ -38,7 +38,7 @@ internal static partial class BotCore
     public const string BotID = "871501999";
 
     public const string Invisible = "͏";
-    
+
     private static Dictionary<string, Queue<OutgoingMessage>> OutQueuePerChannel { get; } = [];
 
     private static async Task ConfigLiveMonitorAsync(List<string> channelNames)
@@ -97,6 +97,7 @@ internal static partial class BotCore
         _ = Browsing.Browsing.Start;
         _ = Personality.Personality.Start;
         _ = LLM.Inference.Start;
+        _ = new RegularTasks.UserEvaluator();
 
         ExportUtils.UpdateStyles();
     }
@@ -140,7 +141,7 @@ internal static partial class BotCore
 
         if (!Utils.ContainsPrefix(messageAsCodepoints, out messageAsCodepoints))
         {
-            if (!ChannelLiveState[e.ChatMessage.Channel] && userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
+            if (userSent.Privileges > Privileges.Banned && e.ChatMessage.RoomId.Equals("85498365") && (userSent.MessagesOffline > 50 || userSent.MessagesOnline > 50))
                 Markov.TokenizationQueue.Enqueue(m);
 
             return;

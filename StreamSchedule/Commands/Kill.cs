@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-internal class Kill : Command
+internal sealed class Kill : Command
 {
     public override string Call => "kill";
     public override Privileges Privileges => Privileges.None;

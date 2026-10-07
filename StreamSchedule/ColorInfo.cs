@@ -31,10 +31,11 @@ internal static class ColorInfo
         }
         catch(Exception e)
         {
+            BotCore.Nlog.Error($"color r {color.r}, g {color.g}, b {color.b}");
             BotCore.Nlog.Error(e);
             name = "";
         }
-        
+
         return color with {name = name};
     }
 }

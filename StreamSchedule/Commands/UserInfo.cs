@@ -7,7 +7,7 @@ using User = StreamSchedule.Data.Models.User;
 
 namespace StreamSchedule.Commands;
 
-internal class UserInfo : Command
+internal sealed class UserInfo : Command
 {
     public override string Call => "whois_";
     public override Privileges Privileges => Privileges.Uuh;

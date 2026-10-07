@@ -2,7 +2,7 @@ using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class AllowOnline : Command
+internal sealed class AllowOnline : Command
 {
     public override string Call => "toggleonline";
     public override Privileges Privileges => Privileges.Mod;

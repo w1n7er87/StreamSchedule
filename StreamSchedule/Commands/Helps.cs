@@ -2,7 +2,7 @@
 
 namespace StreamSchedule.Commands;
 
-internal class Helps : Command
+internal sealed class Helps : Command
 {
     public override string Call => "helps";
     public override Privileges Privileges => Privileges.None;

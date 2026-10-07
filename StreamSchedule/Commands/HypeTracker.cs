@@ -6,7 +6,7 @@ using User = TwitchLib.Api.Helix.Models.Users.GetUsers.User;
 
 namespace StreamSchedule.Commands;
 
-internal class HypeTracker : Command
+internal sealed class HypeTracker : Command
 {
     public override string Call => "hype";
     public override Privileges Privileges => Privileges.Trusted;

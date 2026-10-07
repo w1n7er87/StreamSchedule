@@ -4,7 +4,7 @@ using StreamSchedule.GraphQL.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class Lurkers : Command
+internal sealed class Lurkers : Command
 {
     public override string Call => "lurkers";
     public override Privileges Privileges => Privileges.None;

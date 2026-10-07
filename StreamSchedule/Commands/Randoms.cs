@@ -2,7 +2,7 @@ using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class Randoms : Command
+internal sealed     class Randoms : Command
 {
     public override string Call => "random";
     public override Privileges Privileges => Privileges.None;

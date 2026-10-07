@@ -6,7 +6,7 @@ using Emote = StreamSchedule.GraphQL.Data.Emote;
 
 namespace StreamSchedule.Commands;
 
-internal class GetEmotesFromMessage : Command
+internal sealed class GetEmotesFromMessage : Command
 {
     public override string Call => "emot";
     public override Privileges Privileges => Privileges.None;

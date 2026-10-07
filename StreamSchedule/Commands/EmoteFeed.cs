@@ -7,7 +7,7 @@ using User = StreamSchedule.GraphQL.Data.User;
 
 namespace StreamSchedule.Commands;
 
-internal class EmoteFeed : Command
+internal sealed class EmoteFeed : Command
 {
     public override string Call => "emon";
     public override Privileges Privileges => Privileges.Trusted;

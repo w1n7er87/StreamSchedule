@@ -4,7 +4,7 @@ using StreamSchedule.GraphQL.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class ChannelRules : Command
+internal sealed class ChannelRules : Command
 {
     public override string Call => "rules";
     public override Privileges Privileges => Privileges.Banned;

@@ -2,7 +2,7 @@ using StreamSchedule.Data;
 
 namespace StreamSchedule.Commands;
 
-internal class Say : Command
+internal sealed class Say : Command
 {
     public override string Call => "say";
     public override Privileges Privileges => Privileges.Uuh;
