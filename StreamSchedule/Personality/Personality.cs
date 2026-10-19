@@ -108,6 +108,7 @@ public static class Personality
             "uuh . . . ",
             "CaitThinking let's see . . . ",
             "modCheck ",
+            "MenheraBored ",
             "", ""];
 
         string[] lines = [

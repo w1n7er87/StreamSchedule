@@ -222,11 +222,17 @@ public static partial class Markov
 
     private static Task TokenizeMessage(string message)
     {
-        message = Spaces().Replace(Exclamations().Replace(Questions().Replace(message, "???"), "!!!"), " ").Replace("\r", "").Replace("\e", "");
+        message = Questions().Replace(message, "???");
+        if (string.IsNullOrEmpty(message)) return Task.CompletedTask;
+        message = Exclamations().Replace(message, "!!!");
+        if (string.IsNullOrEmpty(message)) return Task.CompletedTask;
+        message = Spaces().Replace(message, " ");
+        if (string.IsNullOrEmpty(message)) return Task.CompletedTask;
+        message = message.Replace("\r", "").Replace("\e", "");
         if(string.IsNullOrWhiteSpace(message)) return Task.CompletedTask;
-        
+
         List<string> words = message.Split(' ').Prepend("\r").ToList();
-        
+
         for (int i = 0; i < words.Count; i++)
         {
             string nextWord = (i + 1 >= words.Count) ? "\e" : words[i + 1];
