@@ -1,6 +1,8 @@
 ﻿using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using StreamSchedule.Browsing;
 using StreamSchedule.GraphQL.Data;
 
@@ -11,16 +13,13 @@ public static class GraphQLClient
     private const string ClientID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
     private const string Endpoint = "https://gql.twitch.tv/gql";
 
-    private static readonly HttpClient httpClient = new(new SocketsHttpHandler()
-        { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
+    private static readonly HttpClient httpClient = new(new SocketsHttpHandler() { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
 
-    private static readonly HttpClient testHttpClient = new(new SocketsHttpHandler()
-        { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
+    private static readonly HttpClient testHttpClient = new(new SocketsHttpHandler() { PooledConnectionLifetime = TimeSpan.FromMinutes(5) });
 
-    private static readonly GraphQLHttpClient client = new(Endpoint, new NewtonsoftJsonSerializer(), httpClient);
+    private static readonly GraphQLHttpClient client;
 
-    private static readonly GraphQLHttpClient testGqlClient =
-        new(Endpoint, new NewtonsoftJsonSerializer(), testHttpClient);
+    private static readonly GraphQLHttpClient testGqlClient;
 
     static GraphQLClient()
     {
@@ -31,6 +30,12 @@ public static class GraphQLClient
         testHttpClient.DefaultRequestHeaders.Add("Client-Id", ClientID);
         testHttpClient.DefaultRequestHeaders.Add("accept", "*/*");
         testHttpClient.DefaultRequestHeaders.Add("Host", "gql.twitch.tv");
+
+        JsonSerializerSettings serializerSettings = new();
+        serializerSettings.Converters.Add(new EnumConverter());
+
+        client = new(Endpoint, new NewtonsoftJsonSerializer(serializerSettings), httpClient);
+        testGqlClient = new(Endpoint, new NewtonsoftJsonSerializer(serializerSettings), testHttpClient);
     }
 
     public static void SetIntegrity(Integrity integrity)

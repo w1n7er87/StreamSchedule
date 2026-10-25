@@ -19,6 +19,7 @@ public static class Helpers
         EmoteType.MEGA_COMMERCE => "mega commerce",
         EmoteType.ARCHIVE => "archived",
         EmoteType.FOLLOWER => "follow",
+        EmoteType.PINATA => "pinata",
         EmoteType.UNKNOWN or _ => "unknown",
     };
 

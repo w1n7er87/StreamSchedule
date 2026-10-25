@@ -2,7 +2,7 @@ namespace StreamSchedule.GraphQL.Data;
 
 public enum HypeTrainActionSource
 {
-    UNKNOWN,
+    UNKNOWN = 0,
     BITS,
     SUBS
 }

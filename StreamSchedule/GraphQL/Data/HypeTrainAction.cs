@@ -2,6 +2,7 @@ namespace StreamSchedule.GraphQL.Data;
 
 public enum HypeTrainAction
 {
+    UNKNOWN = 0,
     TIER_1_SUB,
     TIER_1_GIFTED_SUB,
     TIER_2_SUB,
@@ -11,5 +12,4 @@ public enum HypeTrainAction
     CHEER,
     POLLS,
     BITS_ON_EXTENSION,
-    UNKNOWN
 }

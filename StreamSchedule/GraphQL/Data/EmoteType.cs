@@ -2,6 +2,7 @@
 
 public enum EmoteType
 {
+    UNKNOWN = 0,
     CHANNEL_POINTS,
     BITS_BADGE_TIERS,
     SUBSCRIPTIONS,
@@ -15,5 +16,5 @@ public enum EmoteType
     MEGA_COMMERCE,
     ARCHIVE,
     FOLLOWER,
-    UNKNOWN
+    PINATA,
 }
