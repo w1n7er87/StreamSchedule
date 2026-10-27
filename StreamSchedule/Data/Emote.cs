@@ -8,7 +8,8 @@ public enum EmoteCostType
     Unknown,
     Subscription,
     Bits,
-    Follow
+    Follow,
+    Pinata
 }
 
 public record EmoteCost(EmoteCostType Type, int Value)
@@ -21,6 +22,7 @@ public record EmoteCost(EmoteCostType Type, int Value)
             EmoteCostType.Subscription => "T",
             EmoteCostType.Bits => "Bits",
             EmoteCostType.Follow => "Follow",
+            EmoteCostType.Pinata => "Piñata",
             _ => ""
         }}{(Value > 0 ? Value.ToString() : "")}";
     }
@@ -35,8 +37,11 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
             new(
                 channelEmote.EmoteType switch
                 {
-                    "bitstier" => EmoteCostType.Bits, "subscriptions" => EmoteCostType.Subscription,
-                    "follower" => EmoteCostType.Follow, _ => EmoteCostType.Unknown
+                    "bitstier" => EmoteCostType.Bits,
+                    "subscriptions" => EmoteCostType.Subscription,
+                    "follower" => EmoteCostType.Follow,
+                    "pinata" => EmoteCostType.Pinata,
+                    _ => EmoteCostType.Unknown
                 },
                 channelEmote.Tier switch { "1000" => 1, "2000" => 2, "3000" => 3, _ => 0 }
             ),
@@ -54,6 +59,7 @@ public record Emote(string ID, EmoteCost Cost, string Token, bool Animated)
                     EmoteType.BITS_BADGE_TIERS => EmoteCostType.Bits,
                     EmoteType.SUBSCRIPTIONS => EmoteCostType.Subscription,
                     EmoteType.FOLLOWER => EmoteCostType.Follow,
+                    EmoteType.PINATA => EmoteCostType.Pinata,
                     _ => EmoteCostType.Unknown
                 },
                 gqlEmote?.Type switch
