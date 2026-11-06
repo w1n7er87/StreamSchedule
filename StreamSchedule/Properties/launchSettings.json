@@ -4,9 +4,6 @@
       "commandName": "Project",
       "workingDirectory": "Z:\\GIT\\StreamSchedule\\StreamSchedule\\bin\\Release\\net9.0",
       "nativeDebugging": true
-    },
-    "Container (Dockerfile)": {
-      "commandName": "Docker"
     }
   }
 }

@@ -21,7 +21,7 @@ internal sealed class Update : Command
         Process.Start(new ProcessStartInfo
         {
             FileName = "cmd.exe",
-            Arguments = "/c start \"\" \"update.bat\"",
+            Arguments = "/c start \"\" \"UpdateDeploy.bat\"",
             UseShellExecute = true
         });
 
